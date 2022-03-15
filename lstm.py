@@ -1,3 +1,7 @@
+import torch
+import torch.nn as nn
+from torch.autograd import Variable
+
 class LSTM(nn.Module):
 
     def __init__(self, num_classes, input_size, hidden_size, num_layers):
@@ -7,7 +11,6 @@ class LSTM(nn.Module):
         self.num_layers = num_layers
         self.input_size = input_size
         self.hidden_size = hidden_size
-        self.seq_length = seq_length
         
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                             num_layers=num_layers, batch_first=True)
