@@ -22,24 +22,26 @@ lstm = LSTM(num_classes, input_size, hidden_size, num_layers)
 
 # Getting data in right format
 _data = tipping_point()
-training_data = _data.collect_samples(1)
+training_data = _data.collect_samples(100)
 
-
-seq_length = 4
-x, y = sliding_windows(training_data, seq_length)
-x = x.reshape(-1, 4, 1)
-y = y.reshape(-1, 1)
-dataX = Variable(torch.Tensor(x))
-dataY = Variable(torch.Tensor(y))
-
-trainX = Variable(torch.Tensor(x))
-trainY = Variable(torch.Tensor(y))
-
+seq_length = 7
 criterion = torch.nn.MSELoss()    # mean-squared error for regression
 optimizer = torch.optim.Adam(lstm.parameters(), lr=learning_rate)
 
-# Train the model
 for epoch in range(num_epochs):
+    # Note this data loading is not efficient, since i'm doing this every loop
+    # Should do outside of the loop and draw an index instead -- TO DO
+    idx = np.random.randint(0, len(training_data))
+    _training_data = training_data[idx]
+    x, y = sliding_windows(_training_data, seq_length)
+    x = x.reshape(-1, seq_length, 1)
+    y = y.reshape(-1, 1)
+    dataX = Variable(torch.Tensor(x))
+    dataY = Variable(torch.Tensor(y))
+
+    trainX = Variable(torch.Tensor(x))
+    trainY = Variable(torch.Tensor(y))
+
     outputs = lstm(trainX)
     optimizer.zero_grad()
     
@@ -51,9 +53,19 @@ for epoch in range(num_epochs):
     optimizer.step()
     if epoch % 100 == 0:
       print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()))
+      print(idx)
 
 # Evaluate
 lstm.eval()
+training_data = _data.collect_samples(100)
+idx = np.random.randint(0, len(training_data))
+_training_data = training_data[idx]
+x, y = sliding_windows(_training_data, seq_length)
+x = x.reshape(-1, seq_length, 1)
+y = y.reshape(-1, 1)
+dataX = Variable(torch.Tensor(x))
+dataY = Variable(torch.Tensor(y))
+
 train_predict = lstm(dataX)
 
 data_predict = train_predict.data.numpy()
