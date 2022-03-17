@@ -127,7 +127,7 @@ for i in range(args.viz_iter):
     data_predict = train_predict.data.cpu().numpy()
     dataY_plot = testY.data.cpu().numpy()
     
-    plt.plot(x_linspace, dataY_plot, color="b", alpha=0.1)
+    plt.plot(x_linspace, dataY_plot, color="b", alpha=1)
     plt.plot(x_linspace, data_predict, color="orange", alpha=0.5)
-    
-plt.savefig(f"{args.plot_name}")
+    plt.savefig(f"plots/{args.plot_name}_{i}")
+    plt.clf()
