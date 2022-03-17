@@ -7,26 +7,82 @@ import pandas as pd
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import argparse
 
 if torch.cuda.is_available():  
   dev = "cuda:0" 
 else:  
   dev = "cpu" 
 
-# Defining variables for the LSTM
-num_epochs = 2000
-learning_rate = 0.01
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-e",
+    "--epochs",
+    default=2000,
+    type=int,
+    help="# of Epochs",
+)
+parser.add_argument(
+    "--lr",
+    default=0.01,
+    type=float,
+    help="Learning rate",
+)
+parser.add_argument(
+    "-f",
+    "--num_features",
+    default=1,
+    type=int,
+    help="# of features",
+)
+parser.add_argument(
+    "-s",
+    "--hidden_layers",
+    default=1,
+    type=int,
+    help="Number of Hidden Layers",
+)
+parser.add_argument(
+    "-w",
+    "--width_hidden",
+    default=64,
+    type=int,
+    help="Width of Hidden Layers",
+)
+parser.add_argument(
+    "-i",
+    "--input_window",
+    default=25,
+    type=int,
+    help="Input window size for the model",
+)
+parser.add_argument(
+    "-p",
+    "--prediction_window",
+    default=25,
+    type=int,
+    help="Input window size for the LSTM",
+)
+parser.add_argument(
+    "-v",
+    "--viz_iter",
+    default=1,
+    type=int,
+    help="# replicates to examine for visualization",
+)
+parser.add_argument(
+    "-n",
+    "--plot_name",
+    default="figure",
+    type=str,
+    help="Name of the output plot",
+)
+args = parser.parse_args()
 
 input_size = 1
-hidden_size = 64
 num_layers = 1
 
-viz_reps = 1
-
-in_seq_length = 25
-out_seq_length = 10
-
-lstm = LSTM(out_seq_length, input_size, hidden_size, num_layers, dev)
+lstm = LSTM(args.prediction_window, input_size, args.width_hidden, args.hidden_layers, dev)
 lstm.to(dev)
 
 # Getting data in right format
@@ -34,10 +90,10 @@ _data = tipping_point()
 training_data = _data.collect_samples(1000)
 
 criterion = torch.nn.MSELoss()    # mean-squared error for regression
-optimizer = torch.optim.Adam(lstm.parameters(), lr=learning_rate)
-trainXs, trainYs = process_data(training_data, in_seq_length, out_seq_length)
+optimizer = torch.optim.Adam(lstm.parameters(), lr=args.lr)
+trainXs, trainYs = process_data(training_data, args.input_window, args.prediction_window)
 
-for epoch in range(num_epochs):
+for epoch in range(args.epochs):
     # Note this data loading is not efficient, since i'm doing this every loop
     # Should do outside of the loop and draw an index instead -- TO DO
     idx = np.random.randint(0, len(training_data))
@@ -60,8 +116,8 @@ for epoch in range(num_epochs):
 lstm.eval()
 
 test_data = _data.collect_samples(100)
-testXs, testYs = process_data(test_data, in_seq_length, out_seq_length)
-for i in range(viz_reps):
+testXs, testYs = process_data(test_data, args.input_window, args.prediction_window)
+for i in range(args.viz_iter):
     idx = np.random.randint(0, len(test_data))
     testX = testXs[idx].to(dev)
     testY = testYs[idx].to(dev)
@@ -72,6 +128,6 @@ for i in range(viz_reps):
     dataY_plot = testY.data.cpu().numpy()
     
     plt.plot(x_linspace, dataY_plot, color="b", alpha=0.1)
-    plt.plot(x_linspace, data_predict, color="orange", alpha=0.7)
+    plt.plot(x_linspace, data_predict, color="orange", alpha=0.5)
     
-plt.savefig("trash")
+plt.savefig(f"{args.plot_name}")
