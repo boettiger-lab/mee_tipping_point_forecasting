@@ -1,5 +1,5 @@
 from lstm import LSTM
-from utils import sliding_windows, process_data, x_space
+from utils import sliding_windows, process_data, x_space, check_make_dir
 from model import tipping_point
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,6 +8,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import argparse
+import os
 
 if torch.cuda.is_available():  
   dev = "cuda:0" 
@@ -36,7 +37,7 @@ parser.add_argument(
     help="# of features",
 )
 parser.add_argument(
-    "-s",
+    "-l",
     "--hidden_layers",
     default=1,
     type=int,
@@ -72,30 +73,44 @@ parser.add_argument(
 )
 parser.add_argument(
     "-n",
-    "--plot_name",
-    default="figure",
+    "--model_name",
+    default="model",
     type=str,
     help="Name of the output plot",
 )
+parser.add_argument(
+    "-t",
+    "--training_sample_size",
+    default=1000,
+    type=int,
+    help="Number of samples to use in training",
+)
+parser.add_argument(
+    "-s",
+    "--save",
+    action='store_true',
+    help="Flag to save the model",
+)
 args = parser.parse_args()
 
-input_size = 1
-num_layers = 1
+input_size = 1 # Dimension of input
 
+# Firing up the LSTM
 lstm = LSTM(args.prediction_window, input_size, args.width_hidden, args.hidden_layers, dev)
 lstm.to(dev)
 
 # Getting data in right format
 _data = tipping_point()
-training_data = _data.collect_samples(1000)
+training_data = _data.collect_samples(args.training_sample_size)
 
 criterion = torch.nn.MSELoss()    # mean-squared error for regression
 optimizer = torch.optim.Adam(lstm.parameters(), lr=args.lr)
+
+# Getting data windowed and in format acceptable to the LSTM
 trainXs, trainYs = process_data(training_data, args.input_window, args.prediction_window)
 
 for epoch in range(args.epochs):
-    # Note this data loading is not efficient, since i'm doing this every loop
-    # Should do outside of the loop and draw an index instead -- TO DO
+    # Pick a random time series each epoch to train on
     idx = np.random.randint(0, len(training_data))
     trainX = trainXs[idx].to(dev)
     trainY = trainYs[idx].to(dev)
@@ -112,11 +127,18 @@ for epoch in range(args.epochs):
     if epoch % 100 == 0:
       print("Epoch: %d, loss: %1.5f" % (epoch, loss.item()))
 
-# Evaluate
+check_make_dir(f"evaluated_models/{args.model_name}")
+
+if args.save:
+    torch.save(lstm, f"evaluated_models/{args.model_name}/{args.model_name}")
+
+# Evaluating the LSTM now
 lstm.eval()
 
+# Looking at different samples than we trained on
 test_data = _data.collect_samples(100)
 testXs, testYs = process_data(test_data, args.input_window, args.prediction_window)
+
 for i in range(args.viz_iter):
     idx = np.random.randint(0, len(test_data))
     testX = testXs[idx].to(dev)
@@ -127,7 +149,8 @@ for i in range(args.viz_iter):
     data_predict = train_predict.data.cpu().numpy()
     dataY_plot = testY.data.cpu().numpy()
     
+    # Plotting 
     plt.plot(x_linspace, dataY_plot, color="b", alpha=1)
     plt.plot(x_linspace, data_predict, color="orange", alpha=0.5)
-    plt.savefig(f"plots/{args.plot_name}_{i}")
+    plt.savefig(f"evaluated_models/{args.model_name}/{args.model_name}_{i}")
     plt.clf()

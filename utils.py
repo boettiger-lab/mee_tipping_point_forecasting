@@ -1,6 +1,7 @@
 import numpy as np
 from torch.autograd import Variable
 import torch
+import os
 
 def sliding_windows(data, in_seq_length, out_seq_length):
     x = []
@@ -34,3 +35,7 @@ def process_data(data, in_seq_length, out_seq_length):
 def x_space(n_rows, window):
     x = [[i for i in range(j, j+window)] for j in range(1, n_rows+1)]
     return x
+
+def check_make_dir(path):
+    if not os.path.exists(path):
+        os.makedirs(path)
