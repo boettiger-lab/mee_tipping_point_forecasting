@@ -145,7 +145,7 @@ for i in range(args.viz_iter):
     testY = testYs[idx].to(dev)
     
     train_predict = lstm(testX)
-    x_linspace = x_space(testY.shape[0], testY.shape[1])
+    x_linspace = x_space(testX.shape[1], testY.shape[1], testY.shape[0])
     data_predict = train_predict.data.cpu().numpy()
     dataY_plot = testY.data.cpu().numpy()
     

@@ -32,8 +32,8 @@ def process_data(data, in_seq_length, out_seq_length):
     
     return x_list, y_list
 
-def x_space(n_rows, window):
-    x = [[i for i in range(j, j+window)] for j in range(1, n_rows+1)]
+def x_space(input_window, output_window, n_rows):
+    x = [[i for i in range(j + input_window, j + input_window + output_window)] for j in range(n_rows)]
     return x
 
 def check_make_dir(path):
