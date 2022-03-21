@@ -34,6 +34,3 @@ class tipping_point():
         for idx, sample in enumerate(self.samples):
             plt.plot(np.linspace(1, self.t_max, self.t_max), sample)
         plt.savefig(file_name)
-
-
-

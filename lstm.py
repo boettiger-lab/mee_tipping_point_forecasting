@@ -4,7 +4,7 @@ from torch.autograd import Variable
 
 class LSTM(nn.Module):
 
-    def __init__(self, num_classes, input_size, hidden_size, num_layers, device):
+    def __init__(self, num_classes, input_size, hidden_size, num_layers, device, dropout):
         super(LSTM, self).__init__()
         
         self.num_classes = num_classes
@@ -15,7 +15,7 @@ class LSTM(nn.Module):
         
         self.lstm = nn.LSTM(input_size=input_size, hidden_size=hidden_size,
                             num_layers=num_layers, batch_first=True).to(self.device)
-        
+        self.dropout = nn.Dropout(dropout)
         self.fc = nn.Linear(hidden_size, num_classes).to(self.device)
 
     def forward(self, x):
@@ -29,7 +29,7 @@ class LSTM(nn.Module):
         ula, (h_out, _) = self.lstm(x, (h_0, c_0))
         
         h_out = h_out.view(-1, self.hidden_size)
-        
+        h_out = self.dropout(h_out)
         out = self.fc(h_out)
         
         return out

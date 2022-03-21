@@ -17,6 +17,13 @@ else:
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
+    "-r",
+    "--var_reps",
+    default=20,
+    type=int,
+    help="# of samples to use to calculate variance",
+)
+parser.add_argument(
     "-e",
     "--epochs",
     default=2000,
@@ -60,7 +67,7 @@ parser.add_argument(
 parser.add_argument(
     "-p",
     "--prediction_window",
-    default=25,
+    default=75,
     type=int,
     help="Input window size for the LSTM",
 )
@@ -91,12 +98,19 @@ parser.add_argument(
     action='store_true',
     help="Flag to save the model",
 )
+parser.add_argument(
+    "-d",
+    "--dropout",
+    default=0.0,
+    type=float,
+    help="Flag to save the model",
+)
 args = parser.parse_args()
 
 input_size = 1 # Dimension of input
 
 # Firing up the LSTM
-lstm = LSTM(args.prediction_window, input_size, args.width_hidden, args.hidden_layers, dev)
+lstm = LSTM(args.prediction_window, input_size, args.width_hidden, args.hidden_layers, dev, args.dropout)
 lstm.to(dev)
 
 # Getting data in right format
@@ -133,7 +147,6 @@ if args.save:
     torch.save(lstm, f"evaluated_models/{args.model_name}/{args.model_name}")
 
 # Evaluating the LSTM now
-lstm.eval()
 
 # Looking at different samples than we trained on
 test_data = _data.collect_samples(100)
@@ -143,14 +156,15 @@ for i in range(args.viz_iter):
     idx = np.random.randint(0, len(test_data))
     testX = testXs[idx].to(dev)
     testY = testYs[idx].to(dev)
-    
-    train_predict = lstm(testX)
-    x_linspace = x_space(testX.shape[1], testY.shape[1], testY.shape[0])
-    data_predict = train_predict.data.cpu().numpy()
     dataY_plot = testY.data.cpu().numpy()
-    
-    # Plotting 
+    x_linspace = x_space(testX.shape[1], testY.shape[1], testY.shape[0])
     plt.plot(x_linspace, dataY_plot, color="b", alpha=1)
-    plt.plot(x_linspace, data_predict, color="orange", alpha=0.5)
+    
+    for j in range(args.var_reps):
+        # For dropout case, all we have to do is re-run however many replicates
+        train_predict = lstm(testX)
+        data_predict = train_predict.data.cpu().numpy()
+        plt.plot(x_linspace, data_predict, color="orange", alpha=0.1)
+        
     plt.savefig(f"evaluated_models/{args.model_name}/{args.model_name}_{i}")
     plt.clf()
