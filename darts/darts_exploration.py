@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import sys
 sys.path.append("../")
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from model import tipping_point
 from darts import TimeSeries
 from darts.models import RNNModel
@@ -23,7 +26,7 @@ train_series = TimeSeries.from_values(ts)
 my_model = RNNModel(
     model="LSTM",
     hidden_dim=64,
-    dropout=0,
+    dropout=0.3,
     batch_size=1,
     n_epochs=10,
     likelihood=GaussianLikelihood(),
@@ -43,3 +46,8 @@ my_model.fit(
     train_series,
     verbose=True,
 )
+
+train_series.plot(label="training")
+pred = my_model.historical_forecasts(train_series, retrain=False, start=25, num_samples=500)
+pred.plot(low_quantile=0.01, high_quantile=0.99, label="1-99th percentiles")
+plt.savefig("trash")
