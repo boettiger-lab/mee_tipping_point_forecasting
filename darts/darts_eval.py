@@ -1,14 +1,17 @@
 import pandas as pd
 import numpy as np
 import sys
+import matplotlib
+matplotlib.use("Agg")
 sys.path.append("../")
+import matplotlib.pyplot as plt
 from model import tipping_point
 from darts import TimeSeries
 from darts.models import RNNModel
 
 # Loading data which is not in a convenient format so I need to do some processing
 _data = tipping_point()
-n_samples = 1
+n_samples = 100
 training_data = _data.collect_samples(n_samples)
 
 _ts = [[] for i in range(training_data.shape[1])]
@@ -28,6 +31,8 @@ my_model = RNNModel(
 
 my_model.load_model("darts_logs/tipping_lstm_test/_model.pth.tar")
 my_model.fit(train_series)
-pred = my_model.predict(n=75, num_samples=500)
-pred.plot(low_quantile=0.2, high_quantile=0.8, label="20-80th percentiles")
+train_series.plot(label="training")
+pred = my_model.historical_forecasts(train_series, retrain=False, start=25)
+pred.plot(low_quantile=0.01, high_quantile=0.99, label="1-99th percentiles")
+plt.savefig("trash")
 import pdb; pdb.set_trace()
