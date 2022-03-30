@@ -36,13 +36,6 @@ parser.add_argument(
     help="File name of plots",
 )
 parser.add_argument(
-    "-f",
-    "--parameter_yaml",
-    default="train",
-    type=str,
-    help="File name of YAML used to store parameters",
-)
-parser.add_argument(
     "-p",
     "--plot",
     action="store_true",
@@ -51,17 +44,13 @@ parser.add_argument(
 args = parser.parse_args()
 
 np.random.seed(42)
-with open(f'{args.parameter_yaml}.yaml') as fh:
-    params_yaml = yaml.load(fh, Loader=yaml.FullLoader)
 
-model = [*params_yaml][0]
-PARAMETERS = params_yaml[model]
-model = model.lower()
-# 
-if model == "lstm":
-    PARAMETERS["model"] = "LSTM"
-if "optimizer_kwargs" in PARAMETERS.keys():
-    PARAMETERS["optimizer_kwargs"] = PARAMETERS["optimizer_kwargs"][0]
+if args.model == "lstm":
+    from train_hyperparams.lstm import hyperparameters
+elif args.model == "tcn":
+    from train_hyperparams.tcn import hyperparameters
+elif args.model == "transformer":
+    from train_hyperparams.transformer import hyperparameters
 
 model = {"lstm" : RNNModel, "tcn" : TCNModel, "transformer" : TransformerModel}[args.model.lower()]
 # Generating time series
@@ -71,7 +60,7 @@ train_series = preprocessed_t_series(args.n_samples)
 
 my_model = model(
     likelihood=LaplaceLikelihood(),
-    **PARAMETERS
+    **hyperparameters
 )
 
 
