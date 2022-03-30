@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import os
 import sys
 sys.path.append("../")
 import matplotlib
@@ -71,6 +72,8 @@ my_model.fit(
 
 # Generating time series
 if args.plot:
+    if not os.path.exists("plots/"):
+        os.makedirs("plots/")
     for i in range(3):
         train_series = preprocessed_t_series(1)
         train_series[:100].plot(label="truth")
