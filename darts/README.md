@@ -1,1 +1,3 @@
-Go through `train.py`
+To train and evaluate a model individually use `train.py`. Run `python train.py -h` to get a sense of what the command line arguments are to specify how to train and evaluate. The hyperparameters used for either lstm's, tcn's or transformers are found in the `train_hyperparams/` directory. There the hyperparameters are formatted in a dictionary.
+
+To tune a model, use `tune.py`. Again here, run `python train.py -h` to get a sense of what the command line arguments are to specify how to tune. Tuning is doing according to a random grid search over the hyperparameters specified for the model in `tune_hyperparams/`. And again, the hyperparameters are formatted in a dictionary, where the values specify the options for tuning in lists. 
