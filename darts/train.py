@@ -19,7 +19,7 @@ parser.add_argument(
     "--model",
     default="lstm",
     type=str,
-    help="model to train with (lstm, tcm or transformer)",
+    help="model to train with (lstm, tcn or transformer)",
 )
 parser.add_argument(
     "-s",
@@ -42,9 +42,15 @@ parser.add_argument(
     type=str,
     help="File name of YAML used to store parameters",
 )
+parser.add_argument(
+    "-p",
+    "--plot",
+    action="store_true",
+    help="Flag whether to plot",
+)
 args = parser.parse_args()
 
-
+np.random.seed(42)
 with open(f'{args.parameter_yaml}.yaml') as fh:
     params_yaml = yaml.load(fh, Loader=yaml.FullLoader)
 
@@ -75,16 +81,12 @@ my_model.fit(
 )
 
 # Generating time series
-# Generating time series
-for i in range(3):
-    train_series = preprocessed_t_series(1)
-    t_series, v_series = train_series.split_before(101)
-    t_series.plot(label="truth")
-    preds = my_model.historical_forecasts(t_series, retrain=False, start=25, num_samples=10000, forecast_horizon=75)
-    preds.plot(low_quantile=0.15, high_quantile=0.85, label="historical 15-85th percentiles")
-    
-    t_series, v_series = t_series.split_before(25)
-    preds = my_model.predict(75, t_series, num_samples=10000)
-    preds.plot(low_quantile=0.15, high_quantile=0.85, label="predict 15-85th percentiles")
-    plt.savefig(f"plots/{args.output_file_name}_{i}")
-    plt.clf()
+if args.plot:
+    for i in range(3):
+        train_series = preprocessed_t_series(1)
+        train_series[:100].plot(label="truth")
+        t_series, v_series = train_series.split_before(25)
+        preds = my_model.predict(75, t_series, num_samples=10000)
+        preds.plot(low_quantile=0.15, high_quantile=0.85, label="predict 15-85th percentiles")
+        plt.savefig(f"plots/{args.output_file_name}_{i}")
+        plt.clf()
