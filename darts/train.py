@@ -24,7 +24,7 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=100,
+    default=1000,
     type=int,
     help="# of samples to train on",
 )
@@ -78,17 +78,13 @@ my_model.fit(
 # Generating time series
 for i in range(3):
     train_series = preprocessed_t_series(1)
-    t_series, v_series = train_series.split_before(100)
-    t_series.plot(label="training")
-    preds = my_model.historical_forecasts(t_series, retrain=False, start=25, num_samples=10000)
-    preds.plot(low_quantile=0.15, high_quantile=0.85, label="15-85th percentiles")
-    plt.savefig(f"plots/{args.output_file_name}_historical_{i}")
-    plt.clf()
+    t_series, v_series = train_series.split_before(101)
+    t_series.plot(label="truth")
+    preds = my_model.historical_forecasts(t_series, retrain=False, start=25, num_samples=10000, forecast_horizon=75)
+    preds.plot(low_quantile=0.15, high_quantile=0.85, label="historical 15-85th percentiles")
     
-    t_series, v_series = train_series.split_before(25)
-    t_series.plot(label="input")
-    v_series.plot(label="truth")
+    t_series, v_series = t_series.split_before(25)
     preds = my_model.predict(75, t_series, num_samples=10000)
-    preds.plot(low_quantile=0.15, high_quantile=0.85, label="15-85th percentiles")
-    plt.savefig(f"plots/{args.output_file_name}_predict_{i}")
+    preds.plot(low_quantile=0.15, high_quantile=0.85, label="predict 15-85th percentiles")
+    plt.savefig(f"plots/{args.output_file_name}_{i}")
     plt.clf()
