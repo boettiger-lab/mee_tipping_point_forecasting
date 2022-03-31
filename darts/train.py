@@ -42,9 +42,15 @@ parser.add_argument(
     action="store_true",
     help="Flag whether to plot",
 )
+parser.add_argument(
+    "--seed",
+    default=42,
+    type=int,
+    help="Seed selection",
+)
 args = parser.parse_args()
 
-np.random.seed(42)
+np.random.seed(args.seed)
 
 if args.model == "lstm":
     from train_hyperparams.lstm import hyperparameters
@@ -57,28 +63,28 @@ model = {"lstm" : RNNModel, "tcn" : TCNModel, "transformer" : TransformerModel}[
 # Generating time series
 train_series = preprocessed_t_series(args.n_samples)
 
-#TO DO: make a list of kwargs to then unpack in model call
-
 my_model = model(
     likelihood=LaplaceLikelihood(),
     **hyperparameters
 )
-
 
 my_model.fit(
     train_series,
     verbose=True,
 )
 
+# TO DO: Change plotting so that you plot the replicates in one plot (need to do some color/line coding here)
 # Generating time series
 if args.plot:
     if not os.path.exists("plots/"):
         os.makedirs("plots/")
+    colors = ["blue", "green", "orange"]
     for i in range(3):
         train_series = preprocessed_t_series(1)
-        train_series[:100].plot(label="truth")
+        train_series[:100].plot(color=colors[i], label='_nolegend_')
         t_series, v_series = train_series.split_before(25)
         preds = my_model.predict(75, t_series, num_samples=10000)
-        preds.plot(low_quantile=0.15, high_quantile=0.85, label="predict 15-85th percentiles")
-        plt.savefig(f"plots/{args.output_file_name}_{i}")
-        plt.clf()
+        preds.plot(low_quantile=0.15, high_quantile=0.85, linestyle="dotted", color=colors[i], label='_nolegend_')
+
+plt.savefig(f"plots/{args.output_file_name}")
+plt.clf()
