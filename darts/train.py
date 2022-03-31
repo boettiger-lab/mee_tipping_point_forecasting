@@ -50,14 +50,14 @@ parser.add_argument(
 )
 args = parser.parse_args()
 
-np.random.seed(args.seed)
-
 if args.model == "lstm":
     from train_hyperparams.lstm import hyperparameters
 elif args.model == "tcn":
     from train_hyperparams.tcn import hyperparameters
 elif args.model == "transformer":
     from train_hyperparams.transformer import hyperparameters
+
+hyperparameters["random_state"] = args.seed
 
 model = {"lstm" : RNNModel, "tcn" : TCNModel, "transformer" : TransformerModel}[args.model.lower()]
 # Generating time series
