@@ -1,6 +1,6 @@
 hyperparameters = {
     "model" : "LSTM",
-    "batch_size" : 32,
+    "batch_size" : 100,
     "dropout" : 0.5, 
     "hidden_dim" : 64,
     "n_rnn_layers" : 1,
@@ -9,8 +9,8 @@ hyperparameters = {
     "model_name" : "test",
     "log_tensorboard" : True,
     "random_state" : 42,
-    "input_chunk_length" : 25,
-    "output_chunk_length" : 24,
+    "input_chunk_length" : 20,
+    "output_chunk_length" : 19,
     "force_reset" : True,
     "save_checkpoints" : True,
     "torch_device_str" : "cuda:0",
