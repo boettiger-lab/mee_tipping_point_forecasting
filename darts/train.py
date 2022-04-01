@@ -8,6 +8,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from model import tipping_point
 from darts import TimeSeries
+import torch
 from darts.models import RNNModel, TCNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
 from utils import preprocessed_t_series, truth_dist
@@ -49,7 +50,7 @@ parser.add_argument(
     help="Seed selection",
 )
 args = parser.parse_args()
-np.random.seed(42)
+np.random.seed(args.seed)
 
 if args.model == "lstm":
     from train_hyperparams.lstm import hyperparameters
@@ -81,11 +82,13 @@ if args.plot:
         os.makedirs("plots/")
     colors = ["blue", "green", "orange"]
     for i in range(3):
+        torch.manual_seed(i)
+        np.random.seed(i)
         train_series = preprocessed_t_series(1)
-        train_series[:100].plot(color="blue", label='truth')
+        train_series[:25].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(25)
         t_dist = truth_dist(t_series, n_samples=100)
-        t_dist[:75].plot(low_quantile=0.025, high_quantile=0.975, linestyle="", color="blue", label="_nolegend_")
+        t_dist[:75].plot(low_quantile=0.025, high_quantile=0.975, color="blue", label="_nolegend_", linestyle="dotted")
         preds = my_model.predict(75, t_series, num_samples=10000)
         preds.plot(low_quantile=0.025, high_quantile=0.975, linestyle="dotted", color="orange", label='prediction')
 
