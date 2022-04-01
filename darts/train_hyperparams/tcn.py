@@ -8,5 +8,6 @@ hyperparameters = {
     "kernel_size" : 4,
     "input_chunk_length" : 25,
     "output_chunk_length" : 24,
+    "n_epochs" : 200,
 }
 

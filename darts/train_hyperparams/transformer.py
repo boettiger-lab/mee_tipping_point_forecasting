@@ -10,4 +10,5 @@ hyperparameters = {
     "dim_feedforward" : 128,
     "input_chunk_length" : 25,
     "output_chunk_length" : 24,
+    "n_epochs" : 200,
 }
