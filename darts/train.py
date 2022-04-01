@@ -81,15 +81,22 @@ if args.plot:
     if not os.path.exists("plots/"):
         os.makedirs("plots/")
     colors = ["blue", "green", "orange"]
+    input_len = hyperparameters["input_chunk_length"]
+    output_len = hyperparameters["output_chunk_length"]
     for i in range(3):
-        torch.manual_seed(i)
-        np.random.seed(i)
+        torch.manual_seed(i+100)
+        np.random.seed(i+100)
         train_series = preprocessed_t_series(1)
-        train_series[:25].plot(color="blue", label='truth')
-        t_series, v_series = train_series.split_before(25)
-        t_dist = truth_dist(t_series, n_samples=100)
-        t_dist[:75].plot(low_quantile=0.025, high_quantile=0.975, color="blue", label="_nolegend_", linestyle="dotted")
-        preds = my_model.predict(75, t_series, num_samples=10000)
+        train_series[:input_len].plot(color="blue", label='truth')
+        t_series, v_series = train_series.split_before(input_len)
+        t_dist = truth_dist(t_series, input_len, output_len, n_samples=100)
+        
+        t_max = 3*output_len
+        if input_len + t_max > 250: # Need to change this if we change episode length
+            t_max = 250 - input_len
+        
+        t_dist.plot(low_quantile=0.025, high_quantile=0.975, color="blue", label="_nolegend_", linestyle="dotted")
+        preds = my_model.predict(t_max, t_series, num_samples=10000)
         preds.plot(low_quantile=0.025, high_quantile=0.975, linestyle="dotted", color="orange", label='prediction')
 
         plt.savefig(f"plots/{args.output_file_name}_{i}")
