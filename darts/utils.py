@@ -1,13 +1,17 @@
 import sys
 sys.path.append("../")
-from model import tipping_point
+from model import stochastic_tp, saddle_node_tp
 import numpy as np
 from darts import TimeSeries
 from pandas import RangeIndex
 
-def preprocessed_t_series(n_samples):
+models = {"stochastic" : stochastic_tp, 
+          "saddle" : saddle_node_tp,
+          }
+
+def preprocessed_t_series(model, n_samples):
     # Generating time series
-    _data = tipping_point()
+    _data = models[model.lower()]()
     training_data = _data.collect_samples(n_samples)
 
     # Preprocessing time series to
@@ -19,13 +23,20 @@ def preprocessed_t_series(n_samples):
     vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
     return TimeSeries.from_times_and_values(RangeIndex(250),vals)
 
-def truth_dist(t_series, input_len, output_len, n_samples=100,):
+def truth_dist(model, t_series, input_len, output_len, n_samples=100,):
     N_init = t_series[-1].values()[0][0]
     t_max = output_len * 3
     if input_len + t_max > 250:
         t_max = 250 - input_len
         
-    _data = tipping_point(N_init, t_max)
+    _data = models[model.lower()](N_init, t_max)
+    
+    # Need to account for degradation parameter having changed over t_series
+    # for saddle bifurcations
+    if model == "saddle":
+        _data.h = _data.h_init + len(t_series) * _data.alpha
+        _data.h_init = _data.h_init + len(t_series) * _data.alpha
+
     for i in range(n_samples):
       training_data = _data.collect_samples(n_samples)
       

@@ -6,7 +6,6 @@ sys.path.append("../")
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from model import tipping_point
 from darts import TimeSeries
 import torch
 from darts.models import RNNModel, TCNModel, TransformerModel
@@ -49,6 +48,13 @@ parser.add_argument(
     type=int,
     help="Seed selection",
 )
+parser.add_argument(
+    "-t",
+    "--tp_model",
+    default="stochastic",
+    type=str,
+    help="Select which model to use for the tipping point (stochastic/saddle)",
+)
 args = parser.parse_args()
 np.random.seed(args.seed)
 
@@ -63,7 +69,7 @@ hyperparameters["random_state"] = args.seed
 
 model = {"lstm" : RNNModel, "tcn" : TCNModel, "transformer" : TransformerModel}[args.model.lower()]
 # Generating time series
-train_series = preprocessed_t_series(args.n_samples)
+train_series = preprocessed_t_series(args.tp_model, args.n_samples)
 
 my_model = model(
     likelihood=LaplaceLikelihood(),
@@ -86,10 +92,10 @@ if args.plot:
     for i in range(3):
         torch.manual_seed(i+100)
         np.random.seed(i+100)
-        train_series = preprocessed_t_series(1)
+        train_series = preprocessed_t_series(args.tp_model, 1)
         train_series[:input_len].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(input_len)
-        t_dist = truth_dist(t_series, input_len, output_len, n_samples=100)
+        t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100)
         
         t_max = 3*output_len
         if input_len + t_max > 250: # Need to change this if we change episode length
