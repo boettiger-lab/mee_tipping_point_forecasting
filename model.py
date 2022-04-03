@@ -36,7 +36,7 @@ class stochastic_tp():
         plt.savefig(file_name)
 
 class saddle_node_tp():
-    def __init__(self, N=0.75, t_max=250, alpha=0.002):
+    def __init__(self, N=0.75, t_max=250, alpha=0.0015):
         self.replicates = 0
         self.t_max = t_max
         self.mu = 0
@@ -60,13 +60,15 @@ class saddle_node_tp():
         
         return self.N
 
-    def draw_replicate(self):
+    def draw_replicate(self, random_alpha):
         self.reset()
+        if random_alpha:
+            self.alpha = np.random.uniform(0.001, 0.0015)
         return np.array([self.step() for t in range(self.t_max)])
     
-    def collect_samples(self, reps):
+    def collect_samples(self, reps, random_alpha=False):
         self.reps = reps
-        self.samples = np.array([self.draw_replicate() for rep in range(reps)])
+        self.samples = np.array([self.draw_replicate(random_alpha) for rep in range(reps)])
         return self.samples
     
     def reset(self):

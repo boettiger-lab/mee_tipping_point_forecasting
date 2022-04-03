@@ -9,10 +9,17 @@ models = {"stochastic" : stochastic_tp,
           "saddle" : saddle_node_tp,
           }
 
-def preprocessed_t_series(model, n_samples):
+def preprocessed_t_series(args):
     # Generating time series
+    model = args.tp_model
+    n_samples = args.n_samples
+    
     _data = models[model.lower()]()
-    training_data = _data.collect_samples(n_samples)
+    
+    if args.random_alpha:
+        training_data = _data.collect_samples(n_samples, args.random_alpha)
+    else:
+        training_data = _data.collect_samples(n_samples)
 
     # Preprocessing time series to
     _ts = [[] for i in range(training_data.shape[1])]
@@ -23,7 +30,7 @@ def preprocessed_t_series(model, n_samples):
     vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
     return TimeSeries.from_times_and_values(RangeIndex(250),vals)
 
-def truth_dist(model, t_series, input_len, output_len, n_samples=100,):
+def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alpha=False):
     N_init = t_series[-1].values()[0][0]
     t_max = output_len * 3
     if input_len + t_max > 250:
@@ -38,7 +45,10 @@ def truth_dist(model, t_series, input_len, output_len, n_samples=100,):
         _data.h_init = _data.h_init + len(t_series) * _data.alpha
 
     for i in range(n_samples):
-      training_data = _data.collect_samples(n_samples)
+      if random_alpha:
+          training_data = _data.collect_samples(n_samples, random_alpha)
+      else:
+          training_data = _data.collect_samples(n_samples)
       
       # Preprocessing time series to
       _ts = [[] for i in range(training_data.shape[1])]
