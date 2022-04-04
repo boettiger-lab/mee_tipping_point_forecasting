@@ -90,9 +90,9 @@ for i in range(args.n_trials):
     
     # Making a file name suffix to keep track of hyperparams
     trial_hyperparameter_keys = list(trial_hyperparameters.keys())
-    trial_string = ""
+    trial_string = f"{args.tp_model}"
     for k in range(len(hyperparameters)):
-        trial_string += f"_{args.tp_model}_{trial_hyperparameter_keys[k]}_{trial_hyperparameters[trial_hyperparameter_keys[k]]}"
+        trial_string += f"_{trial_hyperparameter_keys[k]}_{trial_hyperparameters[trial_hyperparameter_keys[k]]}"
 
     my_model = models[args.model.lower()](
         n_epochs=args.epochs,
