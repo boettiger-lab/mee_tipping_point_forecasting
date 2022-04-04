@@ -1,7 +1,6 @@
 import numpy as np
 import sys
 sys.path.append("../")
-from model import tipping_point
 from darts import TimeSeries
 from darts.models import RNNModel, TCNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
@@ -62,13 +61,23 @@ parser.add_argument(
     type=int,
     help="Number of tuning trials",
 )
+parser.add_argument(
+    "-t",
+    "--tp_model",
+    default="stochastic",
+    type=str,
+    help="Select which model to use for the tipping point (stochastic/saddle)",
+)
+parser.add_argument(
+    "--random_alpha",
+    action="store_true",
+    help="Select whether to use a random alpha or not on saddle node tp",
+)
 args = parser.parse_args()
 
 np.random.seed(args.seed)
 # Generating time series
-train_series = preprocessed_t_series(args.n_samples)
-# Generating time series
-series = preprocessed_t_series(args.n_samples)
+train_series = preprocessed_t_series(args)
 
 if args.model == "lstm":
     from tune_hyperparams.lstm import hyperparameters
@@ -90,7 +99,7 @@ for i in range(args.n_trials):
     trial_hyperparameter_keys = list(trial_hyperparameters.keys())
     trial_string = ""
     for k in range(len(hyperparameters)):
-        trial_string += f"_{trial_hyperparameter_keys[k]}_{trial_hyperparameters[trial_hyperparameter_keys[k]]}"
+        trial_string += f"_{args.tp_model}_{trial_hyperparameter_keys[k]}_{trial_hyperparameters[trial_hyperparameter_keys[k]]}"
 
     my_model = models[args.model.lower()](
         n_epochs=args.epochs,
