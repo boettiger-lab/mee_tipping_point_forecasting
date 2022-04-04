@@ -9,10 +9,9 @@ models = {"stochastic" : stochastic_tp,
           "saddle" : saddle_node_tp,
           }
 
-def preprocessed_t_series(args):
+def preprocessed_t_series(args, n_samples):
     # Generating time series
     model = args.tp_model
-    n_samples = args.n_samples
     
     _data = models[model.lower()]()
     
@@ -32,9 +31,7 @@ def preprocessed_t_series(args):
 
 def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alpha=False):
     N_init = t_series[-1].values()[0][0]
-    t_max = output_len * 3
-    if input_len + t_max > 250:
-        t_max = 250 - input_len
+    t_max = 250-input_len
         
     _data = models[model.lower()](N_init, t_max)
     
@@ -57,5 +54,5 @@ def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alp
               _ts[j].append(training_data[i, j])
   
       vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
-    return TimeSeries.from_times_and_values(RangeIndex(start=input_len, stop=input_len + t_max), vals)
+    return TimeSeries.from_times_and_values(RangeIndex(start=input_len, stop=250), vals)
         

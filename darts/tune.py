@@ -20,16 +20,9 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=1000,
+    default=100,
     type=int,
     help="# of samples to train on",
-)
-parser.add_argument(
-    "-f",
-    "--parameter_yaml",
-    default="train",
-    type=str,
-    help="File name of YAML used to store parameters",
 )
 parser.add_argument(
     "--seed",
