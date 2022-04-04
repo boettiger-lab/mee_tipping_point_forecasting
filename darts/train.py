@@ -86,7 +86,6 @@ my_model.fit(
     verbose=True,
 )
 
-# TO DO: Change plotting so that you plot the replicates in one plot (need to do some color/line coding here)
 # Generating time series
 if args.plot:
     if not os.path.exists("plots/"):
