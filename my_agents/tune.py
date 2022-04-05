@@ -1,7 +1,6 @@
 import numpy as np
 import sys
 sys.path.append("../")
-from model import tipping_point
 from darts import TimeSeries
 from darts.models import RNNModel, TCNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
@@ -21,16 +20,9 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=1000,
+    default=100,
     type=int,
     help="# of samples to train on",
-)
-parser.add_argument(
-    "-f",
-    "--parameter_yaml",
-    default="train",
-    type=str,
-    help="File name of YAML used to store parameters",
 )
 parser.add_argument(
     "--seed",
@@ -62,13 +54,23 @@ parser.add_argument(
     type=int,
     help="Number of tuning trials",
 )
+parser.add_argument(
+    "-t",
+    "--tp_model",
+    default="stochastic",
+    type=str,
+    help="Select which model to use for the tipping point (stochastic/saddle)",
+)
+parser.add_argument(
+    "--random_alpha",
+    action="store_true",
+    help="Select whether to use a random alpha or not on saddle node tp",
+)
 args = parser.parse_args()
 
 np.random.seed(args.seed)
 # Generating time series
-train_series = preprocessed_t_series(args.n_samples)
-# Generating time series
-series = preprocessed_t_series(args.n_samples)
+train_series = preprocessed_t_series(args, args.n_samples)
 
 if args.model == "lstm":
     from tune_hyperparams.lstm import hyperparameters
@@ -88,7 +90,7 @@ for i in range(args.n_trials):
     
     # Making a file name suffix to keep track of hyperparams
     trial_hyperparameter_keys = list(trial_hyperparameters.keys())
-    trial_string = ""
+    trial_string = f"{args.tp_model}"
     for k in range(len(hyperparameters)):
         trial_string += f"_{trial_hyperparameter_keys[k]}_{trial_hyperparameters[trial_hyperparameter_keys[k]]}"
 

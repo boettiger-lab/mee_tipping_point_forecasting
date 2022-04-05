@@ -40,7 +40,7 @@ class saddlenode():
             mu = np.log(np.clip(exp_mu, 0, np.inf))
         state = np.random.lognormal(mu, params["sigma"], size)
         return np.maximum(0, state)
-
+vim 
     def step(self):
         self.eta = np.random.normal(self.mu, self.sigma)
         self.N = self.may(self.N, params)
