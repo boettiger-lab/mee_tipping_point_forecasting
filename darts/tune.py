@@ -70,7 +70,7 @@ args = parser.parse_args()
 
 np.random.seed(args.seed)
 # Generating time series
-train_series = preprocessed_t_series(args, args.n_samples)
+train_series, _ = preprocessed_t_series(args.tp_model, args.n_samples, args.random_alpha)
 
 if args.model == "lstm":
     from tune_hyperparams.lstm import hyperparameters

@@ -9,14 +9,13 @@ models = {"stochastic" : stochastic_tp,
           "saddle" : saddle_node_tp,
           }
 
-def preprocessed_t_series(args, n_samples):
-    # Generating time series
-    model = args.tp_model
-    
+# Need to change this so that it doesn't intake args
+def preprocessed_t_series(model, n_samples, random_alpha=False):
     _data = models[model.lower()]()
     
-    if args.random_alpha:
-        training_data = _data.collect_samples(n_samples, args.random_alpha)
+    # Generating time series
+    if random_alpha:
+        training_data = _data.collect_samples(n_samples, random_alpha)
     else:
         training_data = _data.collect_samples(n_samples)
 
@@ -27,7 +26,7 @@ def preprocessed_t_series(args, n_samples):
             _ts[j].append(training_data[i, j])
 
     vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
-    return TimeSeries.from_times_and_values(RangeIndex(250),vals)
+    return TimeSeries.from_times_and_values(RangeIndex(250),vals), vals
 
 def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alpha=False):
     N_init = t_series[-1].values()[0][0]

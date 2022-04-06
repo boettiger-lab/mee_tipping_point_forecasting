@@ -74,7 +74,7 @@ hyperparameters["random_state"] = args.seed
 
 model = {"lstm" : RNNModel, "tcn" : TCNModel, "transformer" : TransformerModel}[args.model.lower()]
 # Generating time series
-train_series = preprocessed_t_series(args, args.n_samples)
+train_series, _ = preprocessed_t_series(args.tp_model, 1, args.random_alpha)
 
 my_model = model(
     likelihood=LaplaceLikelihood(),
@@ -96,7 +96,7 @@ if args.plot:
     for i in range(3):
         torch.manual_seed(i+100)
         np.random.seed(i+100)
-        train_series = preprocessed_t_series(args, 1)
+        train_series, _ = preprocessed_t_series(args.tp_model, 1, args.random_alpha)
         train_series[:input_len].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(input_len)
         t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100, random_alpha=args.random_alpha)
