@@ -1,5 +1,5 @@
 data {
-    int<lower=0> n;
+    int<lower=0> n; // Number of time series
     int<lower=0> t_max; // Duration of time series
     real<lower=0> x[n,t_max]; // State
 }
@@ -21,6 +21,7 @@ model {
     // Priors
     x1 ~ beta(30, 12);
     x2 ~ beta(10, 25);
+    sigma ~ beta(2, 50);
     
     for (i in 1:n) {
     // Likelihood
