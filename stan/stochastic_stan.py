@@ -4,18 +4,28 @@ import sys
 sys.path.append("../darts/")
 from utils import preprocessed_t_series
 import numpy as np
+import argparse 
 
-sm = cmdstanpy.CmdStanModel(stan_file="stochastic_tp.stan")
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--tp_model",
+    default="stochastic",
+    type=str,
+    help="tp model to train with (stochastic/saddle)",
+)
+args = parser.parse_args()
 
-np.random.seed(42)
-_, _data = preprocessed_t_series("stochastic", 100)
+sm = cmdstanpy.CmdStanModel(stan_file=f"{args.tp_model.lower()}_tp.stan")
+
+_, _data = preprocessed_t_series(f"{args.tp_model.lower()}", 100)
 data = dict(n=100, t_max=250, x=_data.reshape(100, 250))
 # Sample using Stan
 samples = sm.sample(
     data=data,
     chains=4,
-    iter_sampling=10000, 
-    iter_warmup=5000,
+    iter_sampling=20000, 
+    iter_warmup=50000,
+    seed=42,
 )
 
 print(samples.summary())
