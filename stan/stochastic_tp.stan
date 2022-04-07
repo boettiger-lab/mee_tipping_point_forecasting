@@ -19,8 +19,8 @@ transformed parameters {
 }
 model {
     // Priors
-    x1 ~ beta(30, 12);
-    x2 ~ beta(10, 25);
+    x1 ~ beta(500, 130);
+    x2 ~ beta(80, 300);
     sigma ~ beta(2, 50);
     
     for (i in 1:n) {
@@ -28,5 +28,13 @@ model {
         for (j in 2:t_max) {
             x[i,j] ~ normal(mu[i,j], sigma);
         }
+    }
+}
+generated quantities {
+    real<lower=0> x_ppc[t_max]; 
+    
+    x_ppc[1] = 0.75;
+    for (j in 2:t_max) {
+      x_ppc[j] = normal_rng(x_ppc[j-1] + (x1 - x_ppc[j-1])^2 * (x2 - x_ppc[j-1]), sigma);
     }
 }
