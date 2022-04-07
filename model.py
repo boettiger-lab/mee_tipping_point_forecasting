@@ -10,10 +10,12 @@ class stochastic_tp():
         self.N_init = N
         self.N = N
         self.reps = 0
+        self.x1 = 0.75
+        self.x2 = 0.25
 
     def step(self):
         self.eta = np.random.normal(self.mu, self.sigma)
-        self.N += (0.75 - self.N)**2 * (0.25 - self.N) + self.eta
+        self.N += (self.x1 - self.N)**2 * (self.x2 - self.N) + self.eta
         self.N = np.clip(self.N, 0, 1)
         return self.N
 
@@ -39,7 +41,7 @@ class saddle_node_tp():
         self.replicates = 0
         self.t_max = t_max
         self.mu = 0
-        self.sigma = 3e-2
+        self.sigma = 7e-3
         self.N_init = N
         self.N = N
         self.reps = 0
@@ -62,7 +64,7 @@ class saddle_node_tp():
     def draw_replicate(self, random_alpha):
         self.reset()
         if random_alpha:
-            self.alpha = np.random.uniform(0.0001, 0.0015)
+            self.alpha = np.random.uniform(0.0004, 0.0015)
         return np.array([self.step() for t in range(self.t_max)])
     
     def collect_samples(self, reps, random_alpha=False):

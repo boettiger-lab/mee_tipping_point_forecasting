@@ -26,7 +26,7 @@ def preprocessed_t_series(model, n_samples, random_alpha=False):
             _ts[j].append(training_data[i, j])
 
     vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
-    return TimeSeries.from_times_and_values(RangeIndex(250),vals), vals
+    return TimeSeries.from_times_and_values(RangeIndex(250),vals), vals.reshape(250, 100).T
 
 def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alpha=False):
     N_init = t_series[-1].values()[0][0]

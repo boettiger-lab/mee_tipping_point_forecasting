@@ -18,13 +18,13 @@ args = parser.parse_args()
 sm = cmdstanpy.CmdStanModel(stan_file=f"{args.tp_model.lower()}_tp.stan")
 
 _, _data = preprocessed_t_series(f"{args.tp_model.lower()}", 100)
-data = dict(n=100, t_max=250, x=_data.reshape(100, 250))
+data = dict(n=100, t_max=250, x=_data)
 # Sample using Stan
 samples = sm.sample(
     data=data,
     chains=4,
-    iter_sampling=20000, 
-    iter_warmup=50000,
+    iter_sampling=10000, 
+    iter_warmup=10000,
     seed=42,
 )
 
