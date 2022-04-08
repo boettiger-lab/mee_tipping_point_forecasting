@@ -50,7 +50,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--n_trials",
-    default=20,
+    default=50,
     type=int,
     help="Number of tuning trials",
 )
@@ -97,7 +97,7 @@ for i in range(args.n_trials):
     my_model = models[args.model.lower()](
         n_epochs=args.epochs,
         likelihood=LaplaceLikelihood(),
-        model_name=f"{args.prefix}_{args.model}_tuning{trial_string}",
+        model_name=f"{args.prefix}_{args.model}_tuning_{trial_string}",
         log_tensorboard=True,
         input_chunk_length=25,
         output_chunk_length=24,
