@@ -50,7 +50,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--n_trials",
-    default=10,
+    default=20,
     type=int,
     help="Number of tuning trials",
 )
