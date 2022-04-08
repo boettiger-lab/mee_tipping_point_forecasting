@@ -41,7 +41,7 @@ class saddle_node_tp():
         self.replicates = 0
         self.t_max = t_max
         self.mu = 0
-        self.sigma = 7e-3
+        self.sigma = 0.02
         self.N_init = N
         self.N = N
         self.reps = 0
