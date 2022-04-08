@@ -55,3 +55,12 @@ def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alp
       vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
     return TimeSeries.from_times_and_values(RangeIndex(start=input_len, stop=250), vals)
   
+def count_tipped(vals, model):
+    n_vals = len(vals)
+    count = 0
+    for i in range(n_vals):
+        if vals[i, -1] < 0.6:
+            count += 1
+    return count / n_vals
+
+#
