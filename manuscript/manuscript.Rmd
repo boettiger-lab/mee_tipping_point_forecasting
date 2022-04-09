@@ -1,0 +1,57 @@
+---
+title: Estimating Uncertainty for Tipping Points with Deep Learning
+authors:
+  - name: Marcus Lapeyrolerie
+    department: Department of Environmental Science, Policy, and Management
+    affiliation: University of California, Berkeley
+    location: Berkeley, California
+    email: mlapeyro@berkeley.edu
+  - name: Carl Boettiger
+    department: Department of Environmental Science, Policy, and Management
+    affiliation: University of California, Berkeley
+    location: Berkeley, California
+    email: cboettig@berkeley.edu (corresponding author)
+abstract: |
+  Lorem Ipsum whatever
+  
+keywords:
+  - Time Series
+  - Forecasting
+  - Machine Learning
+  - Artificial Intelligence
+  - Tipping points
+bibliography: references.bib
+nocite: |
+    
+header-includes:
+  - \usepackage{amsmath}
+  - \usepackage{amssymb}
+#  - \usepackage{lineno}
+#  - \usepackage{endfloat}
+#  - \linenumbers
+  
+output: 
+  rticles::arxiv_article:
+    keep_tex: true
+  word_document: default
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+# Introduction
+
+
+
+# Materials and Methods
+
+
+
+# Results
+
+
+# Discussion
+
+
+\pagebreak
+
+# References
