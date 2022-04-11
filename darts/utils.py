@@ -10,14 +10,9 @@ models = {"stochastic" : stochastic_tp,
           }
 
 # Need to change this so that it doesn't intake args
-def preprocessed_t_series(model, n_samples, random_alpha=False):
+def preprocessed_t_series(model, n_samples):
     _data = models[model.lower()]()
-    
-    # Generating time series
-    if random_alpha:
-        training_data = _data.collect_samples(n_samples, random_alpha)
-    else:
-        training_data = _data.collect_samples(n_samples)
+    training_data = _data.collect_samples(n_samples)
 
     # Preprocessing time series to
     _ts = [[] for i in range(training_data.shape[1])]
@@ -28,7 +23,7 @@ def preprocessed_t_series(model, n_samples, random_alpha=False):
     vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
     return TimeSeries.from_times_and_values(RangeIndex(250),vals), vals.reshape(250, n_samples).T
 
-def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alpha=False):
+def truth_dist(model, t_series, input_len, output_len, n_samples=100):
     N_init = t_series[-1].values()[0][0]
     t_max = 250-input_len
         
@@ -41,10 +36,7 @@ def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alp
         _data.h_init = _data.h_init + len(t_series) * _data.alpha
 
     for i in range(n_samples):
-      if random_alpha:
-          training_data = _data.collect_samples(n_samples, random_alpha)
-      else:
-          training_data = _data.collect_samples(n_samples)
+      training_data = _data.collect_samples(n_samples)
       
       # Preprocessing time series to
       _ts = [[] for i in range(training_data.shape[1])]
@@ -55,7 +47,7 @@ def truth_dist(model, t_series, input_len, output_len, n_samples=100, random_alp
       vals = np.array(_ts).reshape(training_data.shape[1], 1, n_samples)
     return TimeSeries.from_times_and_values(RangeIndex(start=input_len, stop=250), vals)
   
-def count_tipped(vals, model):
+def count_tipped(vals):
     n_vals = len(vals)
     count = 0
     for i in range(n_vals):
@@ -63,4 +55,22 @@ def count_tipped(vals, model):
             count += 1
     return count / n_vals
 
-#
+def import_hypers(hyper_file_name):
+    if hyper_file_name == "lstm":
+        from train_hyperparams.lstm import hyperparameters
+    elif hyper_file_name == "tcn":
+        from train_hyperparams.tcn import hyperparameters
+    elif hyper_file_name == "transformer":
+        from train_hyperparams.transformer import hyperparameters
+    elif hyper_file_name == "stochastic_10":
+        from train_hyperparams.stochastic_10 import hyperparameters
+    elif hyper_file_name == "stochastic_100":
+        from train_hyperparams.stochastic_100 import hyperparameters
+    elif hyper_file_name == "stochastic_1000":
+        from train_hyperparams.stochastic_1000 import hyperparameters
+    elif hyper_file_name == "saddle_10":
+        from train_hyperparams.saddle_10 import hyperparameters
+    elif hyper_file_name == "saddle_100":
+        from train_hyperparams.saddle_100 import hyperparameters
+    elif hyper_file_name == "saddle_1000":
+        from train_hyperparams.saddle_1000 import hyperparameters
