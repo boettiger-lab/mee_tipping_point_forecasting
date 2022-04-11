@@ -7,10 +7,11 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from darts import TimeSeries
+from pandas import DataFrame
 import torch
 from darts.models import RNNModel, BlockRNNModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, import_hypers
+from utils import preprocessed_t_series, truth_dist, import_hypers, make_df
 import argparse
 import yaml
 from functools import reduce
@@ -38,10 +39,10 @@ parser.add_argument(
     help="File name of plots",
 )
 parser.add_argument(
-    "-p",
-    "--plot",
+    "-e",
+    "--evaluate",
     action="store_true",
-    help="Flag whether to plot",
+    help="Flag whether to plot and save a csv of samples",
 )
 parser.add_argument(
     "--seed",
@@ -83,7 +84,7 @@ elif args.hyper_file == "saddle_block":
 model = {"lstm" : RNNModel, "block_rnn" : BlockRNNModel}[args.model.lower()]
 
 models = []
-for i in range(42, 62):
+for i in range(42, 47):
     hyperparameters["random_state"] = i
     np.random.seed(i)
     
@@ -95,10 +96,11 @@ for i in range(42, 62):
     elif args.case.lower() == "both" and args.tp_model == "stochastic":
         train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
         train_series_ = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-        train_series = train_series.stack(train_series_)
+        train_series = train_series.concatenate(train_series_, axis="sample")
     elif args.case.lower() == "none":
         # Generating time series
         train_series, _ = preprocessed_t_series(args.tp_model, args.n_samples)
+        
 
     my_model = model(
         likelihood=LaplaceLikelihood(),
@@ -114,13 +116,14 @@ for i in range(42, 62):
     del my_model
 
 # Generating time series
-if args.plot:
+if args.evaluate:
     if not os.path.exists("plots/"):
         os.makedirs("plots/")
     input_len = hyperparameters["input_chunk_length"]
     output_len = hyperparameters["output_chunk_length"]
+    final_df = DataFrame()
   
-    for i in range(3):
+    for i in range(5):
         train_series, _ = preprocessed_t_series(args.tp_model, 1)
         train_series[:input_len].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(input_len)
@@ -135,6 +138,10 @@ if args.plot:
         ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
         
         ensemble_series.plot(low_quantile=0.025, high_quantile=0.975, linestyle="dotted", color="orange", label='prediction')
-
+        df = make_df(ensemble_series, t_dist, args.tp_model, args.model.lower(), args.case, args.n_samples)
+        df["iter"] = i
+        final_df = final_df.append(df, ignore_index=True)
+        
         plt.savefig(f"plots/ensemble_{args.output_file_name}_{i}")
         plt.clf()
+    final_df.to_csv(f"{args.output_file_name}.csv.gz")

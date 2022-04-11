@@ -3,7 +3,7 @@ sys.path.append("../")
 from model import stochastic_tp, saddle_node_tp
 import numpy as np
 from darts import TimeSeries
-from pandas import RangeIndex
+from pandas import RangeIndex, DataFrame
 
 models = {"stochastic" : stochastic_tp, 
           "saddle" : saddle_node_tp,
@@ -74,3 +74,34 @@ def import_hypers(hyper_file_name):
         from train_hyperparams.saddle_100 import hyperparameters
     elif hyper_file_name == "saddle_1000":
         from train_hyperparams.saddle_1000 import hyperparameters
+
+def make_df(prediction_series, truth_series, tp_model, ml_model, case, n_samples):
+    predictions_array = prediction_series.all_values()[:, 0, :]
+    truth_array = truth_series.all_values()[:, 0, :]
+    
+    predictions_df = DataFrame(predictions_array)
+    truth_df = DataFrame(truth_array)
+    
+    predictions_df["time"] = prediction_series.time_index
+    truth_df["time"] = truth_series.time_index
+    
+    predictions_df = predictions_df.melt(id_vars="time", var_name="ensemble", value_name="value")
+    truth_df = truth_df.melt(id_vars="time", var_name="ensemble", value_name="value")
+    
+    
+    predictions_df["tp_model"] = tp_model
+    predictions_df["ml_model"] = ml_model
+    predictions_df["case"] = n_samples if case == "none" else case
+    predictions_df["true_model"] = False
+    truth_df["tp_model"] = tp_model
+    truth_df["ml_model"] = ml_model
+    truth_df["case"] = n_samples if case == "none" else case
+    truth_df["true_model"] = True
+    df = predictions_df.append(truth_df, ignore_index=True)
+    
+    
+    return df
+    
+  
+    
+    
