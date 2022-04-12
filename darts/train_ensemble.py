@@ -91,7 +91,7 @@ for i in range(42, 47):
     # Selecting case to pick training set
     if args.case.lower() == "tipped" and args.tp_model == "stochastic":
         train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-    elif args.case.lower() == "non_tipped" and args.tp_model == "stochastic":
+    elif args.case.lower() == "nontipped" and args.tp_model == "stochastic":
         train_series = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
     elif args.case.lower() == "both" and args.tp_model == "stochastic":
         train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
@@ -119,6 +119,10 @@ for i in range(42, 47):
 if args.evaluate:
     if not os.path.exists("plots/"):
         os.makedirs("plots/")
+    if not os.path.exists(f"plots/ensemble_{args.output_file_name}/"):
+        os.makedirs(f"plots/ensemble_{args.output_file_name}/")
+    if not os.path.exists("forecasts/"):
+            os.makedirs("forecasts/")
     input_len = hyperparameters["input_chunk_length"]
     output_len = hyperparameters["output_chunk_length"]
     final_df = DataFrame()
@@ -141,7 +145,7 @@ if args.evaluate:
         df = make_df(ensemble_series, t_dist, args.tp_model, args.model.lower(), args.case, args.n_samples)
         df["iter"] = i
         final_df = final_df.append(df, ignore_index=True)
-        
-        plt.savefig(f"plots/ensemble_{args.output_file_name}_{i}")
+        plt.savefig(f"plots/ensemble_{args.output_file_name}/{i}")
         plt.clf()
-    final_df.to_csv(f"{args.output_file_name}.csv.gz")
+        
+    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz")
