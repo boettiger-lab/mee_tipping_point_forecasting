@@ -2,7 +2,7 @@ import numpy as np
 import sys
 sys.path.append("../")
 from darts import TimeSeries
-from darts.models import RNNModel, TCNModel, TransformerModel
+from darts.models import RNNModel, BlockRNNModel
 from darts.utils.likelihood_models import LaplaceLikelihood
 from utils import preprocessed_t_series
 import random
@@ -15,7 +15,7 @@ parser.add_argument(
     "--model",
     default="lstm",
     type=str,
-    help="model to train with (lstm, tcn or transformer)",
+    help="model to train with (vanilla lstm or block lstm)",
 )
 parser.add_argument(
     "-s",
@@ -32,7 +32,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--epochs",
-    default=200,
+    default=500,
     type=int,
     help="Number of epochs to train a model for",
 )
@@ -70,16 +70,14 @@ args = parser.parse_args()
 
 np.random.seed(args.seed)
 # Generating time series
-train_series, _ = preprocessed_t_series(args.tp_model, args.n_samples, args.random_alpha)
+train_series, _ = preprocessed_t_series(args.tp_model, args.n_samples)
 
 if args.model == "lstm":
     from tune_hyperparams.lstm import hyperparameters
-elif args.model == "tcn":
-    from tune_hyperparams.tcn import hyperparameters
-elif args.model == "transformer":
-    from tune_hyperparams.transformer import hyperparameters
+elif args.model == "block_rnn":
+    from tune_hyperparams.block_rnn import hyperparameters
     
-models = {"lstm": RNNModel, "tcn": TCNModel, "transformer": TransformerModel}
+models = {"lstm": RNNModel, "block_rnn": BlockRNNModel}
 
 for i in range(args.n_trials):
     # Randomly selecting a parameter dictionary
