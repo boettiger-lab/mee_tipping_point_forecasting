@@ -35,7 +35,7 @@ simulate <- function(N_init = 0.75,
 sims <- purrr::map_dfr(1:100, \(i) simulate(), .id = "i")
 sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
 
-sims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) | filter(t<max(t))
+sims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) |> filter(t<max(t))
 
 x_t <- sims$N
 x_t1 <- sims$xt1
