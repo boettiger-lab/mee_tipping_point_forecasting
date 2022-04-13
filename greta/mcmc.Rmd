@@ -45,6 +45,7 @@ sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
 ```{r}
 gsims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) |> filter(t<max(t))
 
+
 x_t <- gsims$N
 x_t1 <- gsims$xt1
 
