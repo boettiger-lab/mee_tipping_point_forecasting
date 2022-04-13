@@ -1,3 +1,9 @@
+---
+output: github_document
+---
+
+
+```{r}
 library(tidyverse)
 set.seed(1234567)
 
@@ -34,26 +40,84 @@ simulate <- function(N_init = 0.75,
 
 sims <- purrr::map_dfr(1:100, \(i) simulate(), .id = "i")
 sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
+```
 
-sims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) | filter(t<max(t))
+```{r}
+gsims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) |> filter(t<max(t))
 
-x_t <- sims$N
-x_t1 <- sims$xt1
+x_t <- gsims$N
+x_t1 <- gsims$xt1
 
 library(greta)
-a <- uniform(0, 2)
-b <- uniform(0, 2)
-sigma <- uniform(0, 1)
-
-# Model   (mean <-  may(x_t, p))
+a <- uniform(0, 10)
+b <- uniform(0, 10)
+sigma <- uniform(0, 10)
 mean <-  x_t + (a - x_t) ^ 2 * (b - x_t)
 distribution(x_t1) <- normal(mean, sigma )
-
 m <- model(a, b, sigma)
+```
 
+```{r}
 mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("mcmc_cache"))
+
 
 bench::bench_time({                 
   draws <- mmcmc(m, n_samples = 10000, warmup = 5000, chains = 4, verbose = FALSE)
 })
+```
+
+```{r}
+bayesplot::mcmc_trace(draws)
+```
+
+
+```{r}
+posterior_samples <- 
+  bind_rows(map(draws, as_tibble)) %>% 
+  sample_n(100)
+posterior_sims <- posterior_samples %>%
+  purrr::transpose() %>%
+  map_dfr(function(q) simulate() ,.id = "i")
+
+bind_rows(sims, posterior_sims, .id = "model")|> 
+  ggplot(aes(t, N, col=model, group=interaction(model,i))) +
+           geom_line(alpha=0.3)
+
+```
+
+
+
+# Scoring
+
+```{r}
+
+
+library(scoringRules)
+
+observed <- sims %>% filter(i == 1) %>% pull(N)
+posterior_sims
+dat <- posterior_sims |> pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> select(-t) |> as.matrix()
+
+
+
+score <- scoringRules::logs_sample(observed, dat)
+logsscore <- score[-1] # drop first point
+mean(logsscore)
+
+score <- scoringRules::crps_sample(observed, dat)
+crpsscore <- score[-1] # drop first point
+mean(crpsscore)
+
+
+
+```
+
+
+
+
+
+
+
+
+
 
