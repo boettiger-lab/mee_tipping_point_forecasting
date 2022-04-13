@@ -38,7 +38,7 @@ simulate <- function(N_init = 0.75,
   tibble::tibble(t = 1:t_max, N = N)
 }
 
-sims <- purrr::map_dfr(1:100, \(i) simulate(), .id = "i")
+sims <- purrr::map_dfr(1:10, \(i) simulate(), .id = "i")
 sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
 ```
 
