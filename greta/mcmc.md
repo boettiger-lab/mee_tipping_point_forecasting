@@ -48,7 +48,7 @@ simulate <- function(N_init = 0.75,
   tibble::tibble(t = 1:t_max, N = N)
 }
 
-sims <- purrr::map_dfr(1:10, \(i) simulate(), .id = "i")
+sims <- purrr::map_dfr(1:1, \(i) simulate(), .id = "i")
 sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
 ```
 
@@ -109,7 +109,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##  25.84m   7.39m
+    ##  12.18m   4.23m
 
 ``` r
 bayesplot::mcmc_trace(draws)
@@ -154,7 +154,7 @@ scores(observed, dat)
 ```
 
     ##        logs       crps
-    ## 1 -1.602781 0.04491187
+    ## 1 -1.539489 0.04875796
 
 ``` r
 # score over all replicates:
@@ -166,8 +166,8 @@ rep_scores <- sims |> group_by(i) |> group_map(~ scores(.x$N, dat)) |> bind_rows
 rep_scores |> summarise(across(.fns= base::mean))
 ```
 
-    ##         logs       crps
-    ## 1 -0.8066878 0.09986078
+    ##        logs       crps
+    ## 1 -1.539489 0.04875796
 
 ``` r
 library(patchwork)
