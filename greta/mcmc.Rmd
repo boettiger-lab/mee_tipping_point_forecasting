@@ -90,29 +90,40 @@ bind_rows(sims, posterior_sims, .id = "model")|>
 
 # Scoring
 
+
+First, a single 'observed' sample from the true:
+
 ```{r}
-
-
 library(scoringRules)
 
-observed <- sims %>% filter(i == 1) %>% pull(N)
-posterior_sims
+scores <- function(observed, dat) {
+  logsscore <- scoringRules::logs_sample(observed, dat)
+  crpsscore <- scoringRules::crps_sample(observed, dat)
+  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
+
+}
+# ensemble predictions
 dat <- posterior_sims |> pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> select(-t) |> as.matrix()
 
-
-
-score <- scoringRules::logs_sample(observed, dat)
-logsscore <- score[-1] # drop first point
-mean(logsscore)
-
-score <- scoringRules::crps_sample(observed, dat)
-crpsscore <- score[-1] # drop first point
-mean(crpsscore)
-
-
+# Score just the 1st replicate "true" observations
+observed <- sims |> filter(i == 1) |> pull(N)
+scores(observed, dat)
 
 ```
+```{r}
+# score over all replicates:
 
+rep_scores <- sims |> group_by(i) |> group_map(~ scores(.x$N, dat)) |> bind_rows()
+```
+
+```{r}
+rep_scores |> summarise(across(.fns= base::mean))
+
+library(patchwork)
+ggplot(rep_scores) + geom_histogram(aes(crps)) + 
+(ggplot(rep_scores) + geom_histogram(aes(logs)) )
+
+```
 
 
 

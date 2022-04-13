@@ -57,6 +57,7 @@ sims |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.06)
 ``` r
 gsims <- sims |> group_by(i) |> mutate(xt1 = lead(N)) |> filter(t<max(t))
 
+
 x_t <- gsims$N
 x_t1 <- gsims$xt1
 
@@ -108,7 +109,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##  99.6ms  99.7ms
+    ##   100ms   100ms
 
 ``` r
 bayesplot::mcmc_trace(draws)
@@ -133,44 +134,48 @@ bind_rows(sims, posterior_sims, .id = "model")|>
 
 # Scoring
 
+First, a single ‘observed’ sample from the true:
+
 ``` r
 library(scoringRules)
 
-observed <- sims %>% filter(i == 1) %>% pull(N)
-posterior_sims
-```
+scores <- function(observed, dat) {
+  logsscore <- scoringRules::logs_sample(observed, dat)
+  crpsscore <- scoringRules::crps_sample(observed, dat)
+  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
 
-    ## # A tibble: 25,000 × 3
-    ##    i         t     N
-    ##    <chr> <int> <dbl>
-    ##  1 1         1 0.75 
-    ##  2 1         2 0.752
-    ##  3 1         3 0.744
-    ##  4 1         4 0.748
-    ##  5 1         5 0.756
-    ##  6 1         6 0.768
-    ##  7 1         7 0.777
-    ##  8 1         8 0.780
-    ##  9 1         9 0.797
-    ## 10 1        10 0.784
-    ## # … with 24,990 more rows
-
-``` r
+}
+# ensemble predictions
 dat <- posterior_sims |> pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> select(-t) |> as.matrix()
 
-
-
-score <- scoringRules::logs_sample(observed, dat)
-logsscore <- score[-1] # drop first point
-mean(logsscore)
+# Score just the 1st replicate "true" observations
+observed <- sims |> filter(i == 1) |> pull(N)
+scores(observed, dat)
 ```
 
-    ## [1] -1.169741
+    ##        logs       crps
+    ## 1 -1.169741 0.06299483
 
 ``` r
-score <- scoringRules::crps_sample(observed, dat)
-crpsscore <- score[-1] # drop first point
-mean(crpsscore)
+# score over all replicates:
+
+rep_scores <- sims |> group_by(i) |> group_map(~ scores(.x$N, dat)) |> bind_rows()
 ```
 
-    ## [1] 0.06299483
+``` r
+rep_scores |> summarise(across(.fns= base::mean))
+```
+
+    ##         logs     crps
+    ## 1 -0.9623152 0.090808
+
+``` r
+library(patchwork)
+ggplot(rep_scores) + geom_histogram(aes(crps)) + 
+(ggplot(rep_scores) + geom_histogram(aes(logs)) )
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
