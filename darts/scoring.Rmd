@@ -13,8 +13,6 @@ library(tidyverse)
 
 ```{r}
 data <- read_csv("forecasts/block_rnn_stochastic_10.csv.gz")[-1]
-emp_draws <- data %>% filter(true_model==TRUE) %>% select(-true_model)
-forecasts <- data %>% filter(true_model==FALSE) %>% select(-true_model)
 ```
 
 ```{r}
@@ -30,35 +28,38 @@ scores <- function(observed, dat) {
 
 ```{r}
 
-## Currently it looks like only one tp_model and one ml_model, but 5 iterations:
-## We will need to generalize this code to map over multiple tp_models and ml_models etc
-# forecasts %>% count(tp_model, ml_model, iter)
+score_all <- function(data, groups = NULL) {
+  
+true <- data |> filter(true_model)
+fcst <- data |> filter(!true_model)
 
-## pivot forecast into a matrix of size(time) x size(ensembles)
-i <- 1
-dat <- forecasts |> filter(iter == i) |>
+dat <- fcst |>
   select(t = time, i = ensemble, N = value) |> 
  pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
   select(-t) |> as.matrix()
 
-test <- emp_draws |> filter(iter == i)  |>
+test <- true  |>
   select(t = time, i = ensemble, N = value)
-```
 
-```{r}
-bench::bench_time({
+
 rep_scores <- 
   test |> 
   group_by(i) |> 
   group_map(~ scores(.x$N, dat)) |> 
   bind_rows()
-})
+
+bind_cols(rep_scores, groups)
+}
+
+rep_scores <- data |> 
+  group_by(iter, ml_model, tp_model) |>
+  group_map(~ score_all(.x, .y) ,.keep = TRUE) |> 
+  bind_rows()
 ```
 
 
 ```{r}
-library(patchwork)
-ggplot(all_scores) + geom_histogram(aes(crps)) + 
-(ggplot(all_scores) + geom_histogram(aes(logs)) )
+# crude demo
+ggplot(rep_scores) + geom_density(aes(crps, color=iter, group=iter)) + facet_grid(ml_model~tp_model)
 
 ```
