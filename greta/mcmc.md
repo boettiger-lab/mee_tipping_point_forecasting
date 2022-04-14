@@ -54,7 +54,7 @@ set.seed(4242)
 train_reps <- 10
 train_t_max <- 250
 test_t_max <- 250
-test_reps <- 100
+test_reps <- 1000
 
 
 np.clip <- function(x, a, b) {
@@ -135,7 +135,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##  55.6ms  55.7ms
+    ##  65.7ms  65.8ms
 
 ``` r
 bayesplot::mcmc_trace(draws)
@@ -144,16 +144,18 @@ bayesplot::mcmc_trace(draws)
 ![](mcmc_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
+## draw test_reps number of samples
+
 posterior_samples <- 
   bind_rows(map(draws, as_tibble)) %>% 
-  sample_n(100)
+  sample_n(test_reps)
 posterior_sims <- posterior_samples %>%
   purrr::transpose() %>%
   map_dfr(function(q) simulate(t_max = test_t_max) ,.id = "i")
 
 bind_rows(test, posterior_sims, .id = "model")|> 
   ggplot(aes(t, N, col=model, group=interaction(model,i))) +
-           geom_line(alpha=0.3)
+           geom_line(alpha=0.1)
 ```
 
 ![](mcmc_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
@@ -183,28 +185,32 @@ scores <- function(observed, dat) {
 
 }
 # ensemble predictions
-dat <- posterior_sims |> pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> select(-t) |> as.matrix()
-
-# Score just the 1st replicate "true" observations
-observed <- test |> filter(i == 1) |> pull(N)
-scores(observed, dat)
+dat <- 
+  posterior_sims |> 
+  pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
+  select(-t) |> as.matrix()
 ```
-
-    ##        logs       crps
-    ## 1 -1.583036 0.04056811
 
 ``` r
 # score over all replicates:
-
-rep_scores <- test |> group_by(i) |> group_map(~ scores(.x$N, dat)) |> bind_rows()
+bench::bench_time({
+rep_scores <- 
+  test |> 
+  group_by(i) |> 
+  group_map(~ scores(.x$N, dat)) |> 
+  bind_rows()
+})
 ```
+
+    ## process    real 
+    ##   1.42m   1.42m
 
 ``` r
 rep_scores |> summarise(across(.fns= base::mean))
 ```
 
     ##        logs       crps
-    ## 1 -1.188015 0.08529506
+    ## 1 -1.136281 0.09452234
 
 ``` r
 library(patchwork)
