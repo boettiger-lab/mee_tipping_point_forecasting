@@ -1,8 +1,15 @@
 ---
 title: "scoring"
-output: html_document
+output: github_document
 date: '2022-04-13'
 ---
+
+
+```{r}
+library(scoringRules)
+library(tidyverse)
+```
+
 
 ```{r}
 data <- read_csv("forecasts/block_rnn_stochastic_10.csv.gz")[-1]
@@ -18,27 +25,38 @@ scores <- function(observed, dat) {
   crpsscore <- scoringRules::crps_sample(observed, dat)
   data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
 }
-
-# Score just the 1st replicate "true" observations
-observed <- emp_draws %>%  filter(iter == 0, ensemble==0) %>%  pull(value)
-dat <- forecasts %>%  filter(iter == 0, ensemble==0) %>%  select(ensemble, value) %>% as.matrix()
-scores(observed, dat)
-
 ```
+
+
 ```{r}
-# score over all replicates:
-all_scores = list()
-for (i in (0:4)) {
-  for (e in 0:99){
-    dat <- forecasts %>%  filter(iter == i, ensemble == e) %>%  select(ensemble, value) %>% as.matrix()
-    rep_scores <- emp_draws %>% filter(iter==i) %>%  group_by(ensemble) %>%  group_map(~ scores(.x$value, dat)) %>%  bind_rows()
-    all_scores <- append(all_scores, rep_scores)
-  }
-  print(i)
-}
 
-all_scores %>%  summarise(across(.fns= base::mean))
+## Currently it looks like only one tp_model and one ml_model, but 5 iterations:
+## We will need to generalize this code to map over multiple tp_models and ml_models etc
+# forecasts %>% count(tp_model, ml_model, iter)
 
+## pivot forecast into a matrix of size(time) x size(ensembles)
+i <- 1
+dat <- forecasts |> filter(iter == i) |>
+  select(t = time, i = ensemble, N = value) |> 
+ pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
+  select(-t) |> as.matrix()
+
+test <- emp_draws |> filter(iter == i)  |>
+  select(t = time, i = ensemble, N = value)
+```
+
+```{r}
+bench::bench_time({
+rep_scores <- 
+  test |> 
+  group_by(i) |> 
+  group_map(~ scores(.x$N, dat)) |> 
+  bind_rows()
+})
+```
+
+
+```{r}
 library(patchwork)
 ggplot(all_scores) + geom_histogram(aes(crps)) + 
 (ggplot(all_scores) + geom_histogram(aes(logs)) )
