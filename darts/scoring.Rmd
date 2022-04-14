@@ -18,9 +18,11 @@ data <- read_csv("forecasts/block_rnn_stochastic_10.csv.gz")[-1]
 ```{r}
 library(scoringRules)
 
-scores <- function(observed, dat) {
-  logsscore <- scoringRules::logs_sample(observed, dat)
-  crpsscore <- scoringRules::crps_sample(observed, dat)
+# trivial wrapper to score both logs and crps
+scores <- function(observed, predicted) {
+  logsscore <- scoringRules::logs_sample(observed, predicted)
+  crpsscore <- scoringRules::crps_sample(observed, predicted)
+  # drops the first point (initial condition)
   data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
 }
 ```
@@ -29,37 +31,52 @@ scores <- function(observed, dat) {
 ```{r}
 
 score_all <- function(data, groups = NULL) {
-  
+    
 true <- data |> filter(true_model)
 fcst <- data |> filter(!true_model)
 
-dat <- fcst |>
-  select(t = time, i = ensemble, N = value) |> 
- pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
-  select(-t) |> as.matrix()
+# key trick is to make forecast a t_max x ensembles matrix for scoringRules:
+predicted <- fcst |>
+  select(t = time, i = ensemble, value) |> 
+  pivot_wider(id_cols = "t", names_from="i", values_from = "value") |> 
+  select(-t) |> 
+  as.matrix()
 
-test <- true  |>
-  select(t = time, i = ensemble, N = value)
+# just select and rename relevant columns
+test <- true |>  select(t = time, i = ensemble, value)
 
-
+# Here we go! score each test timeseries against the entire predicted ensemble!
 rep_scores <- 
   test |> 
   group_by(i) |> 
-  group_map(~ scores(.x$N, dat)) |> 
+  group_map(~ scores(.x$value, predicted)) |> 
   bind_rows()
 
+# add any "grouping variables" on as additional columns for bookkeeping
 bind_cols(rep_scores, groups)
 }
+```
 
+
+
+```{r}
+# now actually run the scoring over all iterations, ml_models, tp_models:
+
+bench::bench_time({
 rep_scores <- data |> 
   group_by(iter, ml_model, tp_model) |>
   group_map(~ score_all(.x, .y) ,.keep = TRUE) |> 
   bind_rows()
+
+})
 ```
 
 
 ```{r}
-# crude demo
-ggplot(rep_scores) + geom_density(aes(crps, color=iter, group=iter)) + facet_grid(ml_model~tp_model)
+
+# rough plot, probably not the best visual of this.
+ggplot(rep_scores) + 
+  geom_density(aes(crps, color=iter, group=iter)) + 
+  facet_grid(ml_model~tp_model)
 
 ```
