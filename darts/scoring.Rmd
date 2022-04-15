@@ -12,7 +12,11 @@ library(tidyverse)
 
 
 ```{r}
-data <- read_csv("forecasts/block_rnn_stochastic_10.csv.gz")[-1]
+data <- list.files(path = "./forecasts/",
+               pattern = "*.csv", 
+               full.names = T) %>% 
+        read_csv() 
+data <- data[-1]
 ```
 
 ```{r}
@@ -37,7 +41,7 @@ fcst <- data |> filter(!true_model)
 
 # key trick is to make forecast a t_max x ensembles matrix for scoringRules:
 predicted <- fcst |>
-  select(t = time, i = ensemble, value) |> 
+  select(t = time, i = ensemble, value) |> # Not sure if this should be iter here hmm but this might be addressed later
   pivot_wider(id_cols = "t", names_from="i", values_from = "value") |> 
   select(-t) |> 
   as.matrix()
@@ -48,7 +52,7 @@ test <- true |>  select(t = time, i = ensemble, value)
 # Here we go! score each test timeseries against the entire predicted ensemble!
 rep_scores <- 
   test |> 
-  group_by(i) |> 
+  group_by(i) |> # group by i? 
   group_map(~ scores(.x$value, predicted)) |> 
   bind_rows()
 
@@ -64,7 +68,7 @@ bind_cols(rep_scores, groups)
 
 bench::bench_time({
 rep_scores <- data |> 
-  group_by(iter, ml_model, tp_model) |>
+  group_by(iter, ml_model, tp_model, case) |>
   group_map(~ score_all(.x, .y) ,.keep = TRUE) |> 
   bind_rows()
 
@@ -73,10 +77,23 @@ rep_scores <- data |>
 
 
 ```{r}
+# Logs Plot
+rep_scores %>% 
+  filter(case == 10 |  case == 100 | case == 1000) %>% 
+  #filter(tp_model == "stochastic") %>% 
+  ggplot(aes(ml_model, logs)) + 
+  geom_boxplot(outlier.shape = 1) +
+  #geom_jitter() + 
+  facet_grid(tp_model~case, scales="free")
+```
 
-# rough plot, probably not the best visual of this.
-ggplot(rep_scores) + 
-  geom_density(aes(crps, color=iter, group=iter)) + 
-  facet_grid(ml_model~tp_model)
-
+```{r}
+# CRPS Plot
+rep_scores %>% 
+  filter(case == 10 |  case == 100 | case == 1000) %>% 
+  #filter(tp_model == "stochastic") %>% 
+  ggplot(aes(ml_model, crps)) + 
+  geom_boxplot(outlier.shape = 1) +
+  #geom_jitter() + 
+  facet_grid(tp_model~case, scales="free")
 ```
