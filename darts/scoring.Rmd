@@ -97,3 +97,31 @@ rep_scores %>%
   #geom_jitter() + 
   facet_grid(tp_model~case, scales="free")
 ```
+
+
+Trying to get single curves set up here
+```{r}
+plot_single <- function(data, case_, iter_) {
+    # I checked that both "Truth" cases are the same between models but potential error source here -- should rethink csv saving
+    t_data <- data %>% 
+                filter(case == case_ & iter == iter_) %>% 
+                transform(ml_model = ifelse(true_model==TRUE, "Truth", ml_model)) %>% 
+                transform(true_model = ifelse(ml_model == "Truth", FALSE, true_model))
+    
+    t_data %>% 
+        filter(case == case_ & iter == iter_ & true_model == FALSE) %>%
+        group_by(time, true_model, ml_model) %>% 
+        mutate(`5%` = quantile(value, c(.05))) %>% 
+        mutate(`95%` = quantile(value, c(.95))) %>% 
+        ggplot() +
+        geom_ribbon(aes(x=time, ymin=`5%`, ymax=`95%`, color=ml_model, fill=ml_model), alpha=0.4)
+}
+
+plot_single(data, "nontipped", 0)
+
+```
+
+```{r}
+plot_single(data, "tipped", 1)
+```
+
