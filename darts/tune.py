@@ -2,7 +2,7 @@ import numpy as np
 import sys
 sys.path.append("../")
 from darts import TimeSeries
-from darts.models import RNNModel, BlockRNNModel
+from darts.models import RNNModel, BlockRNNModel, TCNModel
 from darts.utils.likelihood_models import LaplaceLikelihood
 from utils import preprocessed_t_series
 import random
@@ -76,8 +76,10 @@ if args.model == "lstm":
     from tune_hyperparams.lstm import hyperparameters
 elif args.model == "block_rnn":
     from tune_hyperparams.block_rnn import hyperparameters
+elif args.model == "tcn":
+    from tune_hyperparams.tcn import hyperparameters
     
-models = {"lstm": RNNModel, "block_rnn": BlockRNNModel}
+models = {"lstm": RNNModel, "block_rnn": BlockRNNModel, "tcn": TCNModel}
 
 for i in range(args.n_trials):
     # Randomly selecting a parameter dictionary

@@ -5,7 +5,7 @@ class stochastic_tp():
     def __init__(self, N=0.75, t_max=250):
         self.replicates = 0
         self.t_max = t_max
-        self.mu = -5e-4
+        self.mu = 0
         self.sigma = 1e-2
         self.N_init = N
         self.N = N
