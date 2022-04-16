@@ -46,6 +46,8 @@ for i in range(3):
     model = StatsForecastAutoARIMA().fit(t_series)
     preds = model.predict(t_max, num_samples=100)
     preds.plot(low_quantile=0.025, high_quantile=0.975, linestyle="dotted", color="orange", label='prediction')
-
+    
+    if not os.path.exists("plots/"):
+        os.makedirs("plots/")
     plt.savefig(f"plots/StatsForecastAutoARIMA_{i}")
     plt.clf()
