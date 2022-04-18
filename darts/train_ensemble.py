@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from darts import TimeSeries
 from pandas import DataFrame
 import torch
-from darts.models import RNNModel, BlockRNNModel
+from darts.models import RNNModel, BlockRNNModel, TCNModel
 from darts.utils.likelihood_models import LaplaceLikelihood
 from utils import preprocessed_t_series, truth_dist, import_hypers, make_df
 import argparse
@@ -80,8 +80,12 @@ elif args.hyper_file == "stochastic_block":
     from train_hyperparams.stochastic_block import hyperparameters
 elif args.hyper_file == "saddle_block":
     from train_hyperparams.saddle_block import hyperparameters
+elif args.hyper_file == "stochastic_tcn":
+    from train_hyperparams.stochastic_tcn import hyperparameters
+elif args.hyper_file == "saddle_tcn":
+    from train_hyperparams.saddle_tcn import hyperparameters
 
-model = {"lstm" : RNNModel, "block_rnn" : BlockRNNModel}[args.model.lower()]
+model = {"lstm" : RNNModel, "block_rnn" : BlockRNNModel, "tcn" : TCNModel}[args.model.lower()]
 
 models = []
 for i in range(42, 47):
@@ -128,6 +132,9 @@ if args.evaluate:
     final_df = DataFrame()
   
     for i in range(5):
+        np.random.seed(i)
+        torch.manual_seed(i)
+        
         train_series, _ = preprocessed_t_series(args.tp_model, 1)
         train_series[:input_len].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(input_len)
@@ -148,4 +155,4 @@ if args.evaluate:
         plt.savefig(f"plots/ensemble_{args.output_file_name}/{i}")
         plt.clf()
         
-    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz")
+    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
