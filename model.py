@@ -97,9 +97,9 @@ class hopf_tp():
     def step(self):
         self.K += self.delta
         self.eta = np.random.normal(self.mu, self.sigma, 2)
-        N = copy.deepcopy(self.N[0])
-        self.N[0] = N * np.exp(self.r * (1 - N / self.K) - self.c * self.N[1] + self.eta[0])
-        self.N[1] = N * np.exp(self.r * (1 - N / self.K)) * (1 - np.exp(-self.c * self.N[1] + self.eta[1]))
+        g = self.N[0] * np.exp(self.r * (1 - self.N[0] / K))
+        self.N[0] = g * np.exp(- self.c * self.N[1] + self.eta[0])
+        self.N[1] = g * (1 - np.exp(-self.c * self.N[1] + self.eta[1]))
         
         self.N = np.clip(self.N, 0 , 100)
         return self.N
