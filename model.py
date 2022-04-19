@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import copy
 
 class stochastic_tp():
     def __init__(self, N=0.75, t_max=250):
@@ -80,10 +81,10 @@ class saddle_node_tp():
         plt.savefig(file_name)
 
 class hopf_tp():
-    def __init__(self, N=[9, 0.1], t_max=100, delta=0.1, K_init=30):
+    def __init__(self, N=[9, 0.1], t_max=100, delta=0.1, K_init=15):
         self.t_max = t_max
         self.mu = 0
-        self.sigma = 0.02
+        self.sigma = .02
         self.N_init = N
         self.N = N
         self.reps = 0
@@ -96,8 +97,9 @@ class hopf_tp():
     def step(self):
         self.K += self.delta
         self.eta = np.random.normal(self.mu, self.sigma, 2)
-        self.N[0] = self.N[0] * np.exp(self.r * (1 - self.N[0] / self.K) - self.c * self.N[1] + self.eta[0])
-        self.N[1] = self.N[0] * np.exp(self.r * (1 - self.N[0] / self.K)) * (1 - np.exp(-self.c * self.N[1] + self.eta[1]))
+        N = copy.deepcopy(self.N[0])
+        self.N[0] = N * np.exp(self.r * (1 - N / self.K) - self.c * self.N[1] + self.eta[0])
+        self.N[1] = N * np.exp(self.r * (1 - N / self.K)) * (1 - np.exp(-self.c * self.N[1] + self.eta[1]))
         
         self.N = np.clip(self.N, 0 , 100)
         return self.N
@@ -106,16 +108,19 @@ class hopf_tp():
         self.reset()
         return np.array([self.step() for t in range(self.t_max)])
     
-    def collect_samples(self, reps, random_alpha=False):
+    def collect_samples(self, reps):
         self.reps += reps
         self.samples = np.array([self.draw_replicate() for rep in range(reps)])
+        
         return self.samples
     
     def reset(self):
         self.N = self.N_init
         self.K = self.K_init
+        
     
     def plot(self, file_name):
         for idx, sample in enumerate(self.samples):
-            plt.plot(np.linspace(1, self.t_max, self.t_max), sample, alpha=0.1, color="b")
+            plt.plot(np.linspace(1, self.t_max, self.t_max), sample[:,0], alpha=0.1, color="b")
+            plt.plot(np.linspace(1, self.t_max, self.t_max), sample[:,1], alpha=0.1, color="r")
         plt.savefig(file_name)
