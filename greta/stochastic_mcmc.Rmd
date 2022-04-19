@@ -9,10 +9,10 @@ library(greta)
 library(bayesplot)
 
 set.seed(4242)
-train_reps <- 10
+train_reps <- 100
 train_t_max <- 250
 test_t_max <- 250
-test_reps <- 1000
+test_reps <- 100
 
 
 np.clip <- function(x, a, b) {
@@ -24,8 +24,14 @@ np.clip <- function(x, a, b) {
 
 ```{r}
 # View the bistable curve: 
-# curve( (0.75 - x)**2 * (0.25 - x), 0, 1)
+#curve( (0.75 - x)**2 * (0.25 - x), 0.749999, 0.750001)
+#curve(0*x,0,1,add = TRUE)
 
+#curve((0.25 - x)**2 * (0.75 - x), 0, 1)
+#curve(0*x,0,1,add = TRUE)
+```
+
+```{r}
 step <- function(N, eta,  a = 0.75, b = 0.25) {
   N <- N + (a - N)**2 * (b - N) + eta
   N <- np.clip(N, 0, 1)
@@ -34,16 +40,16 @@ step <- function(N, eta,  a = 0.75, b = 0.25) {
 
 # simulate
 simulate <- function(N_init = 0.75,
-                     t_max = 250L,
-                     mu =0, # -5e-4,
-                     sigma = 1e-2,
-                     a = 0.75, 
-                     b = 0.25) {
-  eta <- rnorm(t_max, mu, sigma)
+                     t_max = 1250L,
+                       p = list(
+                       sigma = 1e-2,
+                       a = 0.75, 
+                       b = 0.25)) {
+  eta <- rnorm(t_max, 0, p$sigma) # mu = 0, no drift
   N   <- numeric(t_max)
   N[1] <- N_init
   for (t in 1:(t_max-1)) {
-    N[t+1] <- step(N[t], eta[t], a = a, b = b)
+    N[t+1] <- step(N[t], eta[t], a = p$a, b = p$b)
   }
   tibble::tibble(t = 1:t_max, N = N)
 }
@@ -97,9 +103,12 @@ posterior_samples <-
   sample_n(test_reps)
 posterior_sims <- posterior_samples %>%
   purrr::transpose() %>%
-  map_dfr(function(q) simulate(t_max = test_t_max) ,.id = "i")
+  map_dfr(function(q) simulate(t_max = test_t_max, p = q) ,.id = "i")
 
-bind_rows(test, posterior_sims, .id = "model")|> 
+bind_rows(
+  mutate(test, model="true"), 
+  mutate(posterior_sims, model="predicted")
+)|> 
   ggplot(aes(t, N, col=model, group=interaction(model,i))) +
            geom_line(alpha=0.1)
 
@@ -107,8 +116,8 @@ bind_rows(test, posterior_sims, .id = "model")|>
 
 ```{r}
 true <- tibble(a = 0.75, b = 0.25, sigma = 1e-2) |> gather(variable, value)
-
-posterior_samples  |> gather(variable, value) |> ggplot() + 
+bind_rows(map(draws, as_tibble)) |>
+  gather(variable, value) |> ggplot() + 
   geom_histogram(aes(value), bins = 30)  +
   geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
   facet_wrap(~variable, scales = "free")
