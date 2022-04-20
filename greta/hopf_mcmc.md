@@ -1,60 +1,16 @@
 
 ``` r
-library(tidyverse)
+library(tidyverse, quietly = TRUE)
+library(greta, quietly = TRUE)
+library(bayesplot, quietly = TRUE)
 ```
-
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──
-
-    ## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-    ## ✓ tibble  3.1.6     ✓ dplyr   1.0.8
-    ## ✓ tidyr   1.2.0     ✓ stringr 1.4.0
-    ## ✓ readr   2.1.2     ✓ forcats 0.5.1
-
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
-
-``` r
-library(greta)
-```
-
-    ## 
-    ## Attaching package: 'greta'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     slice
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     binomial, cov2cor, poisson
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     %*%, apply, backsolve, beta, chol2inv, colMeans, colSums, diag,
-    ##     eigen, forwardsolve, gamma, identity, rowMeans, rowSums, sweep,
-    ##     tapply
-
-``` r
-library(bayesplot)
-```
-
-    ## This is bayesplot version 1.8.1
-
-    ## - Online documentation and vignettes at mc-stan.org/bayesplot
-
-    ## - bayesplot theme set to bayesplot::theme_default()
-
-    ##    * Does _not_ affect other ggplot2 plots
-
-    ##    * See ?bayesplot_theme_set for details on theme setting
 
 ``` r
 set.seed(4242)
-train_reps <- 10
+train_reps <- 1
 train_t_max <- 100
 test_t_max <- 100
-test_reps <- 100
+test_reps <- train_reps # same as train_reps since test cases are continuations of the training rep time series
 
 
 np.clip <- function(x, a, b) {
@@ -64,40 +20,35 @@ np.clip <- function(x, a, b) {
 }
 ```
 
-``` r
-# Cycles start around K >= 21
-# some stochastic resonance visible before then
-step <- function(N, eta,  r = 0.75, c = 0.25, Ko = 15, delta=0.1, t=1) {
-  
-  # K will go linearly from 15 to 25 with delta = 0.1
-  # Make delta negative and start with a bigger Ko to run in reverse
-  K <- Ko + delta*t
-  
-  Nt <- numeric(2)
-  Nt[1] <- N[1] * exp(r * (1 - N[1]/K) - c * N[2] + eta[1])
-  Nt[2] <- N[1] * exp(r * (1 - N[1]/K) ) * (1 - exp(-c * N[2]+ eta[2]) )
-  Nt[1] <- np.clip(Nt[1], 0, 100)
-  Nt[2] <- np.clip(Nt[2], 0, 100)
+Cycles start around `K >= 21`, though some stochastic resonance visible
+before then. `K` will go linearly from 15 to 25 with `delta = 0.1`. Make
+delta negative and start with a bigger `Ko` to run in reverse.
 
-  Nt
+``` r
+step <- function(H, P, eta,  t=0, 
+                 p = list(r = 0.75, c = 0.25, Ko = 15, delta=0.1)) {
+  K <- p$Ko + p$delta*t
+  N <- numeric(2)
+  N[1] <- H * exp(p$r * (1 - H/K) - p$c * P + eta[1])
+  N[2] <- H * exp(p$r * (1 - H/K) ) * (1 - exp(-p$c * P+ eta[2]) )
+  N[1] <- np.clip(N[1], 0, 100)
+  N[2] <- np.clip(N[2], 0, 100)
+  N
 }
 
-# simulate
-simulate <- function(N_init = c(9,.1),
-                     t_max = 100,
-                     mu =0, # -5e-4,
-                     sigma = 2e-2,
-                     r = 0.75, 
-                     c = 0.1,
-                     Ko = 15,
-                     delta = 0.1
+simulate <- function(t_max = 100, 
+                     p = list(H_init = 9, P_init = 1,
+                              r = 0.75, c = 0.1,  Ko = 15, delta = 0.1,
+                              sigma_H = 2e-2, sigma_P = 2e-2)
                      ) {
-  eta <- array(rnorm(2*t_max, mu, sigma), c(t_max,2))
+  eta <- array(c(rnorm(t_max, 0, p$sigma_H), 
+                 rnorm(t_max, 0, p$sigma_P)),
+               dim=c(t_max,2))
   N   <- array(NA, c(t_max,2))
   
-  N[1,] <- N_init
+  N[1,] <- c(p$H_init, p$P_init)
   for (t in 1:(t_max-1)) {
-    N[t+1,] <- step(N[t,], eta[t,], r=r, c=c, Ko=Ko, delta=delta, t=t)
+    N[t+1,] <- step(N[t,1], N[t,2], eta[t,], t=t, p = p)
   }
   tibble::tibble(t = 1:t_max, H = N[,1], P = N[,2])
 }
@@ -105,7 +56,10 @@ simulate <- function(N_init = c(9,.1),
 
 ``` r
 t_max <- train_t_max + test_t_max
-sim <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=t_max, delta=-0.1, Ko=30), .id = "i")
+ p = list(H_init = 9, P_init = 1,
+          r = 0.75, c = 0.1,  Ko = 14, delta = 0.08,
+          sigma_H = 2e-2, sigma_P = 2e-2)
+sim <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=t_max, p = p), .id = "i")
 train <- sim |> filter(t <= train_t_max)
 test <- sim |> filter(t > train_t_max)
 # test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max), .id = "i")
@@ -114,7 +68,7 @@ test <- sim |> filter(t > train_t_max)
 train |> ggplot(aes(H, P, group=i)) + geom_path(alpha=0.4)
 ```
 
-![](hopf_mcmc_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 sim |> 
@@ -123,4 +77,160 @@ sim |>
   geom_vline(aes(xintercept = train_t_max))
 ```
 
-![](hopf_mcmc_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+``` r
+gsims <- train |> 
+  group_by(i) |> 
+  mutate(H1 = lead(H),
+         P1 = lead(P)) |> 
+  filter(t<max(t)) |> 
+  ungroup()
+
+stopifnot(all(gsims$P1 > 0))
+
+H_t  <- gsims$H 
+H_t1 <- log( gsims$H1 ) 
+P_t  <- gsims$P
+P_t1 <- log( gsims$P1 )
+t <- gsims$t
+```
+
+``` r
+library(greta)
+r <- uniform(0, 10)
+```
+
+    ## ℹ Initialising python and checking dependencies, this may take a moment.
+
+    ## ✓ Initialising python and checking dependencies ... done!
+
+    ## 
+
+``` r
+c <- uniform(0, 10)
+Ko <- uniform(0, 50)
+delta <- uniform(-1,1)
+sigma_H <- uniform(0, 1)
+sigma_P <- uniform(0, 1)
+
+K <- Ko + delta * t
+mu_H <- log( H_t ) +  (r * (1 - H_t/K) - c * P_t) 
+distribution(H_t1) <- normal(mu_H, sigma_H )
+
+
+mu_P <- log( H_t ) +  (r * (1 - H_t/K) ) + log(1 - exp(-c * P_t) )
+distribution(P_t1) <- normal(mu_P, sigma_P )
+m <- model(r, c, Ko, delta, sigma_H, sigma_P)
+```
+
+``` r
+mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("hopf_cache"))
+bench::bench_time({                 
+    draws <- mmcmc(m, 
+                 n_samples = 10000, warmup = 5000,
+                 chains = 4, verbose = FALSE)
+})
+```
+
+    ## process    real 
+    ##   118ms   119ms
+
+``` r
+bayesplot::mcmc_trace(draws)
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+test_reps <- 100
+## draw test_reps number of samples
+left_off <- train |> 
+  filter(t == train_t_max) |> 
+  select(H,P) |> 
+  rename(H_init = H, P_init = P) |>
+  slice_sample(n = test_reps, replace=TRUE)
+
+posterior_samples <- 
+  bind_rows(map(draws, as_tibble)) %>% 
+  sample_n(test_reps) |>
+  bind_cols(left_off)
+
+
+posterior_sims <- posterior_samples %>%
+  purrr::transpose() %>%
+  map_dfr(function(q) simulate(t_max = test_t_max,
+                               p = q
+                               ) ,.id = "i") |>
+  mutate(t = t+train_t_max)
+```
+
+``` r
+combined <- 
+  bind_rows(
+    mutate(train, type="training"), 
+    mutate(test,type="observed"),  
+    mutate(posterior_sims, type="predicted") |> filter(i %in% 1:3)
+    ) |>
+  rename("host" = H, "parasite" = P) |>
+  pivot_longer(c(host, parasite), values_to="density", names_to="species")
+
+
+combined |> 
+  ggplot(aes(t, density, col=type, group=interaction(i,type))) + 
+  geom_line(alpha=0.5) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+true <- as_tibble(p) |> select(-H_init, -P_init)  |> gather(variable, value)
+
+bind_rows(map(draws, as_tibble)) |>
+  gather(variable, value) |> ggplot() + 
+  geom_histogram(aes(value), bins = 30)  +
+  geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
+  facet_wrap(~variable, scales = "free")
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+# Scoring
+
+``` r
+library(scoringRules)
+
+scores <- function(observed, dat) {
+  logsscore <- scoringRules::logs_sample(observed, dat)
+  crpsscore <- scoringRules::crps_sample(observed, dat)
+  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
+
+}
+```
+
+We score predictions of each variable seperately. First the predator
+(Parasite):
+
+``` r
+# ensemble predictions
+P_dat <- 
+  posterior_sims |> 
+  pivot_wider(id_cols = "t", names_from="i", values_from = "P") |> 
+  select(-t) |> as.matrix()
+```
+
+``` r
+# score over all replicates:
+  
+rep_scores <- 
+  test |> 
+  group_by(i) |> 
+  group_map(~ scores(.x$P, P_dat)) |> 
+  bind_rows()
+
+rep_scores |> summarise(across(.fns= base::mean))
+```
+
+    ##       logs    crps
+    ## 1 2.827651 1.17359
