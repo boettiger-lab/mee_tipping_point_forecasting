@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from darts import TimeSeries
 from pandas import DataFrame
 import torch
-from darts.models import RNNModel, BlockRNNModel, TCNModel
+from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, import_hypers, make_df
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series
 import argparse
 import yaml
 from functools import reduce
@@ -22,12 +22,12 @@ parser.add_argument(
     "--model",
     default="lstm",
     type=str,
-    help="model to train with (lstm or block_rnn)",
+    help="model to train with (lstm/block_rnn/transformer/gru)",
 )
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=1000,
+    default=100,
     type=int,
     help="# of samples to train on",
 )
@@ -55,12 +55,7 @@ parser.add_argument(
     "--tp_model",
     default="stochastic",
     type=str,
-    help="Select which model to use for the tipping point (stochastic/saddle)",
-)
-parser.add_argument(
-    "--hyper_file",
-    default="lstm",
-    help="Select which hyperparameter file to load hypers from",
+    help="Select which model to use for the tipping point (stochastic/saddle/hopf)",
 )
 parser.add_argument(
     "-c",
@@ -69,42 +64,50 @@ parser.add_argument(
     type=str,
     help="Special cases to consider (none, tipped, non_tipped, both)",
 )
+parser.add_argument(
+    "--reverse",
+    action="store_true",
+    help="Flag to use decreasing Hopf model",
+)
 args = parser.parse_args()
 
+if args.model == "lstm": 
+    if args.tp_model == "stochastic":
+        from train_hyperparams.stochastic_lstm import hyperparameters
+    elif args.tp_model == "saddle":
+        from train_hyperparams.saddle_lstm import hyperparameters
+    elif args.tp_model == "hopf":
+        from train_hyperparams.hopf_lstm import hyperparameters
+elif args.model == "gru":
+    if args.tp_model == "stochastic":
+        from train_hyperparams.stochastic_gru import hyperparameters
+    elif args.tp_model == "saddle":
+        from train_hyperparams.saddle_gru import hyperparameters
+    elif args.tp_model == "hopf":
+        from train_hyperparams.hopf_gru import hyperparameters
+elif args.model == "block_rnn":
+    if args.tp_model == "stochastic":
+        from train_hyperparams.stochastic_block import hyperparameters
+    elif args.tp_model == "saddle":
+        from train_hyperparams.saddle_block import hyperparameters
+    elif args.tp_model == "hopf":
+        from train_hyperparams.hopf_block import hyperparameters
+elif args.model == "transformer":
+    if args.tp_model == "stochastic":
+        from train_hyperparams.stochastic_transformer import hyperparameters
+    elif args.tp_model == "saddle":
+        from train_hyperparams.saddle_transformer import hyperparameters
+    elif args.tp_model == "hopf":
+        from train_hyperparams.hopf_transformer import hyperparameters
 
-if args.hyper_file == "stochastic_lstm":
-    from train_hyperparams.stochastic_lstm import hyperparameters
-elif args.hyper_file == "saddle_lstm":
-    from train_hyperparams.saddle_lstm import hyperparameters
-elif args.hyper_file == "stochastic_block":
-    from train_hyperparams.stochastic_block import hyperparameters
-elif args.hyper_file == "saddle_block":
-    from train_hyperparams.saddle_block import hyperparameters
-elif args.hyper_file == "stochastic_tcn":
-    from train_hyperparams.stochastic_tcn import hyperparameters
-elif args.hyper_file == "saddle_tcn":
-    from train_hyperparams.saddle_tcn import hyperparameters
-
-model = {"lstm" : RNNModel, "block_rnn" : BlockRNNModel, "tcn" : TCNModel}[args.model.lower()]
+model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.model.lower()]
 
 models = []
 for i in range(42, 47):
     hyperparameters["random_state"] = i
     np.random.seed(i)
     
-    # Selecting case to pick training set
-    if args.case.lower() == "tipped" and args.tp_model == "stochastic":
-        train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-    elif args.case.lower() == "nontipped" and args.tp_model == "stochastic":
-        train_series = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-    elif args.case.lower() == "both" and args.tp_model == "stochastic":
-        train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-        train_series_ = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-        train_series = train_series.concatenate(train_series_, axis="sample")
-    elif args.case.lower() == "none":
-        # Generating time series
-        train_series, _ = preprocessed_t_series(args.tp_model, args.n_samples)
-        
+    train_series = get_train_series(args)
 
     my_model = model(
         likelihood=LaplaceLikelihood(),
@@ -138,7 +141,7 @@ if args.evaluate:
         train_series, _ = preprocessed_t_series(args.tp_model, 1)
         train_series[:input_len].plot(color="blue", label='truth')
         t_series, v_series = train_series.split_before(input_len)
-        t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100)
+        t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100, reverse=args.reverse)
         
         t_max = 250-input_len
         
@@ -156,3 +159,5 @@ if args.evaluate:
         plt.clf()
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
+
+
