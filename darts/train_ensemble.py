@@ -11,7 +11,7 @@ from pandas import DataFrame
 import torch
 from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, make_df, get_train_series
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
 import argparse
 import yaml
 from functools import reduce
@@ -138,20 +138,27 @@ if args.evaluate:
         np.random.seed(i)
         torch.manual_seed(i)
         
-        train_series, _ = preprocessed_t_series(args.tp_model, 1)
-        train_series[:input_len].plot(color="blue", label='truth')
-        t_series, v_series = train_series.split_before(input_len)
+        train_series = preprocessed_t_series(args.tp_model, 1)
+        
+        if args.tp_model == "hopf":
+            x, y = train_series[:input_len].univariate_component(0), train_series[:input_len].univariate_component(1)
+            x.plot(color="blue", label='truth')
+            y.plot(color="gold", label="truth")
+        else:
+            train_series[:input_len].plot(color="blue", label='truth')
+            
+        t_series = train_series[:input_len]
         t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100, reverse=args.reverse)
         
-        t_max = 250-input_len
+        t_max = 250-input_len if args.tp_model != "hopf" else 200-input_len
+        plot(args.tp_model, t_dist, "blue", "gold")
         
-        t_dist.plot(low_quantile=0.025, high_quantile=0.975, color="blue", label="_nolegend_", linestyle="dotted")
         ensemble_preds = []
         for model in models:
             ensemble_preds.append(model.predict(t_max, t_series, num_samples=100))
         ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
         
-        ensemble_series.plot(low_quantile=0.025, high_quantile=0.975, linestyle="dotted", color="orange", label='prediction')
+        plot(args.tp_model, ensemble_series, "orange", "green")
         df = make_df(ensemble_series, t_dist, args.tp_model, args.model.lower(), args.case, args.n_samples)
         df["iter"] = i
         final_df = final_df.append(df, ignore_index=True)
