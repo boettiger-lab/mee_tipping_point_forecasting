@@ -28,9 +28,8 @@ Cycles start around `K >= 21`, though some stochastic resonance visible before t
 Make delta negative and start with a bigger `Ko` to run in reverse.
 
 ```{r}
-step <- function(H, P, eta,  t=0, 
-                 p = list(r = 0.75, c = 0.25, Ko = 15, delta=0.1)) {
-  K <- p$Ko + p$delta*t
+step <- function(H, P, eta,  t=0, p) {
+  K <- p$Ko + p$delta*(t+p$t_init)
   N <- numeric(2)
   N[1] <- H * exp(p$r * (1 - H/K) - p$c * P + eta[1])
   N[2] <- H * exp(p$r * (1 - H/K) ) * (1 - exp(-p$c * P+ eta[2]) )
@@ -42,7 +41,7 @@ step <- function(H, P, eta,  t=0,
 simulate <- function(t_max = 100, 
                      p = list(H_init = 9, P_init = 1,
                               r = 0.75, c = 0.1,  Ko = 15, delta = 0.1,
-                              sigma_H = 2e-2, sigma_P = 2e-2)
+                              sigma_H = 2e-2, sigma_P = 2e-2, t_init = 0)
                      ) {
   eta <- array(c(rnorm(t_max, 0, p$sigma_H), 
                  rnorm(t_max, 0, p$sigma_P)),
@@ -62,7 +61,7 @@ simulate <- function(t_max = 100,
 t_max <- train_t_max + test_t_max
  p = list(H_init = 9, P_init = 1,
           r = 0.75, c = 0.1,  Ko = 14, delta = 0.08,
-          sigma_H = 2e-2, sigma_P = 2e-2)
+          sigma_H = 2e-2, sigma_P = 2e-2, t_init = 0)
 sim <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=t_max, p = p), .id = "i")
 train <- sim |> filter(t <= train_t_max)
 test <- sim |> filter(t > train_t_max)

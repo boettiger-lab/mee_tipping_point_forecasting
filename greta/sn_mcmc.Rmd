@@ -9,7 +9,7 @@ library(greta)
 library(bayesplot)
 
 set.seed(4242)
-train_reps <- 1
+train_reps <- 100
 train_t_max <- 75
 test_t_max <- 75
 test_reps <- 100
@@ -29,10 +29,10 @@ step <- function(N,
                  t,
                  pars) {
 
-        h <- np.clip(pars$h_init + pars$alpha * t, 0, 0.27)
+        h <- np.clip(pars$h_init + pars$alpha * (pars$t_init + t), 0, 0.27)
         N <- N + pars$r * N * (1 - N / pars$K) - 
           h * (N**2 / (pars$s**2 + N**2)) + eta
-        N <- np.clip(N, 0, 1)
+        N <- np.clip(N, 0, 100)
         N
   N
 }
@@ -47,7 +47,8 @@ simulate <- function(N_init = 0.75,
                         h_init = .15,
                         alpha = 0.0015,
                         mu = 0,
-                        sigma = 0.00
+                        sigma = 0.00,
+                        t_init = 0
                       )
                     ) {
   eta <- rnorm(t_max, pars$mu, pars$sigma) # mu = 0, no drift
@@ -56,7 +57,7 @@ simulate <- function(N_init = 0.75,
   for (t in 1:(t_max-1)) {
     N[t+1] <- step(N[t], eta[t], t, pars)
   }
-  tibble::tibble(t = 1:t_max, N = N)
+  tibble::tibble(t = pars$t_init + 1:t_max, N = N)
 }
 ```
 
@@ -68,7 +69,8 @@ pars = list(r = 1,
             h_init = .15,
             alpha = 0.0015,
             mu = 0,
-            sigma = 0.02
+            sigma = 0.02,
+            t_init = 0
           )
 t_max <- train_t_max + test_t_max
 sims <- purrr::map_dfr(1:train_reps, 
@@ -96,8 +98,8 @@ t <- gsims$t
 library(greta)
 r <- uniform(0, 10)
 K <- uniform(0, 10)
-s <- uniform(0,10)
-h_init <- uniform(0,10)
+s <- uniform(0, 10)
+h_init <- uniform(0, 10)
 alpha <- uniform(0, 10)
 sigma <- uniform(0, 10)
 h <- h_init + alpha * t
@@ -111,7 +113,7 @@ mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("sn_cache"))
 
 
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 60000, warmup = 50000, chains = 4, verbose = FALSE)
+  draws <- mmcmc(m, n_samples = 100000, warmup = 80000, chains = 4, verbose = FALSE)
 })
 ```
 
@@ -125,25 +127,35 @@ bayesplot::mcmc_trace(draws)
 
 ```{r}
 ## draw test_reps number of samples
+left_off <- train |> 
+  filter(t == train_t_max) |> 
+  select(N) |> 
+  rename(N_init = N) |>
+  slice_sample(n = test_reps, replace=TRUE)
 
 posterior_samples <- 
-  bind_rows(map(draws, as_tibble)) %>% 
-  sample_n(test_reps)
-posterior_sims <- posterior_samples %>%
-  purrr::transpose() %>%
-  map_dfr(function(q) simulate(t_max = test_t_max, p = q) ,.id = "i")
+  bind_rows(map(draws, as_tibble)) |> 
+  sample_n(test_reps) |>
+  mutate(t_init = train_t_max) |>
+  bind_cols(left_off)
+
+posterior_sims <- posterior_samples |>
+  mutate(mu=0) |>
+  purrr::transpose() |>
+  map_dfr(function(q) simulate(t_max = test_t_max, pars = q, N_init = q$N_init) ,.id = "i")
 
 bind_rows(
+  mutate(train, model="historical"),
   mutate(test, model="true"), 
   mutate(posterior_sims, model="predicted")
 )|> 
   ggplot(aes(t, N, col=model, group=interaction(model,i))) +
-           geom_line(alpha=0.1)
+           geom_line(alpha=0.2)
 
 ```
 
 ```{r}
-true <- tibble(a = 0.75, b = 0.25, sigma = 1e-2) |> gather(variable, value)
+true <- as_tibble(pars) |> gather(variable, value)
 bind_rows(map(draws, as_tibble)) |>
   gather(variable, value) |> ggplot() + 
   geom_histogram(aes(value), bins = 30)  +
