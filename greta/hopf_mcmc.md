@@ -7,11 +7,10 @@ library(bayesplot, quietly = TRUE)
 
 ``` r
 set.seed(4242)
-train_reps <- 1
+train_reps <- 10
 train_t_max <- 100
 test_t_max <- 100
-test_reps <- train_reps # same as train_reps since test cases are continuations of the training rep time series
-
+test_reps <- 100
 
 np.clip <- function(x, a, b) {
   if(x < a) return(a)
@@ -134,7 +133,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##   118ms   119ms
+    ##   124ms   124ms
 
 ``` r
 bayesplot::mcmc_trace(draws)
@@ -143,7 +142,6 @@ bayesplot::mcmc_trace(draws)
 ![](hopf_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
-test_reps <- 100
 ## draw test_reps number of samples
 left_off <- train |> 
   filter(t == train_t_max) |> 
@@ -232,5 +230,5 @@ rep_scores <-
 rep_scores |> summarise(across(.fns= base::mean))
 ```
 
-    ##       logs    crps
-    ## 1 2.827651 1.17359
+    ##       logs     crps
+    ## 1 3.166922 1.161241

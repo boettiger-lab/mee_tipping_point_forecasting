@@ -78,3 +78,152 @@ sim |>
   ggplot(aes(t, density, col=species, group=interaction(i,species))) + geom_line(alpha=0.2) +
   geom_vline(aes(xintercept = train_t_max))
 ```
+
+
+
+
+```{r}
+gsims <- train |> 
+  group_by(i) |> 
+  mutate(H1 = lead(H),
+         P1 = lead(P)) |> 
+  filter(t<max(t)) |> 
+  ungroup()
+
+stopifnot(all(gsims$P1 > 0))
+
+H_t  <- gsims$H 
+H_t1 <- log( gsims$H1 ) 
+P_t  <- gsims$P
+P_t1 <- log( gsims$P1 )
+t <- gsims$t
+```
+
+```{r}
+library(greta)
+r <- uniform(0, 10)
+c <- uniform(0, 10)
+Ko <- uniform(0, 50)
+delta <- uniform(-1,1)
+sigma_H <- uniform(0, 1)
+sigma_P <- uniform(0, 1)
+
+K <- Ko + delta * t
+mu_H <- log( H_t ) +  (r * (1 - H_t/K) - c * P_t) 
+distribution(H_t1) <- normal(mu_H, sigma_H )
+
+
+mu_P <- log( H_t ) +  (r * (1 - H_t/K) ) + log(1 - exp(-c * P_t) )
+distribution(P_t1) <- normal(mu_P, sigma_P )
+m <- model(r, c, Ko, delta, sigma_H, sigma_P)
+```
+
+```{r}
+mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("hopf_decrease_cache"))
+bench::bench_time({                 
+    draws <- mmcmc(m, 
+                 n_samples = 10000, warmup = 5000,
+                 chains = 4, verbose = FALSE)
+})
+```
+
+```{r}
+bayesplot::mcmc_trace(draws)
+```
+
+
+
+
+
+
+```{r}
+## draw test_reps number of samples
+left_off <- train |> 
+  filter(t == train_t_max) |> 
+  select(H,P) |> 
+  rename(H_init = H, P_init = P) |>
+  slice_sample(n = test_reps, replace=TRUE)
+
+posterior_samples <- 
+  bind_rows(map(draws, as_tibble)) %>% 
+  sample_n(test_reps) |>
+  bind_cols(left_off)
+
+
+posterior_sims <- posterior_samples %>%
+  purrr::transpose() %>%
+  map_dfr(function(q) simulate(t_max = test_t_max,
+                               p = q
+                               ) ,.id = "i") |>
+  mutate(t = t+train_t_max)
+```
+
+```{r}
+combined <- 
+  bind_rows(
+    mutate(train, type="training"), 
+    mutate(test,type="observed"),  
+    mutate(posterior_sims, type="predicted") |> filter(i %in% 1:3)
+    ) |>
+  rename("host" = H, "parasite" = P) |>
+  pivot_longer(c(host, parasite), values_to="density", names_to="species")
+
+
+combined |> 
+  ggplot(aes(t, density, col=type, group=interaction(i,type))) + 
+  geom_line(alpha=0.5) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
+```
+
+
+
+```{r}
+true <- as_tibble(p) |> select(-H_init, -P_init)  |> gather(variable, value)
+
+bind_rows(map(draws, as_tibble)) |>
+  gather(variable, value) |> ggplot() + 
+  geom_histogram(aes(value), bins = 30)  +
+  geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
+  facet_wrap(~variable, scales = "free")
+```
+
+
+# Scoring
+
+
+```{r}
+library(scoringRules)
+
+scores <- function(observed, dat) {
+  logsscore <- scoringRules::logs_sample(observed, dat)
+  crpsscore <- scoringRules::crps_sample(observed, dat)
+  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
+
+}
+```
+
+We score predictions of each variable seperately.  First the predator (Parasite):
+
+```{r}
+# ensemble predictions
+P_dat <- 
+  posterior_sims |> 
+  pivot_wider(id_cols = "t", names_from="i", values_from = "P") |> 
+  select(-t) |> as.matrix()
+
+
+```
+
+
+```{r}
+# score over all replicates:
+  
+rep_scores <- 
+  test |> 
+  group_by(i) |> 
+  group_map(~ scores(.x$P, P_dat)) |> 
+  bind_rows()
+
+rep_scores |> summarise(across(.fns= base::mean))
+
+```

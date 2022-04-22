@@ -11,11 +11,10 @@ library(bayesplot, quietly = TRUE)
 
 ```{r}
 set.seed(4242)
-train_reps <- 1
+train_reps <- 10
 train_t_max <- 100
 test_t_max <- 100
-test_reps <- train_reps # same as train_reps since test cases are continuations of the training rep time series
-
+test_reps <- 100
 
 np.clip <- function(x, a, b) {
   if(x < a) return(a)
@@ -134,7 +133,6 @@ bayesplot::mcmc_trace(draws)
 
 
 ```{r}
-test_reps <- 100
 ## draw test_reps number of samples
 left_off <- train |> 
   filter(t == train_t_max) |> 
