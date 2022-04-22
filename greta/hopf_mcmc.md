@@ -7,7 +7,7 @@ library(bayesplot, quietly = TRUE)
 
 ``` r
 set.seed(4242)
-train_reps <- 10
+train_reps <- 1
 train_t_max <- 100
 test_t_max <- 100
 test_reps <- 100
@@ -24,9 +24,8 @@ before then. `K` will go linearly from 15 to 25 with `delta = 0.1`. Make
 delta negative and start with a bigger `Ko` to run in reverse.
 
 ``` r
-step <- function(H, P, eta,  t=0, 
-                 p = list(r = 0.75, c = 0.25, Ko = 15, delta=0.1)) {
-  K <- p$Ko + p$delta*t
+step <- function(H, P, eta,  t=0, p) {
+  K <- p$Ko + p$delta*(t+p$t_init)
   N <- numeric(2)
   N[1] <- H * exp(p$r * (1 - H/K) - p$c * P + eta[1])
   N[2] <- H * exp(p$r * (1 - H/K) ) * (1 - exp(-p$c * P+ eta[2]) )
@@ -38,7 +37,7 @@ step <- function(H, P, eta,  t=0,
 simulate <- function(t_max = 100, 
                      p = list(H_init = 9, P_init = 1,
                               r = 0.75, c = 0.1,  Ko = 15, delta = 0.1,
-                              sigma_H = 2e-2, sigma_P = 2e-2)
+                              sigma_H = 2e-2, sigma_P = 2e-2, t_init = 0)
                      ) {
   eta <- array(c(rnorm(t_max, 0, p$sigma_H), 
                  rnorm(t_max, 0, p$sigma_P)),
@@ -49,15 +48,17 @@ simulate <- function(t_max = 100,
   for (t in 1:(t_max-1)) {
     N[t+1,] <- step(N[t,1], N[t,2], eta[t,], t=t, p = p)
   }
-  tibble::tibble(t = 1:t_max, H = N[,1], P = N[,2])
+  tibble::tibble(t = p$t_init + 1:t_max, H = N[,1], P = N[,2])
 }
 ```
+
+# Increasing K
 
 ``` r
 t_max <- train_t_max + test_t_max
  p = list(H_init = 9, P_init = 1,
           r = 0.75, c = 0.1,  Ko = 14, delta = 0.08,
-          sigma_H = 2e-2, sigma_P = 2e-2)
+          sigma_H = 2e-2, sigma_P = 2e-2, t_init = 0)
 sim <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=t_max, p = p), .id = "i")
 train <- sim |> filter(t <= train_t_max)
 test <- sim |> filter(t > train_t_max)
@@ -72,7 +73,8 @@ train |> ggplot(aes(H, P, group=i)) + geom_path(alpha=0.4)
 ``` r
 sim |> 
   pivot_longer(c(P,H), values_to="density", names_to="species") |>
-  ggplot(aes(t, density, col=species, group=interaction(i,species))) + geom_line(alpha=0.2) +
+  ggplot(aes(t, density, col=species, group=interaction(i,species))) + 
+  geom_line() +
   geom_vline(aes(xintercept = train_t_max))
 ```
 
@@ -97,7 +99,7 @@ t <- gsims$t
 
 ``` r
 library(greta)
-r <- uniform(0, 10)
+r <- lognormal(0, 1)
 ```
 
     ## ℹ Initialising python and checking dependencies, this may take a moment.
@@ -107,11 +109,11 @@ r <- uniform(0, 10)
     ## 
 
 ``` r
-c <- uniform(0, 10)
+c <- lognormal(0, 1)
 Ko <- uniform(0, 50)
 delta <- uniform(-1,1)
-sigma_H <- uniform(0, 1)
-sigma_P <- uniform(0, 1)
+sigma_H <- lognormal(0, 1)
+sigma_P <- lognormal(0, 1)
 
 K <- Ko + delta * t
 mu_H <- log( H_t ) +  (r * (1 - H_t/K) - c * P_t) 
@@ -133,13 +135,25 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##   124ms   124ms
+    ##   10.6m    5.2m
 
 ``` r
 bayesplot::mcmc_trace(draws)
 ```
 
 ![](hopf_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+true <- as_tibble(p) |> select(-H_init, -P_init)  |> gather(variable, value)
+
+bind_rows(map(draws, as_tibble)) |>
+  gather(variable, value) |> ggplot() + 
+  geom_histogram(aes(value), bins = 30)  +
+  geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
+  facet_wrap(~variable, scales = "free")
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ``` r
 ## draw test_reps number of samples
@@ -152,6 +166,7 @@ left_off <- train |>
 posterior_samples <- 
   bind_rows(map(draws, as_tibble)) %>% 
   sample_n(test_reps) |>
+  mutate(t_init = train_t_max) |>
   bind_cols(left_off)
 
 
@@ -159,8 +174,7 @@ posterior_sims <- posterior_samples %>%
   purrr::transpose() %>%
   map_dfr(function(q) simulate(t_max = test_t_max,
                                p = q
-                               ) ,.id = "i") |>
-  mutate(t = t+train_t_max)
+                               ) ,.id = "i")
 ```
 
 ``` r
@@ -168,19 +182,126 @@ combined <-
   bind_rows(
     mutate(train, type="training"), 
     mutate(test,type="observed"),  
-    mutate(posterior_sims, type="predicted") |> filter(i %in% 1:3)
+    mutate(posterior_sims, type="predicted") 
     ) |>
   rename("host" = H, "parasite" = P) |>
   pivot_longer(c(host, parasite), values_to="density", names_to="species")
+```
 
-
+``` r
 combined |> 
+  group_by(t,type,species) |> 
+  summarise(mean = mean(density), sd = sd(density), .groups = "drop") |> 
+ ggplot(aes(t, col=type)) + 
+  geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+  geom_line(aes(y=mean)) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
+```
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+``` r
+combined |> 
+      filter(i %in% 1:train_reps) |> 
   ggplot(aes(t, density, col=type, group=interaction(i,type))) + 
   geom_line(alpha=0.5) +
   geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
 ```
 
-![](hopf_mcmc_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+# Decreasing K
+
+``` r
+t_max <- train_t_max + test_t_max
+ p = list(H_init = 9, P_init = 1,
+          r = 0.75, c = 0.1,  Ko = 30, delta = -0.08,
+          sigma_H = 2e-2, sigma_P = 2e-2, t_init = 0)
+sim <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=t_max, p = p), .id = "i")
+train <- sim |> filter(t <= train_t_max)
+test <- sim |> filter(t > train_t_max)
+# test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max), .id = "i")
+
+## show training data
+train |> ggplot(aes(H, P, group=i)) + geom_path(alpha=0.4)
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+sim |> 
+  pivot_longer(c(P,H), values_to="density", names_to="species") |>
+  ggplot(aes(t, density, col=species, group=interaction(i,species))) + geom_line(alpha=1) +
+  geom_vline(aes(xintercept = train_t_max))
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+
+``` r
+gsims <- train |> 
+  group_by(i) |> 
+  mutate(H1 = lead(H),
+         P1 = lead(P)) |> 
+  filter(t<max(t)) |> 
+  ungroup()
+
+stopifnot(all(gsims$P1 > 0))
+
+H_t  <- gsims$H 
+H_t1 <- log( gsims$H1 ) 
+P_t  <- gsims$P
+P_t1 <- log( gsims$P1 )
+t <- gsims$t
+```
+
+``` r
+library(greta)
+r <- lognormal(0, 1)
+c <- lognormal(0, 1)
+Ko <- uniform(0, 50)
+delta <- uniform(-1,1)
+sigma_H <- lognormal(0, 1)
+sigma_P <- lognormal(0, 1)
+
+K <- Ko + delta * t
+mu_H <- log( H_t ) +  (r * (1 - H_t/K) - c * P_t) 
+distribution(H_t1) <- normal(mu_H, sigma_H )
+
+
+mu_P <- log( H_t ) +  (r * (1 - H_t/K) ) + log(1 - exp(-c * P_t) )
+distribution(P_t1) <- normal(mu_P, sigma_P )
+m <- model(r, c, Ko, delta, sigma_H, sigma_P)
+```
+
+``` r
+mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("hopf_decreasing_cache"))
+bench::bench_time({                 
+    draws <- mmcmc(m, 
+                 n_samples = 10000, warmup = 5000,
+                 chains = 4, verbose = FALSE)
+})
+```
+
+    ## process    real 
+    ##  14.99m   6.51m
+
+``` r
+bayesplot::mcmc_trace(draws)
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 ``` r
 true <- as_tibble(p) |> select(-H_init, -P_init)  |> gather(variable, value)
@@ -192,7 +313,74 @@ bind_rows(map(draws, as_tibble)) |>
   facet_wrap(~variable, scales = "free")
 ```
 
-![](hopf_mcmc_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+``` r
+## draw test_reps number of samples
+left_off <- train |> 
+  filter(t == train_t_max) |> 
+  select(H,P) |> 
+  rename(H_init = H, P_init = P) |>
+  slice_sample(n = test_reps, replace=TRUE)
+
+posterior_samples <- 
+  bind_rows(map(draws, as_tibble)) %>% 
+  sample_n(test_reps) |>
+  mutate(t_init = train_t_max) |>
+  bind_cols(left_off)
+
+
+posterior_sims <- posterior_samples %>%
+  purrr::transpose() %>%
+  map_dfr(function(q) simulate(t_max = test_t_max,
+                               p = q
+                               ) ,.id = "i")
+```
+
+``` r
+combined <- 
+  bind_rows(
+    mutate(train, type="training"), 
+    mutate(test,type="observed"),  
+    mutate(posterior_sims, type="predicted") 
+    ) |>
+  rename("host" = H, "parasite" = P) |>
+  pivot_longer(c(host, parasite), values_to="density", names_to="species")
+```
+
+``` r
+combined |> 
+  group_by(t,type,species) |> 
+  summarise(mean = mean(density), sd = sd(density), .groups = "drop") |> 
+ ggplot(aes(t, col=type)) + 
+  geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+  geom_line(aes(y=mean)) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
+```
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+``` r
+combined |> 
+      filter(i %in% 1:train_reps) |> 
+  ggplot(aes(t, density, col=type, group=interaction(i,type))) + 
+  geom_line(alpha=0.5) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~species, ncol=1)
+```
+
+![](hopf_mcmc_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 # Scoring
 
@@ -230,5 +418,5 @@ rep_scores <-
 rep_scores |> summarise(across(.fns= base::mean))
 ```
 
-    ##       logs     crps
-    ## 1 3.166922 1.161241
+    ##       logs      crps
+    ## 1 1.510092 0.4335423
