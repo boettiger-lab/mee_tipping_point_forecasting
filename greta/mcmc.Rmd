@@ -1,0 +1,109 @@
+---
+output: github_document
+---
+
+
+```{r}
+library(tidyverse)
+library(greta)
+library(bayesplot)
+source("R/saddle_node.R")
+```
+
+```{r}
+set.seed(4242)
+pars = list(r = 1,
+            K = 1,
+            s = 0.1,
+            h_init = .15,
+            alpha = 0.0015,
+            mu = 0,
+            sigma = 0.02,
+            t_init = 0
+          )
+t_max <- train_t_max + test_t_max
+
+simulate <- simulate_sn
+```
+
+```{r}
+train_reps <- 100
+train_t_max <- 75
+test_t_max <- 75
+test_reps <- 100
+
+
+sims <- purrr::map_dfr(1:train_reps, 
+                       \(i) simulate(t_max=t_max, pars = pars), 
+                       .id = "i")
+train <- sims |> filter(t <= train_t_max)
+test <- sims |> filter(t > train_t_max)
+```
+
+```{r}
+m <- greta_model_sn(train)
+
+bench::bench_time({                 
+  draws <- mmcmc(m, n_samples = 100000, warmup = 80000, chains = 4, verbose = FALSE)
+})
+```
+
+```{r}
+bayesplot::mcmc_trace(draws)
+plot_posteriors(draws, pars)
+```
+
+
+```{r}
+fc <- forecast(draws, train, test, simulate)
+
+fc |> ggplot(aes(t, N, col=model, group=interaction(model,i))) +
+           geom_line(alpha=0.2)
+
+```
+
+
+
+# Scoring
+
+
+First, a single 'observed' sample from the true:
+
+```{r}
+
+# ensemble predictions
+dat <- 
+  posterior_sims |> 
+  pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
+  select(-t) |> as.matrix()
+
+
+```
+```{r}
+# score over all replicates:
+bench::bench_time({
+rep_scores <- 
+  test |> 
+  group_by(i) |> 
+  group_map(~ scores(.x$N, dat)) |> 
+  bind_rows()
+})
+```
+
+```{r}
+rep_scores |> summarise(across(.fns= base::mean))
+
+library(patchwork)
+ggplot(rep_scores) + geom_histogram(aes(crps), bins=20) + 
+(ggplot(rep_scores) + geom_histogram(aes(logs), bins=20) )
+
+```
+
+
+
+
+
+
+
+
+
