@@ -1,12 +1,24 @@
 library(tidyverse)
+library(tidyselect)
 library(memoise)
 library(greta)
 library(scoringRules)
 
+
+
+np.clip <- function(x, a, b) {
+  if(x < a) return(a)
+  if(x > b) return(b)
+  x
+}
+
 mmcmc <- memoise::memoise(greta::mcmc, cache = memoise::cache_filesystem("cache"))
 
 plot_posteriors <- function(draws, pars) {
-  true <- as_tibble(pars) |> gather(variable, value)
+  true <- as_tibble(pars) |> 
+    select(-contains("init")) |> 
+    gather(variable, value)
+  
   bind_rows(map(draws, as_tibble)) |>
     gather(variable, value) |> ggplot() + 
     geom_histogram(aes(value), bins = 30)  +
@@ -15,37 +27,47 @@ plot_posteriors <- function(draws, pars) {
 }
 
 
-forecast <- function(draws, train, test, simulate) {
+
+get_inits <- function(train, vars = "N") {
   train_t_max <- max(train$t)
   
-  # get initial conditions for forecast from final state distribution in training samples
+  # initial conditions for forecast using final state distribution in training 
   left_off <- train |> 
     filter(t == train_t_max) |> 
-    select(N) |> 
-    rename(N_init = N) |>
-    slice_sample(n = test_reps, replace=TRUE)
-  
-  # sample from posteriors
-  posterior_samples <- 
+    select(all_of(vars)) |> 
+    slice_sample(n = test_reps, replace=TRUE) 
+  names(left_off) <- paste0(names(left_off), "_init")
+  left_off |>
+    mutate(t_init = train_t_max)
+}
+
+sample_posteriors <- function(draws, inits = NULL, test_reps = 100) {  
     bind_rows(map(draws, as_tibble)) |> 
     sample_n(test_reps) |>
-    mutate(t_init = train_t_max) |>
-    bind_cols(left_off)
-  
+    bind_cols(inits)
+}
+
+forecast_dist <- function(posterior_samples, simulate) {
   # run simulate() with each row of parameters
-  posterior_sims <- 
+
     posterior_samples |>
-    mutate(mu=0) |>
     purrr::transpose() |>
     map_dfr(function(q) 
-      simulate(t_max = test_t_max, pars = q, N_init = q$N_init),
+      simulate(t_max = test_t_max, p = q),
       .id = "i")
-  
-  # Combine as single data.frame
+}
+
+
+compare_forecast <- function(draws, train, test, simulate, vars, test_reps = 100) {
+  inits <- get_inits(train, vars)
+  posterior_sims <-
+    sample_posteriors(draws, inits, test_reps=test_reps) |>
+    forecast_dist(simulate)
+
   bind_rows(
-    mutate(train, model="historical"),
-    mutate(test, model="true"), 
-    mutate(posterior_sims, model="predicted"))
+    mutate(train, type="historical"),
+    mutate(test, type="true"), 
+    mutate(posterior_sims, type="predicted"))
 }
 
 
@@ -54,6 +76,26 @@ forecast <- function(draws, train, test, simulate) {
 scores <- function(observed, dat) {
   logsscore <- scoringRules::logs_sample(observed, dat)
   crpsscore <- scoringRules::crps_sample(observed, dat)
-  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
+  data.frame(logs = logsscore[-1], crps =  crpsscore[-1])
   
 }
+
+
+rep_scores <- function(combined, var) {
+  obs <- 
+    combined |> 
+    filter(type == "predicted") |>
+    filter(variable == var) |>
+    pivot_wider(id_cols = "t", 
+                names_from="i",
+                values_from = "value") |> 
+    select(-t) |> as.matrix()
+  
+  combined |> 
+    filter(type == "true", variable == var) |> 
+    group_by(i) |> 
+    group_modify(~ scores(.x$value, obs)) |>
+    mutate(variable = var)
+  
+}
+
