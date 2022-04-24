@@ -180,5 +180,5 @@ write_csv(scores, "data/scores_hopf.csv.gz")
 
 
 ```{r}
-scores |> ggplot(aes(variable, crps)) + geom_boxplot() ~ facet_wrap(~scenario)
+scores |> ggplot(aes(variable, crps)) + geom_boxplot() + facet_wrap(~scenario)
 ```
