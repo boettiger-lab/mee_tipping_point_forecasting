@@ -34,7 +34,8 @@ bench::bench_time({
 
 ```{r}
 ## draw test_reps number of samples
-combined <- compare_forecast(draws, train, test, simulate, vars = "N") 
+combined <- compare_forecast(draws, train, test, simulate, vars = "N",
+                              test_reps, test_t_max) 
 write_csv(combined, "data/stochastic.csv.gz")
 ```
 

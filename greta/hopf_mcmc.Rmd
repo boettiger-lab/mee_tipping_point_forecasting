@@ -63,7 +63,8 @@ plot_posteriors(draws,p)
 
 
 ```{r}
-combined <-  compare_forecast(draws, train, test, simulate, vars = c("H", "P"))
+combined <-  compare_forecast(draws, train, test, simulate, vars = c("H", "P"),
+                              test_reps, test_t_max)
 
 write_csv(combined, "data/hopf_increasing.csv.gz")
 ```
@@ -131,7 +132,8 @@ plot_posteriors(draws2, p)
 ```
 
 ```{r}
-combined <- compare_forecast(draws2, train, test, simulate, vars = c("H", "P")) 
+combined <- compare_forecast(draws2, train, test, simulate, vars = c("H", "P"),
+                              test_reps, test_t_max) 
 
 write_csv(combined, "data/hopf_decreasing.csv.gz")
 

@@ -47,22 +47,21 @@ sample_posteriors <- function(draws, inits = NULL, test_reps = 100) {
     bind_cols(inits)
 }
 
-forecast_dist <- function(posterior_samples, simulate) {
+forecast_dist <- function(posterior_samples, simulate, test_t_max) {
   # run simulate() with each row of parameters
-
     posterior_samples |>
-    purrr::transpose() |>
-    map_dfr(function(q) 
-      simulate(t_max = test_t_max, p = q),
-      .id = "i")
+      purrr::transpose() |> 
+      map_dfr(\(q) simulate(t_max = test_t_max, p = q),
+                            .id = "i")
 }
 
 
-compare_forecast <- function(draws, train, test, simulate, vars, test_reps = 100) {
+compare_forecast <- function(draws, train, test, simulate, vars,
+                             test_reps = 100, test_t_max = 100) {
   inits <- get_inits(train, vars)
   posterior_sims <-
     sample_posteriors(draws, inits, test_reps=test_reps) |>
-    forecast_dist(simulate)
+    forecast_dist(simulate, test_t_max)
 
   bind_rows(
     mutate(train, type="historical"),
