@@ -7,7 +7,7 @@ Cycles start around `K >= 21`, though some stochastic resonance visible before t
 Make delta negative and start with a bigger `Ko` to run in reverse.
 
 
-```{r message=FALSE}
+```{r setup, message=FALSE}
 library(tidyverse, quietly = TRUE)
 library(greta, quietly = TRUE)
 library(bayesplot, quietly = TRUE)
@@ -63,9 +63,7 @@ plot_posteriors(draws,p)
 
 
 ```{r}
-combined <- 
-  compare_forecast(draws, train, test, simulate, vars = c("H", "P")) |> 
-  pivot_longer(c(H, P), values_to="value", names_to="variable")
+combined <-  compare_forecast(draws, train, test, simulate, vars = c("H", "P"))
 
 write_csv(combined, "data/hopf_increasing.csv.gz")
 ```
@@ -91,11 +89,12 @@ single <-
 ```
 
 ```{r}
-scores <- bind_rows(
-  rep_scores(combined, "P"),
-  rep_scores(combined, "H") |> 
-  mutate(scenario="hopf_increasing", model="MCMC") 
-)
+scores <- 
+  bind_rows(
+    rep_scores(combined, "P"),
+    rep_scores(combined, "H") 
+  ) |> 
+  mutate(scenario="hopf_increasing", model="MCMC")
 ```
 
 
@@ -132,9 +131,8 @@ plot_posteriors(draws2, p)
 ```
 
 ```{r}
-combined <- 
-  compare_forecast(draws2, train, test, simulate, vars = c("H", "P")) |> 
-  pivot_longer(c(H, P), values_to="value", names_to="variable")
+combined <- compare_forecast(draws2, train, test, simulate, vars = c("H", "P")) 
+
 write_csv(combined, "data/hopf_decreasing.csv.gz")
 
 ```
@@ -159,20 +157,22 @@ single <- combined |>
   facet_wrap(~variable, ncol=1)
 ```
 
-
-
-
 # Scoring
 
 
 ```{r}
+scores <- 
+  bind_rows(
+    rep_scores(combined, "P"),
+    rep_scores(combined, "H") 
+  ) |> 
+  mutate(scenario="hopf_decreasing", 
+         model="MCMC", 
+         reps = train_reps) |>
+  bind_rows(scores)
 
+write_csv(scores, "data/scores_hopf.csv.gz")
 
-scores <- bind_rows(
-  rep_scores(combined, "P"),
-  rep_scores(combined, "H") |> 
-  mutate(scenario="hopf_decreasing", model="MCMC") 
-) |> bind_rows(scores)
 
 ```
 

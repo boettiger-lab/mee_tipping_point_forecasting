@@ -16,15 +16,15 @@ step_stoch <- function(N, eta,  a = 0.75, b = 0.25) {
 }
 
 # simulate
-simulate_stoch <- function(N_init = 0.75,
-                     t_max = 250L,
-                     p = list(
-                       sigma = 1e-2,
-                       a = 0.75, 
-                       b = 0.25)) {
+simulate_stoch <- function(t_max = 250L,
+                           p = list(
+                             sigma = 1e-2,
+                             a = 0.75, 
+                             b = 0.25,
+                             N_init = 0.75)) {
   eta <- rnorm(t_max, 0, p$sigma) # mu = 0, no drift
   N   <- numeric(t_max)
-  N[1] <- N_init
+  N[1] <- p$N_init
   for (t in 1:(t_max-1)) {
     N[t+1] <- step_stoch(N[t], eta[t], a = p$a, b = p$b)
   }

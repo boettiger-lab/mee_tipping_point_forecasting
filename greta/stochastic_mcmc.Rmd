@@ -2,46 +2,54 @@
 output: github_document
 ---
 
+```{r setup, message=FALSE}
+library(tidyverse, quietly = TRUE)
+library(greta, quietly = TRUE)
+library(bayesplot, quietly = TRUE)
+source("R/utils.R")
+source("R/hopf.R")
+```
 
 ```{r}
-library(tidyverse)
-library(greta)
-library(bayesplot)
-
 set.seed(4242)
 train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
-
+simulate <- simulate_stoch
 ```
 
 ```{r}
-
-```
-
-```{r}
-
 train <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=train_t_max), .id = "i")
 test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max), .id = "i")
-
-## show training data
-train |> ggplot(aes(t, N, group=i)) + geom_line(alpha=0.2)
 ```
 
 ```{r}
-
 m <- greta_model_stoch(train)
-```
-
-```{r}
-mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("mcmc_cache"))
-
-
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 60000, warmup = 50000, chains = 4, verbose = FALSE)
+  draws <- mmcmc(m, n_samples = 60000, warmup = 50000,
+                 chains = 4, verbose = FALSE)
 })
 ```
+
+```{r}
+## draw test_reps number of samples
+combined <- compare_forecast(draws, train, test, simulate, vars = "N") 
+write_csv(combined, "data/stochastic.csv.gz")
+```
+
+```{r}
+scores <-
+  rep_scores(combined, "N") |> 
+  mutate(scenario="stochastic", 
+         model="MCMC", 
+         reps = train_reps) 
+
+write_csv(scores, "data/scores_stochastic.csv.gz")
+
+```
+
+
 
 ```{r}
 bayesplot::mcmc_trace(draws)
@@ -49,83 +57,25 @@ plot_posteriors(draws, p)
 ```
 
 
-
-
-
 ```{r}
-## draw test_reps number of samples
-
-posterior_samples <- 
-  bind_rows(map(draws, as_tibble)) %>% 
-  sample_n(test_reps)
-posterior_sims <- posterior_samples %>%
-  purrr::transpose() %>%
-  map_dfr(function(q) simulate(t_max = test_t_max, p = q) ,.id = "i")
-
-bind_rows(
-  mutate(test, model="true"), 
-  mutate(posterior_sims, model="predicted")
-)|> 
-  ggplot(aes(t, N, col=model, group=interaction(model,i))) +
-           geom_line(alpha=0.1)
-
-```
-
-```{r}
-true <- tibble(a = 0.75, b = 0.25, sigma = 1e-2) |> gather(variable, value)
-bind_rows(map(draws, as_tibble)) |>
-  gather(variable, value) |> ggplot() + 
-  geom_histogram(aes(value), bins = 30)  +
-  geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
-  facet_wrap(~variable, scales = "free")
+combined |> 
+  group_by(t,type,variable) |> 
+  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
+ ggplot(aes(t, col=type)) + 
+  geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+  geom_line(aes(y=mean)) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
 ```
 
 
-# Scoring
-
-
-First, a single 'observed' sample from the true:
-
 ```{r}
-library(scoringRules)
-
-scores <- function(observed, dat) {
-  logsscore <- scoringRules::logs_sample(observed, dat)
-  crpsscore <- scoringRules::crps_sample(observed, dat)
-  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
-
-}
-# ensemble predictions
-dat <- 
-  posterior_sims |> 
-  pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
-  select(-t) |> as.matrix()
-
-
+single <- 
+  combined |> 
+  filter(i %in% 1:train_reps) |> 
+  ggplot(aes(t, value, col=type, group=interaction(i,type))) + 
+    geom_line() +
+    geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
 ```
-```{r}
-# score over all replicates:
-bench::bench_time({
-rep_scores <- 
-  test |> 
-  group_by(i) |> 
-  group_map(~ scores(.x$N, dat)) |> 
-  bind_rows()
-})
-```
-
-```{r}
-rep_scores |> summarise(across(.fns= base::mean))
-
-library(patchwork)
-ggplot(rep_scores) + geom_histogram(aes(crps), bins=20) + 
-(ggplot(rep_scores) + geom_histogram(aes(logs), bins=20) )
-
-```
-
-
-
-
 
 
 

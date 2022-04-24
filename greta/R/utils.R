@@ -67,19 +67,19 @@ compare_forecast <- function(draws, train, test, simulate, vars, test_reps = 100
   bind_rows(
     mutate(train, type="historical"),
     mutate(test, type="true"), 
-    mutate(posterior_sims, type="predicted"))
+    mutate(posterior_sims, type="predicted")) |>
+    pivot_longer(vars, values_to="value", names_to="variable")
 }
 
 
 
 
-scores <- function(observed, dat) {
+compute_scores <- function(observed, dat) {
   logsscore <- scoringRules::logs_sample(observed, dat)
   crpsscore <- scoringRules::crps_sample(observed, dat)
   data.frame(logs = logsscore[-1], crps =  crpsscore[-1])
   
 }
-
 
 rep_scores <- function(combined, var) {
   obs <- 
@@ -94,7 +94,7 @@ rep_scores <- function(combined, var) {
   combined |> 
     filter(type == "true", variable == var) |> 
     group_by(i) |> 
-    group_modify(~ scores(.x$value, obs)) |>
+    group_modify(~ compute_scores(.x$value, obs)) |>
     mutate(variable = var)
   
 }
