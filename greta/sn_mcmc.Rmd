@@ -7,7 +7,7 @@ library(tidyverse, quietly = TRUE)
 library(greta, quietly = TRUE)
 library(bayesplot, quietly = TRUE)
 source("R/utils.R")
-source("R/hopf.R")
+source("R/saddle_node.R")
 ```
 
 ```{r}
@@ -20,15 +20,16 @@ simulate <- simulate_sn
 ```
 
 ```{r}
-pars = list(r = 1,
-            K = 1,
-            s = 0.1,
-            h_init = .15,
-            alpha = 0.0015,
-            mu = 0,
-            sigma = 0.02,
-            t_init = 0
-          )
+p <- list(r = 1,
+          K = 1,
+          s = 0.1,
+          ho = .15,
+          alpha = 0.0015,
+          mu = 0,
+          sigma = 0.02,
+          t_init = 0,
+          N_init = 0.75
+        )
 t_max <- train_t_max + test_t_max
 
 sim <- purrr::map_dfr(1:test_reps, 
@@ -39,7 +40,7 @@ test <- sim |> filter(t > train_t_max)
 ```
 
 ```{r}
-m <- greta_model_stoch(train)
+m <- greta_model_sn(train)
 bench::bench_time({                 
   draws <- mmcmc(m, n_samples = 60000, warmup = 50000,
                  chains = 4, verbose = FALSE)

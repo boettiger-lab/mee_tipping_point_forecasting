@@ -7,7 +7,7 @@ library(tidyverse, quietly = TRUE)
 library(greta, quietly = TRUE)
 library(bayesplot, quietly = TRUE)
 source("R/utils.R")
-source("R/hopf.R")
+source("R/stochastic.R")
 ```
 
 ```{r}
