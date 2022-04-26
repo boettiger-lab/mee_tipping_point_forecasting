@@ -1,4 +1,3 @@
-import pandas as pd
 import numpy as np
 import os
 import sys
@@ -13,13 +12,14 @@ from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
 from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
 import argparse
-import yaml
 from functools import reduce
+from darts.dataprocessing.transformers import Scaler
 
+scaler = Scaler()
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "-m",
-    "--model",
+    "-f",
+    "--forecasting_model",
     default="lstm",
     type=str,
     help="model to train with (lstm/block_rnn/transformer/gru)",
@@ -51,11 +51,10 @@ parser.add_argument(
     help="Seed selection",
 )
 parser.add_argument(
-    "-t",
-    "--tp_model",
+    "--sim_model",
     default="stochastic",
     type=str,
-    help="Select which model to use for the tipping point (stochastic/saddle/hopf)",
+    help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
 )
 parser.add_argument(
     "-c",
@@ -65,42 +64,54 @@ parser.add_argument(
     help="Special cases to consider (none, tipped, non_tipped, both)",
 )
 parser.add_argument(
-    "--reverse",
+    "--decrease",
     action="store_true",
     help="Flag to use decreasing Hopf model",
 )
 args = parser.parse_args()
 
-if args.model == "lstm": 
-    if args.tp_model == "stochastic":
+if args.forecasting_model == "lstm": 
+    if args.sim_model == "stochastic":
         from train_hyperparams.stochastic_lstm import hyperparameters
-    elif args.tp_model == "saddle":
+    elif args.sim_model == "saddle":
         from train_hyperparams.saddle_lstm import hyperparameters
-    elif args.tp_model == "hopf":
-        from train_hyperparams.hopf_lstm import hyperparameters
-elif args.model == "gru":
-    if args.tp_model == "stochastic":
+    elif args.sim_model == "hopf":
+        if args.decrease:
+            from train_hyperparams.hopf_decrease_lstm import hyperparameters
+        else:
+            from train_hyperparams.hopf_lstm import hyperparameters
+elif args.forecasting_model == "gru":
+    if args.sim_model == "stochastic":
         from train_hyperparams.stochastic_gru import hyperparameters
-    elif args.tp_model == "saddle":
+    elif args.sim_model == "saddle":
         from train_hyperparams.saddle_gru import hyperparameters
-    elif args.tp_model == "hopf":
-        from train_hyperparams.hopf_gru import hyperparameters
-elif args.model == "block_rnn":
-    if args.tp_model == "stochastic":
+    elif args.sim_model == "hopf":
+        if args.decrease:
+            from train_hyperparams.hopf_decrease_gru import hyperparameters
+        else:
+            from train_hyperparams.hopf_gru import hyperparameters
+elif args.forecasting_model == "block_rnn":
+    if args.sim_model == "stochastic":
         from train_hyperparams.stochastic_block import hyperparameters
-    elif args.tp_model == "saddle":
+    elif args.sim_model == "saddle":
         from train_hyperparams.saddle_block import hyperparameters
-    elif args.tp_model == "hopf":
-        from train_hyperparams.hopf_block import hyperparameters
-elif args.model == "transformer":
-    if args.tp_model == "stochastic":
+    elif args.sim_model == "hopf":
+        if args.decrease:
+            from train_hyperparams.hopf_decrease_block import hyperparameters
+        else:
+            from train_hyperparams.hopf_block import hyperparameters
+elif args.forecasting_model == "transformer":
+    if args.sim_model == "stochastic":
         from train_hyperparams.stochastic_transformer import hyperparameters
-    elif args.tp_model == "saddle":
+    elif args.sim_model == "saddle":
         from train_hyperparams.saddle_transformer import hyperparameters
-    elif args.tp_model == "hopf":
-        from train_hyperparams.hopf_transformer import hyperparameters
+    elif args.sim_model == "hopf":
+        if args.decrease:
+            from train_hyperparams.hopf_decrease_transformer import hyperparameters
+        else:
+            from train_hyperparams.hopf_transformer import hyperparameters
 
-model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.model.lower()]
+model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.forecasting_model.lower()]
 
 models = []
 for i in range(42, 47):
@@ -108,7 +119,8 @@ for i in range(42, 47):
     np.random.seed(i)
     
     train_series = get_train_series(args)
-
+    if args.sim_model == "hopf":
+        train_series = scaler.fit_transform(train_series)
     my_model = model(
         likelihood=LaplaceLikelihood(),
         **hyperparameters
@@ -124,10 +136,6 @@ for i in range(42, 47):
 
 # Generating time series
 if args.evaluate:
-    if not os.path.exists("plots/"):
-        os.makedirs("plots/")
-    if not os.path.exists(f"plots/ensemble_{args.output_file_name}/"):
-        os.makedirs(f"plots/ensemble_{args.output_file_name}/")
     if not os.path.exists("forecasts/"):
             os.makedirs("forecasts/")
     input_len = hyperparameters["input_chunk_length"]
@@ -137,33 +145,32 @@ if args.evaluate:
     for i in range(5):
         np.random.seed(i)
         torch.manual_seed(i)
+        n_draws = 100
         
-        train_series = preprocessed_t_series(args.tp_model, 1)
+        train_series = preprocessed_t_series(args.sim_model, 1)
         
-        if args.tp_model == "hopf":
-            x, y = train_series[:input_len].univariate_component(0), train_series[:input_len].univariate_component(1)
-            x.plot(color="blue", label='truth')
-            y.plot(color="gold", label="truth")
+        if args.sim_model == "hopf":
+            t_series = train_series[-input_len:]
         else:
-            train_series[:input_len].plot(color="blue", label='truth')
-            
-        t_series = train_series[:input_len]
-        t_dist = truth_dist(args.tp_model, t_series, input_len, output_len, n_samples=100, reverse=args.reverse)
+            t_series = train_series[:input_len]
         
-        t_max = 250-input_len if args.tp_model != "hopf" else 200-input_len
-        plot(args.tp_model, t_dist, "blue", "gold")
+        # truth_dist 
+        start_t = input_len if args.sim_model != "hopf" else 100
+        t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
+        
+        t_max = 250-input_len if args.sim_model != "hopf" else 100
         
         ensemble_preds = []
         for model in models:
-            ensemble_preds.append(model.predict(t_max, t_series, num_samples=100))
+            if args.sim_model == "hopf":
+                _preds = scaler.inverse_transform(model.predict(t_max, t_series, num_samples=n_draws))
+            else: 
+                _preds = model.predict(t_max, t_series, num_samples=n_draws)
+            ensemble_preds.append(_preds)
         ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
         
-        plot(args.tp_model, ensemble_series, "orange", "green")
-        df = make_df(ensemble_series, t_dist, args.tp_model, args.model.lower(), args.case, args.n_samples)
-        df["iter"] = i
+        df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), args.case, args.n_samples, i)
         final_df = final_df.append(df, ignore_index=True)
-        plt.savefig(f"plots/ensemble_{args.output_file_name}/{i}")
-        plt.clf()
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
 
