@@ -7,25 +7,14 @@ step_sn <- function(N,
                  eta,
                  t,
                  p) {
-  h <- np.clip(p$ho + p$alpha * (p$t_init + t), 0, 0.27)
+  h <- p$ho + p$alpha * (p$t_init + t)
   N <- N + p$r * N * (1 - N / p$K) - 
     h * (N**2 / (p$s**2 + N**2)) + eta
   N <- np.clip(N, 0, 100)
   N
 }
 # simulate
-simulate_sn <- function(t_max = 250L,
-                     p = list(
-                       r = 1,
-                       K = 1,
-                       s = 0.1,
-                       ho = .15,
-                       alpha = 0.0015,
-                       sigma = 0.00,
-                       t_init = 0,
-                       N_init = 0.75
-                     )
-) {
+simulate_sn <- function(t_max = 250L, p) {
 
   eta <- rnorm(t_max, 0, p$sigma) # mu = 0, no drift
   N   <- numeric(t_max)
@@ -46,12 +35,12 @@ greta_model_sn <- function(train) {
   x_t1 <- gsims$xt1
   t <- gsims$t
   
-  r <- uniform(0, 10)
-  K <- uniform(0, 10)
-  s <- uniform(0, 10)
-  ho <- uniform(0, 10)
-  alpha <- uniform(0, 10)
-  sigma <- uniform(0, 10)
+  r     <- uniform(0, 2) #uniform(0, 10)
+  K     <- uniform(0, 2) # uniform(0, 10)
+  s     <- uniform(0.0, 0.2)
+  ho    <- uniform(0, 0.2) # uniform(0, 10)
+  alpha <- uniform(0, 0.001)
+  sigma <- uniform(0, 0.05) # uniform(0, 10)
   h <- ho + alpha * t
   mean <-  x_t + r*x_t*(1 - x_t / K) - h*(x_t^2 / (s^2 + x_t^2))
   distribution(x_t1) <- normal(mean, sigma)

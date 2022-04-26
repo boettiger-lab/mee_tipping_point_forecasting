@@ -12,7 +12,7 @@ source("R/stochastic.R")
 
 ```{r}
 set.seed(4242)
-train_reps <- 1
+train_reps <- 10
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
@@ -20,8 +20,12 @@ simulate <- simulate_stoch
 ```
 
 ```{r}
-train <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=train_t_max), .id = "i")
-test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max), .id = "i")
+p = list(sigma = 1e-2,
+         a = 0.75, 
+         b = 0.25,
+         N_init = 0.75)
+train <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=train_t_max, p), .id = "i")
+test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max, p), .id = "i")
 ```
 
 ```{r}
@@ -34,8 +38,10 @@ bench::bench_time({
 
 ```{r}
 ## draw test_reps number of samples
+inits <- data.frame(N_init=p$N_init, t_init = 0)
 combined <- compare_forecast(draws, train, test, simulate, vars = "N",
-                              test_reps, test_t_max) 
+                              test_reps, test_t_max, inits = inits
+                             ) 
 write_csv(combined, "data/stochastic.csv.gz")
 ```
 
@@ -59,23 +65,25 @@ plot_posteriors(draws, p)
 
 
 ```{r}
+ribbon <- 
 combined |> 
   group_by(t,type,variable) |> 
   summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
  ggplot(aes(t, col=type)) + 
-  geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+  geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
   geom_line(aes(y=mean)) +
   geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
+#ribbon
 ```
 
 
 ```{r}
-single <- 
-  combined |> 
-  filter(i %in% 1:train_reps) |> 
+combined |> 
+  filter(i %in% sample(i, 30)) |> 
   ggplot(aes(t, value, col=type, group=interaction(i,type))) + 
-    geom_line() +
+    geom_line(alpha=.30) +
     geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
+
 ```
 
 

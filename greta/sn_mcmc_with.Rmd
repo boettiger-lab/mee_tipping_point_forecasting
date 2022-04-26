@@ -29,15 +29,13 @@ p <- list(r = 1,
           t_init = 0,
           N_init = 0.75
         )
-t_max <- train_t_max + test_t_max
-
-sim <- purrr::map_dfr(1:test_reps, 
-                      \(i) simulate(t_max=t_max, p = p),
+train <- purrr::map_dfr(1:train_reps, 
+                      \(i) simulate(t_max=train_t_max, p = p),
                       .id = "i")
-train <- sim |> filter(t <= train_t_max, i <= train_reps)
-test <- sim |> filter(t > train_t_max)
+test <- purrr::map_dfr(1:test_reps, 
+                      \(i) simulate(t_max=test_t_max, p = p),
+                      .id = "i")
 
-#sim |> ggplot(aes(t, N, group=i))+geom_line(alpha = 0.1) + geom_vline((aes(xintercept=train_t_max))) 
 ```
 
 ```{r}

@@ -12,7 +12,8 @@ np.clip <- function(x, a, b) {
   x
 }
 
-mmcmc <- memoise::memoise(greta::mcmc, cache = memoise::cache_filesystem("cache"))
+mmcmc <- memoise::memoise(greta::mcmc,
+                          cache = memoise::cache_filesystem("cache"))
 
 plot_posteriors <- function(draws, pars) {
   true <- as_tibble(pars) |> 
@@ -56,9 +57,16 @@ forecast_dist <- function(posterior_samples, simulate, test_t_max) {
 }
 
 
-compare_forecast <- function(draws, train, test, simulate, vars,
-                             test_reps = 100, test_t_max = 100) {
-  inits <- get_inits(train, vars, test_reps = 100)
+
+compare_forecast <- function(draws,
+                             train,
+                             test,
+                             simulate,
+                             vars,
+                             test_reps = 100,
+                             test_t_max = 100,
+                             inits = get_inits(train, vars)) {
+
   posterior_sims <-
     sample_posteriors(draws, inits, test_reps=test_reps) |>
     forecast_dist(simulate, test_t_max)
