@@ -52,7 +52,7 @@ bench::bench_time({
 ## draw test_reps number of samples
 combined <- compare_forecast(draws, train, test, simulate, vars = "N",
                               test_reps, test_t_max)
-write_csv(combined, "data/stochastic.csv.gz")
+write_csv(combined, "data/saddlenode.csv.gz")
 ```
 
 ```{r}
@@ -62,7 +62,7 @@ scores <-
          model="MCMC", 
          reps = train_reps) 
 
-write_csv(scores, "data/scores_stochastic.csv.gz")
+write_csv(scores, "data/scores_saddlenode.csv.gz")
 
 ```
 

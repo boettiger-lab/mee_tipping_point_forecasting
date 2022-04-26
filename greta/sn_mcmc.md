@@ -41,7 +41,11 @@ test <- sim |> filter(t > train_t_max)
 m <- greta_model_sn(train)
 ```
 
-    ## ℹ Initialising python and checking dependencies, this may take a moment.[K✓ Initialising python and checking dependencies ... done![K
+    ## ℹ Initialising python and checking dependencies, this may take a moment.
+
+    ## ✓ Initialising python and checking dependencies ... done!
+
+    ## 
 
 ``` r
 bench::bench_time({                 
@@ -51,7 +55,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##   1.75d  14.29h
+    ##    2.7s    2.7s
 
 ``` r
 ## draw test_reps number of samples
@@ -65,7 +69,7 @@ combined <- compare_forecast(draws, train, test, simulate, vars = "N",
     ## This message is displayed once per session.
 
 ``` r
-write_csv(combined, "data/stochastic.csv.gz")
+write_csv(combined, "data/saddlenode.csv.gz")
 ```
 
 ``` r
@@ -75,7 +79,7 @@ scores <-
          model="MCMC", 
          reps = train_reps) 
 
-write_csv(scores, "data/scores_stochastic.csv.gz")
+write_csv(scores, "data/scores_saddlenode.csv.gz")
 ```
 
 ``` r
