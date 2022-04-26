@@ -28,7 +28,7 @@ plot_posteriors <- function(draws, pars) {
 
 
 
-get_inits <- function(train, vars = "N") {
+get_inits <- function(train, vars = "N", test_reps = 100) {
   train_t_max <- max(train$t)
   
   # initial conditions for forecast using final state distribution in training 
@@ -58,7 +58,7 @@ forecast_dist <- function(posterior_samples, simulate, test_t_max) {
 
 compare_forecast <- function(draws, train, test, simulate, vars,
                              test_reps = 100, test_t_max = 100) {
-  inits <- get_inits(train, vars)
+  inits <- get_inits(train, vars, test_reps = 100)
   posterior_sims <-
     sample_posteriors(draws, inits, test_reps=test_reps) |>
     forecast_dist(simulate, test_t_max)
