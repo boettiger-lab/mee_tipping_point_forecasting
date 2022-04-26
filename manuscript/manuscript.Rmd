@@ -12,7 +12,10 @@ authors:
     location: Berkeley, California
     email: cboettig@berkeley.edu (corresponding author)
 abstract: |
-  Lorem Ipsum whatever
+  1. Meaningful representations of uncertainty are an essential component of effective ecological forecasting.
+  2. Machine learning
+  3. We examine scenarios in which stochasticity and non-linearity can lead to extreme uncertainty under common ecological models.  
+  4. We show that ..
   
 keywords:
   - Time Series
@@ -40,6 +43,7 @@ editor_options:
 ---
 # Introduction
 
+Uncertainty [@Schindler2015]
 
 
 # Materials and Methods

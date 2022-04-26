@@ -1,0 +1,10 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.html
+*_cache
+*__pycache__
+venv/
+plots*
+*_logs

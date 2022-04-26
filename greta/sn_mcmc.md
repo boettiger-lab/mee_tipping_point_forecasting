@@ -1,267 +1,133 @@
 
 ``` r
-library(tidyverse)
+library(tidyverse, quietly = TRUE)
+library(greta, quietly = TRUE)
+library(bayesplot, quietly = TRUE)
+source("R/utils.R")
+source("R/saddle_node.R")
 ```
-
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──
-
-    ## ✓ ggplot2 3.3.5     ✓ purrr   0.3.4
-    ## ✓ tibble  3.1.6     ✓ dplyr   1.0.8
-    ## ✓ tidyr   1.2.0     ✓ stringr 1.4.0
-    ## ✓ readr   2.1.2     ✓ forcats 0.5.1
-
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
-
-``` r
-library(greta)
-```
-
-    ## 
-    ## Attaching package: 'greta'
-
-    ## The following object is masked from 'package:dplyr':
-    ## 
-    ##     slice
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     binomial, cov2cor, poisson
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     %*%, apply, backsolve, beta, chol2inv, colMeans, colSums, diag,
-    ##     eigen, forwardsolve, gamma, identity, rowMeans, rowSums, sweep,
-    ##     tapply
-
-``` r
-library(bayesplot)
-```
-
-    ## This is bayesplot version 1.8.1
-
-    ## - Online documentation and vignettes at mc-stan.org/bayesplot
-
-    ## - bayesplot theme set to bayesplot::theme_default()
-
-    ##    * Does _not_ affect other ggplot2 plots
-
-    ##    * See ?bayesplot_theme_set for details on theme setting
 
 ``` r
 set.seed(4242)
 train_reps <- 100
-train_t_max <- 75
-test_t_max <- 75
+train_t_max <- 250
+test_t_max <- 250
 test_reps <- 100
-
-
-np.clip <- function(x, a, b) {
-  if(x < a) return(a)
-  if(x > b) return(b)
-  x
-}
+simulate <- simulate_sn
 ```
 
 ``` r
-step <- function(N, 
-                 eta,
-                 t,
-                 pars) {
-
-        h <- np.clip(pars$h_init + pars$alpha * (pars$t_init + t), 0, 0.27)
-        N <- N + pars$r * N * (1 - N / pars$K) - 
-          h * (N**2 / (pars$s**2 + N**2)) + eta
-        N <- np.clip(N, 0, 100)
-        N
-  N
-}
-
-# simulate
-simulate <- function(N_init = 0.75,
-                     t_max = 250L,
-                     pars = list(
-                        r = 1,
-                        K = 1,
-                        s = 0.1,
-                        h_init = .15,
-                        alpha = 0.0015,
-                        mu = 0,
-                        sigma = 0.00,
-                        t_init = 0
-                      )
-                    ) {
-  eta <- rnorm(t_max, pars$mu, pars$sigma) # mu = 0, no drift
-  N   <- numeric(t_max)
-  N[1] <- N_init
-  for (t in 1:(t_max-1)) {
-    N[t+1] <- step(N[t], eta[t], t, pars)
-  }
-  tibble::tibble(t = pars$t_init + 1:t_max, N = N)
-}
-```
-
-``` r
-pars = list(r = 1,
-            K = 1,
-            s = 0.1,
-            h_init = .15,
-            alpha = 0.0015,
-            mu = 0,
-            sigma = 0.02,
-            t_init = 0
-          )
+p <- list(r = 1,
+          K = 1,
+          s = 0.1,
+          ho = .15,
+          alpha = 0.0015/4,
+          sigma = 0.02,
+          t_init = 0,
+          N_init = 0.75
+        )
 t_max <- train_t_max + test_t_max
-sims <- purrr::map_dfr(1:train_reps, 
-                       \(i) simulate(t_max=t_max, pars = pars), 
-                       .id = "i")
 
-train <- sims |> filter(t <= train_t_max)
-test <- sims |> filter(t > train_t_max)
+sim <- purrr::map_dfr(1:test_reps, 
+                      \(i) simulate(t_max=t_max, p = p),
+                      .id = "i")
+train <- sim |> filter(t <= train_t_max, i <= train_reps)
+test <- sim |> filter(t > train_t_max)
+
+#sim |> ggplot(aes(t, N, group=i))+geom_line(alpha = 0.1) + geom_vline((aes(xintercept=train_t_max))) 
 ```
 
 ``` r
-sims <- bind_rows(test, train, .id = "data")
-sims |> 
-  ggplot(aes(t, N, group=interaction(i,data), col=data)) + 
-  geom_line()
+m <- greta_model_sn(train)
 ```
 
-![](sn_mcmc_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+    ## ℹ Initialising python and checking dependencies, this may take a moment.[K✓ Initialising python and checking dependencies ... done![K
 
 ``` r
-gsims <- train |> group_by(i) |> mutate(xt1 = lead(N)) |> filter(t<max(t))
-x_t <- gsims$N
-x_t1 <- gsims$xt1
-t <- gsims$t
-
-library(greta)
-r <- uniform(0, 10)
-```
-
-    ## ℹ Initialising python and checking dependencies, this may take a moment.
-
-    ## ✓ Initialising python and checking dependencies ... done!
-
-    ## 
-
-``` r
-K <- uniform(0, 10)
-s <- uniform(0, 10)
-h_init <- uniform(0, 10)
-alpha <- uniform(0, 10)
-sigma <- uniform(0, 10)
-h <- h_init + alpha * t
-mean <-  x_t + r*x_t*(1 - x_t / K) - h*(x_t^2 / (s^2 + x_t^2))
-distribution(x_t1) <- normal(mean, sigma)
-m <- model(r, K, s, h_init, alpha, sigma)
-```
-
-``` r
-mmcmc <- memoise::memoise(mcmc, cache = memoise::cache_filesystem("sn_cache"))
-
-
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 100000, warmup = 80000, chains = 4, verbose = FALSE)
+  draws <- mmcmc(m, n_samples = 700000, warmup = 600000,
+                 chains = 6, verbose = FALSE)
 })
 ```
 
     ## process    real 
-    ##  23.03h   1.62h
+    ##   1.75d  14.29h
+
+``` r
+## draw test_reps number of samples
+combined <- compare_forecast(draws, train, test, simulate, vars = "N",
+                              test_reps, test_t_max)
+```
+
+    ## Note: Using an external vector in selections is ambiguous.
+    ## ℹ Use `all_of(vars)` instead of `vars` to silence this message.
+    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
+    ## This message is displayed once per session.
+
+``` r
+write_csv(combined, "data/stochastic.csv.gz")
+```
+
+``` r
+scores <-
+  rep_scores(combined, "N") |> 
+  mutate(scenario="stochastic", 
+         model="MCMC", 
+         reps = train_reps) 
+
+write_csv(scores, "data/scores_stochastic.csv.gz")
+```
 
 ``` r
 bayesplot::mcmc_trace(draws)
 ```
 
+![](sn_mcmc_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+plot_posteriors(draws, p)
+```
+
+![](sn_mcmc_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+``` r
+combined |> 
+  group_by(t,type,variable) |> 
+  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
+ ggplot(aes(t, col=type)) + 
+  geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
+  geom_line(aes(y=mean)) +
+  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
+```
+
 ![](sn_mcmc_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
-## draw test_reps number of samples
-left_off <- train |> 
-  filter(t == train_t_max) |> 
-  select(N) |> 
-  rename(N_init = N) |>
-  slice_sample(n = test_reps, replace=TRUE)
-
-posterior_samples <- 
-  bind_rows(map(draws, as_tibble)) |> 
-  sample_n(test_reps) |>
-  mutate(t_init = train_t_max) |>
-  bind_cols(left_off)
-
-posterior_sims <- posterior_samples |>
-  mutate(mu=0) |>
-  purrr::transpose() |>
-  map_dfr(function(q) simulate(t_max = test_t_max, pars = q, N_init = q$N_init) ,.id = "i")
-
-bind_rows(
-  mutate(train, model="historical"),
-  mutate(test, model="true"), 
-  mutate(posterior_sims, model="predicted")
-)|> 
-  ggplot(aes(t, N, col=model, group=interaction(model,i))) +
-           geom_line(alpha=0.2)
+  combined |> 
+  filter(i %in% 1:train_reps) |> 
+  ggplot(aes(t, value, col=type, group=interaction(i,type))) + 
+    geom_line() +
+    geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
 ```
 
 ![](sn_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
-true <- as_tibble(pars) |> gather(variable, value)
-bind_rows(map(draws, as_tibble)) |>
-  gather(variable, value) |> ggplot() + 
-  geom_histogram(aes(value), bins = 30)  +
-  geom_vline(data = true, aes(xintercept = value), col = "red", lwd = 1) + 
-  facet_wrap(~variable, scales = "free")
+n <- test_reps*10
+prior_sims <- tibble(
+    r = runif(n, 0, 2),
+    K = runif(n, 0, 2), # runif(n, 0, 2),
+    s = runif(n, 0, 0.2),
+    ho = runif(n, 0, 0.2), # rlnorm(n, 0,1),
+    alpha = runif(n, 0, 0.001),
+    sigma = runif(n, 0, 0.1) 
+    ) |>
+  bind_cols(get_inits(train, "N", n)) |> 
+  forecast_dist(simulate_sn, test_t_max) |>
+  mutate(type = "prior") |>
+  pivot_longer("N", values_to="value", names_to="variable")
+prior_sims |>
+  ggplot(aes(t, value, group=i)) + geom_line(alpha=0.01)
 ```
 
 ![](sn_mcmc_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-# Scoring
-
-First, a single ‘observed’ sample from the true:
-
-``` r
-library(scoringRules)
-
-scores <- function(observed, dat) {
-  logsscore <- scoringRules::logs_sample(observed, dat)
-  crpsscore <- scoringRules::crps_sample(observed, dat)
-  data.frame(logs = mean(logsscore[-1]), crps =  mean(crpsscore[-1]))
-
-}
-# ensemble predictions
-dat <- 
-  posterior_sims |> 
-  pivot_wider(id_cols = "t", names_from="i", values_from = "N") |> 
-  select(-t) |> as.matrix()
-```
-
-``` r
-# score over all replicates:
-bench::bench_time({
-rep_scores <- 
-  test |> 
-  group_by(i) |> 
-  group_map(~ scores(.x$N, dat)) |> 
-  bind_rows()
-})
-```
-
-    ## process    real 
-    ##   1.45s   1.45s
-
-``` r
-rep_scores |> summarise(across(.fns= base::mean))
-```
-
-    ##       logs     crps
-    ## 1 -1.26119 0.037007
-
-``` r
-library(patchwork)
-ggplot(rep_scores) + geom_histogram(aes(crps), bins=20) + 
-(ggplot(rep_scores) + geom_histogram(aes(logs), bins=20) )
-```
-
-![](sn_mcmc_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->

@@ -12,7 +12,7 @@ source("R/saddle_node.R")
 
 ```{r}
 set.seed(4242)
-train_reps <- 100
+train_reps <- 10
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
@@ -24,7 +24,7 @@ p <- list(r = 1,
           K = 1,
           s = 0.1,
           ho = .15,
-          alpha = 0.0015/4,
+          alpha = 0.0015/2,
           sigma = 0.02,
           t_init = 0,
           N_init = 0.75
@@ -38,29 +38,35 @@ test <- purrr::map_dfr(1:test_reps,
 
 ```
 
+
+
 ```{r}
 m <- greta_model_sn(train)
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 700000, warmup = 600000,
+  draws <- mmcmc(m, n_samples = 10000, warmup = 9000,
                  chains = 6, verbose = FALSE)
 })
 ```
 
 ```{r}
-## draw test_reps number of samples
+## compare to simulations starting at the initial conditions 
+# instead of continuing forward from training data
+inits <- data.frame(N_init=p$N_init, t_init = 0)
 combined <- compare_forecast(draws, train, test, simulate, vars = "N",
-                              test_reps, test_t_max)
-write_csv(combined, "data/stochastic.csv.gz")
+                              test_reps, test_t_max, inits = inits
+                             ) 
+
+write_csv(combined, "data/saddlenode_with.csv.gz")
 ```
 
 ```{r}
 scores <-
   rep_scores(combined, "N") |> 
-  mutate(scenario="stochastic", 
+  mutate(scenario="saddle-node", 
          model="MCMC", 
          reps = train_reps) 
 
-write_csv(scores, "data/scores_stochastic.csv.gz")
+write_csv(scores, "data/scores_saddlenode_with.csv.gz")
 
 ```
 
@@ -79,7 +85,7 @@ combined |>
  ggplot(aes(t, col=type)) + 
   geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
   geom_line(aes(y=mean)) +
-  geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
+  facet_wrap(~variable, ncol=1)
 ```
 
 
