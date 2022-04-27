@@ -9,7 +9,7 @@ source("R/stochastic.R")
 
 ``` r
 set.seed(4242)
-train_reps <- 10
+train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
@@ -43,7 +43,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##   404ms   415ms
+    ##   1.82h  58.84m
 
 ``` r
 ## draw test_reps number of samples
