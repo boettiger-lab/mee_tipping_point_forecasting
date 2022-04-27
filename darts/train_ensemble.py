@@ -168,5 +168,3 @@ if args.evaluate:
         final_df = final_df.append(df, ignore_index=True)
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
-
-
