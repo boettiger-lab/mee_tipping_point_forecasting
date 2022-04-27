@@ -75,7 +75,8 @@ compare_forecast <- function(draws,
     mutate(train, type="historical"),
     mutate(test, type="true"), 
     mutate(posterior_sims, type="predicted")) |>
-    pivot_longer(vars, values_to="value", names_to="variable")
+    pivot_longer(all_of(vars), 
+                 values_to="value", names_to="variable")
 }
 
 

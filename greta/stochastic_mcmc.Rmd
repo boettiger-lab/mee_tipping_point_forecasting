@@ -7,32 +7,47 @@ library(tidyverse, quietly = TRUE)
 library(greta, quietly = TRUE)
 library(bayesplot, quietly = TRUE)
 source("R/utils.R")
-source("R/stochastic.R")
+source("R/saddle_node.R")
 ```
 
 ```{r}
 set.seed(4242)
-train_reps <- 10
+train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
-simulate <- simulate_stoch
+simulate <- simulate_sn
 ```
 
 ```{r}
-p = list(sigma = 1e-2,
-         a = 0.75, 
-         b = 0.25,
-         N_init = 0.75)
+p <- list(r = 1,
+          K = 1,
+          s = 0.1,
+          ho = .26,
+          alpha = 0.0,
+          sigma = 0.02,
+          t_init = 0,
+          N_init = 0.55
+        )
 train <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=train_t_max, p), .id = "i")
 test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max, p), .id = "i")
 ```
 
 ```{r}
-m <- greta_model_stoch(train)
+ggplot(train, aes(t, N, group=i)) + geom_line(alpha=0.1)
+```
+
+```{r}
+m <- greta_model_sn(train, 
+                    r     = uniform(0, 2),
+                    K     = uniform(0, 2),
+                    s     = uniform(0.0, 1),
+                    ho    = uniform(0, 1),
+                    alpha = uniform(0,0.00001),
+                    sigma = uniform(0, 0.05))
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 60000, warmup = 50000,
-                 chains = 4, verbose = FALSE)
+  draws <- mmcmc(m, n_samples = 90000, warmup = 70000,
+                 chains = 8, verbose = FALSE)
 })
 ```
 
@@ -73,7 +88,7 @@ combined |>
   geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
   geom_line(aes(y=mean)) +
   geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
-#ribbon
+ribbon
 ```
 
 
