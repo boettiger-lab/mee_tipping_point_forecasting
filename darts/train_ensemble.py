@@ -45,12 +45,6 @@ parser.add_argument(
     help="Flag whether to plot and save a csv of samples",
 )
 parser.add_argument(
-    "--seed",
-    default=42,
-    type=int,
-    help="Seed selection",
-)
-parser.add_argument(
     "--sim_model",
     default="stochastic",
     type=str,
@@ -121,6 +115,7 @@ for i in range(42, 47):
     train_series = get_train_series(args)
     if args.sim_model == "hopf":
         train_series = scaler.fit_transform(train_series)
+    hyperparameters["model_name"] = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{i}"
     my_model = model(
         likelihood=LaplaceLikelihood(),
         **hyperparameters

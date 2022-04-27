@@ -32,6 +32,8 @@ def preprocessed_t_series(model, n_samples, reverse=False):
             _data = hopf_tp(K_init=30, delta=-0.08)
         else:
             _data = hopf_tp(K_init=14, delta=0.08)
+    elif model == "stochastic":
+        _data = saddle_node_tp(N=0.55, alpha=0, h=0.26)
     else:
         _data = models[model.lower()]()
         
