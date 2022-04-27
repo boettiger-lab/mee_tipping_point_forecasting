@@ -1,0 +1,117 @@
+import numpy as np
+import os
+import sys
+sys.path.append("../")
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+from darts import TimeSeries
+from pandas import DataFrame
+import torch
+from darts.models import RNNModel, BlockRNNModel, TransformerModel
+from darts.utils.likelihood_models import LaplaceLikelihood
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
+import argparse
+from functools import reduce
+from darts.dataprocessing.transformers import Scaler
+
+scaler = Scaler()
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "-f",
+    "--forecasting_model",
+    default="lstm",
+    type=str,
+    help="model to train with (lstm/block_rnn/transformer/gru)",
+)
+parser.add_argument(
+    "-s",
+    "--n_samples",
+    default=100,
+    type=int,
+    help="# of samples to train on",
+)
+parser.add_argument(
+    "-o",
+    "--output_file_name",
+    default="trash",
+    type=str,
+    help="File name of plots",
+)
+parser.add_argument(
+    "-e",
+    "--evaluate",
+    action="store_true",
+    help="Flag whether to plot and save a csv of samples",
+)
+parser.add_argument(
+    "--seed",
+    default=42,
+    type=int,
+    help="Seed selection",
+)
+parser.add_argument(
+    "--sim_model",
+    default="stochastic",
+    type=str,
+    help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
+)
+parser.add_argument(
+    "-c",
+    "--case",
+    default="none",
+    type=str,
+    help="Special cases to consider (none, tipped, non_tipped, both)",
+)
+parser.add_argument(
+    "--decrease",
+    action="store_true",
+    help="Flag to use decreasing Hopf model",
+)
+args = parser.parse_args()
+
+
+model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.forecasting_model.lower()]
+
+model_name = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{args.i}"
+model = model.load_model(f"darts_logs/{model_name}")
+
+
+
+if not os.path.exists("forecasts/"):
+        os.makedirs("forecasts/")
+input_len = hyperparameters["input_chunk_length"]
+output_len = hyperparameters["output_chunk_length"]
+final_df = DataFrame()
+
+for i in range(5):
+    np.random.seed(i)
+    torch.manual_seed(i)
+    n_draws = 100
+    
+    train_series = preprocessed_t_series(args.sim_model, 1)
+    
+    if args.sim_model == "hopf":
+        t_series = train_series[-input_len:]
+    else:
+        t_series = train_series[:input_len]
+    
+    # truth_dist 
+    start_t = input_len if args.sim_model != "hopf" else 100
+    t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
+    
+    t_max = 250-input_len if args.sim_model != "hopf" else 100
+    
+    ensemble_preds = []
+    for model in models:
+        if args.sim_model == "hopf":
+            _preds = scaler.inverse_transform(model.predict(t_max, t_series, num_samples=n_draws))
+        else: 
+            _preds = model.predict(t_max, t_series, num_samples=n_draws)
+        ensemble_preds.append(_preds)
+    ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
+    
+    df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), args.case, args.n_samples, i)
+    final_df = final_df.append(df, ignore_index=True)
+        
+    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
