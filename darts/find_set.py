@@ -6,7 +6,9 @@ import argparse
 flag_non = False
 flag_tip = False
 while True:
-    x, y = preprocessed_t_series("stochastic", 1)
+    x = preprocessed_t_series("stochastic", 1)
+    y = x.all_values()
+    
     if count_tipped(y) == 0:
         x.to_csv("stochastic_non_tipped.csv")
         flag_non = True

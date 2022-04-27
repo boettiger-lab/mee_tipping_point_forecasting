@@ -6,7 +6,7 @@ import pandas as pd
 from darts import TimeSeries
 from pandas import RangeIndex, DataFrame
 
-models = {"stochastic" : stochastic_tp, 
+models = { 
           "saddle" : saddle_node_tp,
           }
 
@@ -72,6 +72,8 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
             delta=0.08
             K_init = 14 + delta * t
             _data = hopf_tp(N_init, t_max, K_init=K_init, delta=delta)
+    elif model == "stochastic":
+        _data = saddle_node_tp(N=N_init, t_max=t_max, alpha=0, h=0.26)
     else:
         _data = models[model.lower()](N_init[0], t_max)
     
@@ -99,16 +101,16 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
         vals = np.array(_ts).reshape(training_data.shape[1], 1, n_draws)
         
     stop = 250 if model != "hopf" else 200
-    
+    import pdb; pdb.set_trace()
     return TimeSeries.from_times_and_values(RangeIndex(start=start_t, stop=stop), vals)
   
 def count_tipped(vals):
-    n_vals = len(vals)
+    n_samples = vals.shape[2]
     count = 0
-    for i in range(n_vals):
-        if vals[i, -1] < 0.6:
+    for i in range(n_samples):
+        if vals[-1, 0, i] < 0.3:
             count += 1
-    return count / n_vals
+    return count / n_samples
 
 def import_hypers(tp_model, ml_model):
     if ml_model == "lstm": 
@@ -193,14 +195,6 @@ def make_df(prediction_series, truth_series, historical_series, tp_model, ml_mod
     
     return df
     
-def plot(tp_model, series, color1="blue", color2="yellow", prediction=False):
-    label = "_nolegend_" if not prediction else "prediction"
-    if tp_model == "hopf":
-        x, y = series.univariate_component(0), series.univariate_component(1)
-        x.plot(low_quantile=0.025, high_quantile=0.975, color=color1, label=label, linestyle="dotted")
-        y.plot(low_quantile=0.025, high_quantile=0.975, color=color2, label=label, linestyle="dotted")
-    else:
-        series.plot(low_quantile=0.025, high_quantile=0.975, color=color1, label=label, linestyle="dotted")
     
 def reshape_xarray(_ts):
     _vals = []
