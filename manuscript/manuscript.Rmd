@@ -108,9 +108,11 @@ panelA / panelB / panelC
 The Nicholson-Bailey model describes a predator-prey dynamic for the relationship of a host species and an obligate parsatiod, orignally used to model the population dynamics of blowflies (_Lucilia cuprina_) [@Nicholson1935; @Nicholson1954a; @Nicholson1954b; @Hastings].
 We consider the form which includes density dependence in the host species, and allow for environmental stochasticity,
 
-\begin{equation}
+\begin{align}
+H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K}\right) - c P_t + \eta_{H,t}
+P_{t+1} &= H_t \exp \left( r \left(1  \tfrac{H}{K}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right)
 \label{hopf}
-\end{equation}
+\end{align}
 
 Following @Dakos2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, $K = K_0 + \delta t$, which drives a Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern, which continues to grow in amplitude as the bifurcation parameter continues to increase.
@@ -124,7 +126,20 @@ However, stochasticity in this case acts as a source of some additional informat
 A yet more difficult forecasting scenario is created by the saddle-node bifurcation.
 May's consumer-resource model is a one-dimensional model describing the growth of a 'resource' population (e.g. herbivore) which is grazed by a consumer [@May1979].
 As in the Nicholson-Bailey model, in the absence of that predation the resource population density grows under a density-dependent pattern described by a logistic function.
-Meanwhile, the resource population is also grazed by a consumer at a rate given by a Holling type III s-curve (typically used to model handling time). 
+The resource population is also grazed by a consumer at a rate given by a Holling type III s-curve (typically used to model handling time). 
+For a certain range of parameter choices, this model supports alternative stable state dynamics, and this model has been identified and employed in explaining alternative stable state dynamics in a broad range ecological and socio-ecological systems [@Scheffer2001].  
+
+\begin{align}
+\end{align}
+
+If the environment slowly alters one of the parameters (say, the encounter efficiency, `a`, in our formulation), one of the stable nodes moves closer and closer to the unstable saddle point, leading to a bifurcation that destroys the stable state, leaving the system to suddenly transition to the alternative stable state.
+Saddle-node bifurcations (also known as fold bifurcations) also create a phenomenon known as hysteresis, where it is not sufficient to restore the environment to the previous parameter values to recover the previous state. 
+Unlike the Hopf bifurcation which exhibits a continuous transition from a stable node to a small limit cycle that then grows, the saddle-node transition is a discontinuous or so-called 'catastrophic' bifurcation.
+Due both this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have become a nearly ubiquitous [@Scheffer2009]
+
+
+Saddle-node b
+
 
 ## Scenario 3: The stochastic transition
 
