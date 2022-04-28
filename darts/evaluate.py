@@ -15,6 +15,9 @@ import argparse
 from functools import reduce
 from darts.dataprocessing.transformers import Scaler
 
+
+# NB Cannot use Hopf model here as we don't have the data scaler,
+# so have to retrain these ones to evaluate.
 scaler = Scaler()
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -27,9 +30,9 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=100,
+    default=1,
     type=int,
-    help="# of samples model was trained on",
+    help="Ignore this",
 )
 parser.add_argument(
     "-o",
@@ -77,7 +80,7 @@ for i in range(5):
     torch.manual_seed(i)
     n_draws = 100
     
-    train_series = preprocessed_t_series(args.sim_model, 1)
+    train_series = get_train_series(args)
     
     if args.sim_model == "hopf":
         t_series = train_series[-input_len:]
@@ -99,7 +102,12 @@ for i in range(5):
         ensemble_preds.append(_preds)
     ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
     
-    df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), args.case, args.n_samples, i)
+    if args.sim_model == "stochastic" or args.sim_model == "saddle":
+        case = "tipped" if args.tipped else "nontipped"
+    elif args.sim_model == "hopf":
+        case = "decrease" if args.decrease else "increase"
+    
+    df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
     final_df = final_df.append(df, ignore_index=True)
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
