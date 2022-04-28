@@ -1,0 +1,11 @@
+May, R. M. (1974) Biological populations with nonoverlapping generations: stable points, stable cycles, and chaos. Science 186, 645–7.
+May, R. M. (1975) Stability and Complexity in Model Systems, 2nd edn. Princeton: Princeton University Press.
+May, R. M. (1976) Simple mathematical models with very complicated dynamics. Nature 261(5560), 459–467.
+May, R. M. (1986) The search for patterns in the balance of nature: advances and rertreats. Ecology 67, 1115–26.
+May, R. M. (1989) The chaotic rhythms of life. New Scientist 1691, 18 Nov.
+May, R. M. and Oster, G. (1976) Bifurcations and dynamic complexity in simple ecological models. American Naturalist 110, 573–99.
+Nicholson, A. J. (1954a) Compensatory reactions of populations to stresses, and their evolutionary significance. Australian Journal of Zoology 2, 1–8.
+Nicholson, A. J. (1954b) An outline of the dynamics of animal populations. Australian Journal of Zoology 2, 9–65.
+Nicholson, A. J. (1957) The self-adjustment of populations to change. Cold Spring Harbor Symposium on Quantitative Biology 223, 153–73.
+Oster, G. and Ipaktchi, A. (1978) Population cycles. Theoretical Chemistry: Periodicities in Chemistry and Biology 4, 111–32.
+Oster, G. (1981) Predicting populations. American Zoologist 21, 831–44
