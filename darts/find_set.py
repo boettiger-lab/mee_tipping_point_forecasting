@@ -1,3 +1,4 @@
+
 import numpy as np
 from utils import preprocessed_t_series, count_tipped
 import argparse
@@ -29,5 +30,3 @@ if args.sim_model == "stochastic":
         
         if flag_non and flag_tip:
             break
-    
-    

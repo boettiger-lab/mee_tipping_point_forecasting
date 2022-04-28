@@ -10,7 +10,7 @@ from pandas import DataFrame
 import torch
 from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series
 import argparse
 from functools import reduce
 from darts.dataprocessing.transformers import Scaler
@@ -29,7 +29,7 @@ parser.add_argument(
     "--n_samples",
     default=100,
     type=int,
-    help="# of samples to train on",
+    help="# of samples model was trained on",
 )
 parser.add_argument(
     "-o",
@@ -39,49 +39,37 @@ parser.add_argument(
     help="File name of plots",
 )
 parser.add_argument(
-    "-e",
-    "--evaluate",
-    action="store_true",
-    help="Flag whether to plot and save a csv of samples",
-)
-parser.add_argument(
-    "--seed",
-    default=42,
-    type=int,
-    help="Seed selection",
-)
-parser.add_argument(
     "--sim_model",
     default="stochastic",
     type=str,
     help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
 )
 parser.add_argument(
-    "-c",
-    "--case",
-    default="none",
-    type=str,
-    help="Special cases to consider (none, tipped, non_tipped, both)",
+    "--tipped",
+    action="store_true",
+    help="Use model trained on tipped or nontipped data",
 )
 parser.add_argument(
     "--decrease",
     action="store_true",
-    help="Flag to use decreasing Hopf model",
+    help="Use model trained on decreasing or increasing hopf model",
 )
 args = parser.parse_args()
 
 
-model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.forecasting_model.lower()]
-
-model_name = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{args.i}"
-model = model.load_model(f"darts_logs/{model_name}")
+_model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "transformer" : TransformerModel}[args.forecasting_model.lower()]
+models = []
+for i in range(42, 47):
+    model_name = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.decrease}_{args.tipped}_{i}"
+    model = _model.load_model(f"darts_logs/{model_name}/_model.pth.tar")
+    models.append(model)
 
 
 
 if not os.path.exists("forecasts/"):
         os.makedirs("forecasts/")
-input_len = hyperparameters["input_chunk_length"]
-output_len = hyperparameters["output_chunk_length"]
+input_len = 25
+output_len = 24
 final_df = DataFrame()
 
 for i in range(5):

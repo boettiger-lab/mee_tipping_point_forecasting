@@ -103,7 +103,7 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
         vals = np.array(_ts).reshape(training_data.shape[1], 1, n_draws)
         
     stop = 250 if model != "hopf" else 200
-    import pdb; pdb.set_trace()
+    
     return TimeSeries.from_times_and_values(RangeIndex(start=start_t, stop=stop), vals)
   
 def count_tipped(vals, threshold=0.3):
