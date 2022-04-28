@@ -10,7 +10,7 @@ from pandas import DataFrame
 import torch
 from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series
 import argparse
 from functools import reduce
 from darts.dataprocessing.transformers import Scaler
@@ -27,7 +27,7 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=100,
+    default=10,
     type=int,
     help="# of samples to train on",
 )
@@ -49,6 +49,12 @@ parser.add_argument(
     default="stochastic",
     type=str,
     help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
+)
+parser.add_argument(
+    "--tipped",
+    default=True,
+    type=bool,
+    help="Whether to use the tipped or nontipped training set",
 )
 parser.add_argument(
     "-c",
@@ -111,11 +117,11 @@ models = []
 for i in range(42, 47):
     hyperparameters["random_state"] = i
     np.random.seed(i)
-    
+    import pdb; pdb.set_trace()
     train_series = get_train_series(args)
     if args.sim_model == "hopf":
         train_series = scaler.fit_transform(train_series)
-    hyperparameters["model_name"] = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{i}"
+    hyperparameters["model_name"] = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{args.tipped}_{i}"
     my_model = model(
         likelihood=LaplaceLikelihood(),
         **hyperparameters
@@ -168,5 +174,3 @@ if args.evaluate:
         final_df = final_df.append(df, ignore_index=True)
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
-
-

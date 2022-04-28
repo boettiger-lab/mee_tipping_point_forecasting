@@ -12,21 +12,19 @@ models = {
 
 def get_train_series(args):
     # Selecting case to pick training set
-    if args.case.lower() == "tipped" and args.sim_model == "stochastic":
+    if args.tipped and args.sim_model == "stochastic":
         train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-    elif args.case.lower() == "nontipped" and args.sim_model == "stochastic":
-        train_series = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-    elif args.case.lower() == "both" and args.sim_model == "stochastic":
-        train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-        train_series_ = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-        train_series = train_series.concatenate(train_series_, axis="sample")
-    elif args.case.lower() == "none":
+    elif not args.tipped and args.sim_model == "stochastic":
+        train_series = TimeSeries.from_csv("stochastic_nontipped.csv", time_col="time")
+    elif args.sim_model == "saddle":
+        train_series =  preprocessed_t_series(args.sim_model, args.n_samples, tipped=args.tipped)
+    else: # Hopf
         # Generating time series
         train_series = preprocessed_t_series(args.sim_model, args.n_samples, reverse=args.decrease)
     
     return train_series
 
-def preprocessed_t_series(model, n_samples, reverse=False):
+def preprocessed_t_series(model, n_samples, reverse=False, tipped=False):
     if model == "hopf":
         if reverse:
             _data = hopf_tp(K_init=30, delta=-0.08)
@@ -34,8 +32,12 @@ def preprocessed_t_series(model, n_samples, reverse=False):
             _data = hopf_tp(K_init=14, delta=0.08)
     elif model == "stochastic":
         _data = saddle_node_tp(N=0.55, alpha=0, h=0.26)
-    else:
-        _data = models[model.lower()]()
+    elif model == "saddle":
+        if tipped:
+            _data = saddle_node_tp(alpha=.0015/2)
+        else:
+            _data = saddle_node_tp(alpha=.0015/4)
+
         
     training_data = _data.collect_samples(n_samples)
     # Note training_data.shape[1] is the length of the time series
@@ -104,11 +106,11 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
     import pdb; pdb.set_trace()
     return TimeSeries.from_times_and_values(RangeIndex(start=start_t, stop=stop), vals)
   
-def count_tipped(vals):
+def count_tipped(vals, threshold=0.3):
     n_samples = vals.shape[2]
     count = 0
     for i in range(n_samples):
-        if vals[-1, 0, i] < 0.3:
+        if vals[-1, 0, i] < threshold:
             count += 1
     return count / n_samples
 
