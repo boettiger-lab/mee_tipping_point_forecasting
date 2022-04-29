@@ -67,10 +67,9 @@ for i in range(42, 47):
     model = _model.load_model(f"darts_logs/{model_name}/_model.pth.tar")
     models.append(model)
 
-
-
 if not os.path.exists("forecasts/"):
-        os.makedirs("forecasts/")
+    os.makedirs("forecasts/")
+    
 input_len = 25
 output_len = 24
 final_df = DataFrame()
@@ -80,32 +79,23 @@ for i in range(5):
     torch.manual_seed(i)
     n_draws = 100
     
-    train_series = get_train_series(args)
+    train_series = preprocessed_t_series(args.sim_model, 1)
     
-    if args.sim_model == "hopf":
-        t_series = train_series[-input_len:]
-    else:
-        t_series = train_series[:input_len]
+    t_series = train_series[:input_len] # Will want to revisit this
     
     # truth_dist 
-    start_t = input_len if args.sim_model != "hopf" else 100
+    start_t = input_len
     t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
     
-    t_max = 250-input_len if args.sim_model != "hopf" else 100
+    t_max = 250-input_len
     
     ensemble_preds = []
     for model in models:
-        if args.sim_model == "hopf":
-            _preds = scaler.inverse_transform(model.predict(t_max, t_series, num_samples=n_draws))
-        else: 
-            _preds = model.predict(t_max, t_series, num_samples=n_draws)
+        _preds = model.predict(t_max, t_series, num_samples=n_draws)
         ensemble_preds.append(_preds)
     ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
     
-    if args.sim_model == "stochastic" or args.sim_model == "saddle":
-        case = "tipped" if args.tipped else "nontipped"
-    elif args.sim_model == "hopf":
-        case = "decrease" if args.decrease else "increase"
+    case = "tipped" if args.tipped else "nontipped"
     
     df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
     final_df = final_df.append(df, ignore_index=True)
