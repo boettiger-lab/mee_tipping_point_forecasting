@@ -58,7 +58,7 @@ write_csv(combined, "data/saddlenode.csv.gz")
 ```{r}
 scores <-
   rep_scores(combined, "N") |> 
-  mutate(scenario="stochastic", 
+  mutate(scenario="saddle_node", 
          model="MCMC", 
          reps = train_reps) 
 
