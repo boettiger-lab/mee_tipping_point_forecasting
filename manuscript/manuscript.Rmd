@@ -62,7 +62,7 @@ We evaluate the ability of some of the most promising machine learning methods f
 <!-- some more verbose bits about bifurcation models probably belongs in discussion instead -->
 We will focus the analysis of several different forecasting scenarios based around two classic models in population ecology: 
 Robert May's consumer-resource model [@May1979], and the Nicholson-Bailey parasatoid-host model [@Nicholson1935]. 
-While 'tactical' population dynamics models used to inform decision making in fields such as fisheries are often much more complex, these simple models nevertheless exhibit rich nonlinear dynamics thought to be typical in ecological systems [].
+While 'tactical' population dynamics models used to inform decision making in fields such as fisheries are often much more complex, these simple models nevertheless exhibit rich nonlinear dynamics thought to be typical in ecological systems [@].
 These textbook models have been well studied and form the basis of half a century of research in ecology, including much recent work on topics such as resilience and tipping points [] which has had important theoretical and practical management outcomes [@Folke2009; @].
 May's model exhibits alternative stable states. 
 In this one-dimensional model, transitions between these states can occur due to intrinsic stochasticity, external forcing, or the gradual environmental change that results in a catastrophic saddle-node bifurcation and generates hysteresis. 
@@ -109,13 +109,14 @@ The Nicholson-Bailey model describes a predator-prey dynamic for the relationshi
 We consider the form which includes density dependence in the host species, and allow for environmental stochasticity,
 
 \begin{align}
-H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K}\right) - c P_t + \eta_{H,t}
-P_{t+1} &= H_t \exp \left( r \left(1  \tfrac{H}{K}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right)
+H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K_t}\right) - c P_t + \eta_{H,t} \\
+P_{t+1} &= H_t \exp \left( r \left(1  \tfrac{H}{K_t}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right) \\
+K_{t+1} &= K_t + \delta
 \label{hopf}
 \end{align}
 
-Following @Dakos2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, $K = K_0 + \delta t$, which drives a Hopf bifurcation as $K$ becomes sufficiently large. 
-In a Hopf bifurcation, a stable node starts an oscillatory pattern, which continues to grow in amplitude as the bifurcation parameter continues to increase.
+Following @Dakos2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, which drives a Hopf bifurcation as $K$ becomes sufficiently large. 
+In a Hopf bifurcation, a stable node starts an oscillatory pattern which continues to grow in amplitude as the bifurcation parameter continues to increase.
 This example illustrates one of the many kinds of challenges which nonlinear phenomena pose to forecasting: the "historical" data prior to the bifurcation never exhibit the cyclical dynamics of growing amplitude that will emerge after the bifurcation occurs.
 If we had used a purely deterministic model, the dynamics would be constrained to a single stable point, corresponding to a slowly changing steady-state population size of host and parasitoid populations.
 However, stochasticity in this case acts as a source of some additional information about the dynamics, as the noise excites quasi-cycles which are visible in the irregular oscillations that appear significantly prior to the emergence of true limit cycles which follow the bifurcation [@Boettiger2018].
@@ -130,24 +131,33 @@ The resource population is also grazed by a consumer at a rate given by a Hollin
 For a certain range of parameter choices, this model supports alternative stable state dynamics, and this model has been identified and employed in explaining alternative stable state dynamics in a broad range ecological and socio-ecological systems [@Scheffer2001].  
 
 \begin{align}
+N_{t+1} &= N_t + r N_t \left(1 - \frac{N_t}{K} \right) - \frac{h_t N_t^2}{s^2 + N_t^2} + \eta_t \\
+h_{t+1} &= h_t + \alpha \\
+\eta_t &\sim \mathcal{N}(0, \sigma)
 \end{align}
 
-If the environment slowly alters one of the parameters (say, the encounter efficiency, `a`, in our formulation), one of the stable nodes moves closer and closer to the unstable saddle point, leading to a bifurcation that destroys the stable state, leaving the system to suddenly transition to the alternative stable state.
+If the environment slowly alters one of the parameters (say, the encounter efficiency, `h_t`, in our formulation), one of the stable nodes moves closer and closer to the unstable saddle point, leading to a bifurcation that destroys the stable state, leaving the system to suddenly transition to the alternative stable state.
 Saddle-node bifurcations (also known as fold bifurcations) also create a phenomenon known as hysteresis, where it is not sufficient to restore the environment to the previous parameter values to recover the previous state. 
 Unlike the Hopf bifurcation which exhibits a continuous transition from a stable node to a small limit cycle that then grows, the saddle-node transition is a discontinuous or so-called 'catastrophic' bifurcation.
-Due both this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have become a nearly ubiquitous [@Scheffer2009]
-
-
-Saddle-node b
+Due both this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
+These dynamics have long been identified as an acute challenge to forecasting, with effort focused primarily on identifying any 'early warning signs' that a catastrophic bifurcation might be occur at all [@Scheffer2009; @Scheffer2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
+Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dei2011; @Dei2012] to whole-ecosystem experiments [@Carpenter2011], and postulated as a model for global change [@Barnosky2014].  
 
 
 ## Scenario 3: The stochastic transition
 
-Hardest of all events to predict are those transitions which are predominately driven by a random component. 
+Perhaps the most difficult of all events to predict are those in which large transitions are predominately driven by a random component. 
 An example of such a transition event is possible to observe in May's consumer-resource model, in which a stochastic term occasionally results in a transition between alternative stable states.
 In such cases, no forecast can precisely predict when a transition will occur, but it is nonetheless possible to deduce the correct distribution of waiting times knowing the correct model. 
 In the case of small noise, transitions are Poisson distributed, such that the distribution of waiting times is roughly exponential [e.g. @vanKampen], though post-hoc the trajectories of such transitions can be mistaken for saddle-node transitions [@prosectorsfallacy].
+To consider such cases, we will again use May's alternative stable state model, though this time leaving all parameters fixed.  
 
+In this context, predicting the probability of a transition in the future based solely on observations prior to a transition occurring is essentially impossible without additional information constraining the model estimate, as such data is equally consistent with infinitely many models or parameter choices which share the same local linearization about the stable point.  
+Unlike the saddle-node bifurcation, there is no slowly warping potential basin which can be detected to inform estimates. 
+Thus, in this scenario, rather than considering the problem of predicting the future evolution of a single time series based only on it's historical values, we consider an alternative framing of the task:
+we imagine our forecaster has access to historical data from one or more comparable systems which includes a previous stochastic transition event.
+Based on this data, our forecaster seeks to identify the distribution of expected transition times for analgous systems starting from the same initial condition. This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [].
+(Note that such stochastic transitions between alternative stable states can also create oscillatory-like dynamics when stochasticity is sufficiently high enough to drive repeated transitions from one attractor to the other and back again.  In such cases, it might be reasonable to estimate a strictly forward-looking forecast of a single system, predicting the distribution of these transitions.)
 
 
 ## Method group 1: Markov Chain Monte Carlo
@@ -162,16 +172,105 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 
 ## Method group 2: Statistical models (ARIMA)
 
+<!-- Key distinction here from MCMC above is not on how model parameters are estimated, but rather on approaches that aren't making strong mechanistic assumptions about process, but are merely phenomonological type models
+-->
 
 
 ## Method group 3: Machine Learning models
 
 
+<!--
+Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
+
+Stuff about how most machine learning techniques provide only point forecasts
+-->
+
+## Forecast skill: strictly proper scores
+
+To compare forecasts, we focus exclusively on metrics of forecast skill which satisfy @Gneiting2007's property of a strictly proper score.
+This ensures the very desirable behavior that which no probabilistic forecast $Q(x,t)$ can have a score as high as that of the true process $P(x,t)$ on average. 
+In other words, while it is possible for any of the models considered to _overfit_ the data against which they are trained, i.e. have a higher likelihood than the true process, it is not possible for these models to overfit the data against which they are scored.
+It is worth noting that this property applies specifically to probablistic forecasts, and is not true of all metrics often used to compare forecasts.
+Concerns about over-fitting arise in most types of model estimation, are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@].   
+This makes the use of strictly proper scoring especially relevant in assessing machine learning predictions.
+
+While all strictly proper scores have this property, this does not guarantee that all such metrics will share the same relative ranking between forecasts.
+We will focus on two of the most common such skill metrics, CRPS score and logs score [e.g. see @scoringRules; @Gneiting2014].
+Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS
 
 # Results
 
 
+By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
+Note that observations are constrained to a smaller region of state space (i.e. a smaller range of population sizes) than will be realized in future. 
+This no-analog aspect of forecasting bifurcation dynamics means that even with many sample points in the training data _and_ perfect knowledge of the true model structure, posterior distributions of parameter values are still influenced by the choice of priors. 
+
+
+```{r}
+hopf |> 
+  group_by(t,type,variable) |> 
+  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
+  rename(species = variable) |> 
+  mutate(species = forcats::fct_recode(species, host = "H", parasitoid = "P")) |>
+  ggplot(aes(t, col=type)) + 
+    geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+    geom_line(aes(y=mean)) +
+    #geom_vline(aes(xintercept = 100)) + 
+    facet_wrap(~species, ncol=1) +
+    theme_bw() + 
+    ggtitle("A. Hopf bifurcation")
+```
+
+```{r}
+panelB <- sn |> filter(type == "historical", i == 1) |>
+  bind_rows(filter(sn, type=="true")|>mutate(type="predicted")) |>
+  ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
+  geom_path(alpha=0.5, show.legend = FALSE) +
+  scale_color_grey(end=0.6) + theme_bw() + 
+  ggtitle("B. Saddle-node bifurcation")
+
+panelC <- stoch |> filter(type == "historical", i == 1) |>
+  bind_rows(filter(stoch, type=="true", i < 50) |> mutate(type="predicted")) |>
+  ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
+  geom_path(alpha=0.5) + scale_color_grey(end=0.6) + theme_bw() + 
+  ggtitle("C. Stochastic transition")
+
+
+panelA / panelB / panelC
+```
+
+
+```{r}
+mcmc_scores <- bind_rows(
+  read_csv("../greta/data/scores_saddlenode.csv.gz") |> mutate(scenario="saddlenode"),
+read_csv("../greta/data/scores_stochastic.csv.gz"),
+read_csv("../greta/data/scores_hopf.csv.gz") |> 
+  filter(scenario == "hopf_increasing") |>
+  mutate(scenario = forcats::fct_recode(scenario, hopf = "hopf_increasing"),
+         reps = 1)
+) |> rename(method=model)
+mcmc_scores |> 
+  pivot_longer(c(logs, crps), names_to = "metric", values_to = "score") |> 
+  ggplot(aes(method, score, col=variable)) + geom_boxplot() + 
+  facet_grid(metric~scenario, scales="free_y")
+```
+
+
+
 # Discussion
+
+Ecological systems have long been acknowledged as complex, due not only to the immense span of dimension and scale such processes involve, but also the frequency of emergent and non-linear phenomena such as stochastic resonance, including bifurcations, tipping points, and hysteresis examined here.
+Calls for increased forecasting efforts from ecologists frequently reference the role of changing climate and other anthropogenic change, which raise the challenge of prediction in no-analog environments, anticipating ecosystem responses to conditions that have not been previously observed [@Clark2001; @Dietze2018].
+What methods will be most reliable in the face of such uncertainty?
+
+
+
+reflects a fundamental challenge of ecological forecasting.
+
+non-linearity,
+We have compared the ability of several cutting edge machine learning approaches for forecasting against statistical and process-based models.
+
+- Ecological forecasting invariably is hard
 
 
 \pagebreak
