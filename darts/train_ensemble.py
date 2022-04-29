@@ -10,7 +10,7 @@ from pandas import DataFrame
 import torch
 from darts.models import RNNModel, BlockRNNModel, TransformerModel
 from darts.utils.likelihood_models import LaplaceLikelihood
-from utils import preprocessed_t_series, truth_dist, make_df, get_train_series, plot
+from utils import preprocessed_t_series, truth_dist, make_df, get_train_series
 import argparse
 from functools import reduce
 from darts.dataprocessing.transformers import Scaler
@@ -27,7 +27,7 @@ parser.add_argument(
 parser.add_argument(
     "-s",
     "--n_samples",
-    default=100,
+    default=10,
     type=int,
     help="# of samples to train on",
 )
@@ -51,11 +51,9 @@ parser.add_argument(
     help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
 )
 parser.add_argument(
-    "-c",
-    "--case",
-    default="none",
-    type=str,
-    help="Special cases to consider (none, tipped, non_tipped, both)",
+    "--tipped",
+    action="store_true",
+    help="Whether to use the tipped or nontipped training set",
 )
 parser.add_argument(
     "--decrease",
@@ -115,7 +113,7 @@ for i in range(42, 47):
     train_series = get_train_series(args)
     if args.sim_model == "hopf":
         train_series = scaler.fit_transform(train_series)
-    hyperparameters["model_name"] = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.case}_{args.decrease}_{i}"
+    hyperparameters["model_name"] = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.decrease}_{args.tipped}_{i}"
     my_model = model(
         likelihood=LaplaceLikelihood(),
         **hyperparameters
@@ -164,9 +162,12 @@ if args.evaluate:
             ensemble_preds.append(_preds)
         ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
         
-        df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), args.case, args.n_samples, i)
+        if args.sim_model == "stochastic" or args.sim_model == "saddle":
+            case = "tipped" if args.tipped else "nontipped"
+        elif args.sim_model == "hopf":
+            case = "decrease" if args.decrease else "increase"
+            
+        df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
         final_df = final_df.append(df, ignore_index=True)
         
     final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
-
-
