@@ -9,7 +9,7 @@ source("R/saddle_node.R")
 
 ``` r
 set.seed(4242)
-train_reps <- 100
+train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
@@ -55,7 +55,7 @@ bench::bench_time({
 ```
 
     ## process    real 
-    ##    2.7s    2.7s
+    ##   1.55d  21.48h
 
 ``` r
 ## draw test_reps number of samples
@@ -103,6 +103,9 @@ combined |>
   geom_line(aes(y=mean)) +
   geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
 ```
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
 
 ![](sn_mcmc_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 

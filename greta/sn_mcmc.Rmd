@@ -12,7 +12,7 @@ source("R/saddle_node.R")
 
 ```{r}
 set.seed(4242)
-train_reps <- 100
+train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
