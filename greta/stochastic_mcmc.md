@@ -4,7 +4,7 @@ library(tidyverse, quietly = TRUE)
 library(greta, quietly = TRUE)
 library(bayesplot, quietly = TRUE)
 source("R/utils.R")
-source("R/stochastic.R")
+source("R/saddle_node.R")
 ```
 
 ``` r
@@ -13,20 +13,37 @@ train_reps <- 1
 train_t_max <- 250
 test_t_max <- 250
 test_reps <- 100
-simulate <- simulate_stoch
+simulate <- simulate_sn
 ```
 
 ``` r
-p = list(sigma = 1e-2,
-         a = 0.75, 
-         b = 0.25,
-         N_init = 0.75)
+p <- list(r = 1,
+          K = 1,
+          s = 0.1,
+          ho = .26,
+          alpha = 0.0,
+          sigma = 0.02,
+          t_init = 0,
+          N_init = 0.55
+        )
 train <- purrr::map_dfr(1:train_reps, \(i) simulate(t_max=train_t_max, p), .id = "i")
 test <- purrr::map_dfr(1:test_reps, \(i) simulate(t_max=test_t_max, p), .id = "i")
 ```
 
 ``` r
-m <- greta_model_stoch(train)
+ggplot(train, aes(t, N, group=i)) + geom_line(alpha=0.1)
+```
+
+![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+m <- greta_model_sn(train, 
+                    r     = uniform(0, 2),
+                    K     = uniform(0, 2),
+                    s     = uniform(0.0, 1),
+                    ho    = uniform(0, 1),
+                    alpha = uniform(0,0.00001),
+                    sigma = uniform(0, 0.05))
 ```
 
     ## ℹ Initialising python and checking dependencies, this may take a moment.
@@ -37,13 +54,13 @@ m <- greta_model_stoch(train)
 
 ``` r
 bench::bench_time({                 
-  draws <- mmcmc(m, n_samples = 60000, warmup = 50000,
-                 chains = 4, verbose = FALSE)
+  draws <- mmcmc(m, n_samples = 90000, warmup = 70000,
+                 chains = 8, verbose = FALSE)
 })
 ```
 
     ## process    real 
-    ##   1.82h  58.84m
+    ##   3.59h   1.34h
 
 ``` r
 ## draw test_reps number of samples
@@ -51,14 +68,6 @@ inits <- data.frame(N_init=p$N_init, t_init = 0)
 combined <- compare_forecast(draws, train, test, simulate, vars = "N",
                               test_reps, test_t_max, inits = inits
                              ) 
-```
-
-    ## Note: Using an external vector in selections is ambiguous.
-    ## ℹ Use `all_of(vars)` instead of `vars` to silence this message.
-    ## ℹ See <https://tidyselect.r-lib.org/reference/faq-external-vector.html>.
-    ## This message is displayed once per session.
-
-``` r
 write_csv(combined, "data/stochastic.csv.gz")
 ```
 
@@ -76,13 +85,13 @@ write_csv(scores, "data/scores_stochastic.csv.gz")
 bayesplot::mcmc_trace(draws)
 ```
 
-![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 plot_posteriors(draws, p)
 ```
 
-![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
 ribbon <- 
@@ -93,8 +102,13 @@ combined |>
   geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
   geom_line(aes(y=mean)) +
   geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
-#ribbon
+ribbon
 ```
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning
+    ## -Inf
+
+![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 ``` r
 combined |> 
@@ -104,4 +118,4 @@ combined |>
     geom_vline(aes(xintercept = train_t_max)) + facet_wrap(~variable, ncol=1)
 ```
 
-![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](stochastic_mcmc_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
