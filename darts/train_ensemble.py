@@ -140,7 +140,8 @@ if args.evaluate:
         torch.manual_seed(i)
         n_draws = 100
         
-        train_series = preprocessed_t_series(args.sim_model, 1)
+        args.n_samples = 1
+        train_series = get_train_series(args)
         
         if args.sim_model == "hopf":
             t_series = train_series[-input_len:]

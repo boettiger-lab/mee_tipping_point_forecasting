@@ -32,7 +32,7 @@ parser.add_argument(
     "--n_samples",
     default=1,
     type=int,
-    help="Ignore this",
+    help="Number of samples that the model was trained on",
 )
 parser.add_argument(
     "-o",
@@ -64,7 +64,7 @@ _model = {"lstm" : RNNModel, "gru" : RNNModel, "block_rnn" : BlockRNNModel, "tra
 models = []
 for i in range(42, 47):
     model_name = f"{args.forecasting_model}_{args.sim_model}_{args.n_samples}_{args.decrease}_{args.tipped}_{i}"
-    model = _model.load_model(f"darts_logs/{model_name}/_model.pth.tar")
+    model = _model.load_from_checkpoint(f"{model_name}", file_name="last-epoch=499.ckpt")
     models.append(model)
 
 if not os.path.exists("forecasts/"):
@@ -74,14 +74,23 @@ input_len = 25
 output_len = 24
 final_df = DataFrame()
 
+if not os.path.exists("forecasts/"):
+    os.makedirs("forecasts/")
+input_len = 25
+output_len = 24
+final_df = DataFrame()
 for i in range(5):
     np.random.seed(i)
     torch.manual_seed(i)
     n_draws = 100
     
-    train_series = preprocessed_t_series(args.sim_model, 1)
+    args.n_samples = 1
+    train_series = get_train_series(args)
     
-    t_series = train_series[:input_len] # Will want to revisit this
+    if args.sim_model == "stochastic":
+        t_series = train_series[:input_len]
+    elif args.sim_model == "saddle":
+        t_series = train_series[-input_len:]
     
     # truth_dist 
     start_t = input_len
@@ -96,8 +105,8 @@ for i in range(5):
     ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
     
     case = "tipped" if args.tipped else "nontipped"
-    
+        
     df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
     final_df = final_df.append(df, ignore_index=True)
-        
-    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
+    
+final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
