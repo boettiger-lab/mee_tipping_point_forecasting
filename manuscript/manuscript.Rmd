@@ -176,11 +176,19 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 -->
 
 We present ARIMA forecasts as model-free statistical analogs to the forecasts made using Bayesian inference with MCMC.
-
+not making mechanistic assumptions. Worst-case scenario, presumption here is that future will be similar to the past
 
 
 ## Method group 3: Machine Learning models
 
+Ml models tend to focus on point forecasts, not sequence to sequence forecasts. 
+Majority of techniques here come from language models.
+Need concept of memory here, either via attention (transformer) or memory (recurrent networks)
+Recent work has put forward that encoder-decoder structure should excel here
+uncertainty is represented by learning parameters for a distribution, in this case we use a poisson distribution. 
+So we estimate uncertainty intervals by making draws from a fitted distribution at each time point.
+In practice lots of problems with instability, we get around this by taking ensemble approach -> learning multiple models over different seeds, using collective forecast
+otherwise can come across models that struggle
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
