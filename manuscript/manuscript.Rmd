@@ -175,6 +175,9 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 <!-- Key distinction here from MCMC above is not on how model parameters are estimated, but rather on approaches that aren't making strong mechanistic assumptions about process, but are merely phenomonological type models
 -->
 
+We present ARIMA forecasts as model-free statistical analogs to the forecasts made using Bayesian inference with MCMC.
+
+
 
 ## Method group 3: Machine Learning models
 
