@@ -75,7 +75,7 @@ No-analog scenarios [@Williams]
 
 
 ```{r fig.cap="Forecast scenarios. A. a Hopf bifurcation: a stable node develops into a limit cycle. B. The saddle-node bifurcation."}
-hopf <- read_csv("../greta/data/hopf_increasing.csv.gz")
+hopf <- read_csv("../greta/forecasts/hopf_increasing.csv.gz")
 panelA <- hopf |> filter(type %in% c("historical", "true"), i < 10) |>
   rename(species = variable) |> 
   mutate(species = forcats::fct_recode(species, host = "H", parasitoid = "P")) |>
@@ -83,7 +83,7 @@ panelA <- hopf |> filter(type %in% c("historical", "true"), i < 10) |>
   geom_line(show.legend = FALSE, alpha = 0.7) + theme_bw()+  scale_color_grey() +
   ggtitle("A. Hopf bifurcation")
 
-sn <- read_csv("../greta/data/saddlenode.csv.gz")
+sn <- read_csv("../greta/forecasts/saddlenode.csv.gz")
 panelB <- sn |> filter(type == "historical", i == 1) |>
   bind_rows(filter(sn, type=="true")|>mutate(type="predicted")) |>
   ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
@@ -91,7 +91,7 @@ panelB <- sn |> filter(type == "historical", i == 1) |>
   scale_color_grey(end=0.6) + theme_bw() + 
   ggtitle("B. Saddle-node bifurcation")
 
-stoch <- read_csv("../greta/data/stochastic.csv.gz")
+stoch <- read_csv("../greta/forecasts/stochastic.csv.gz")
 panelC <- stoch |> filter(type == "historical", i == 1) |>
   bind_rows(filter(stoch, type=="true", i < 50) |> mutate(type="predicted")) |>
   ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
@@ -222,17 +222,28 @@ hopf |>
 ```
 
 ```{r}
-panelB <- sn |> filter(type == "historical", i == 1) |>
-  bind_rows(filter(sn, type=="true")|>mutate(type="predicted")) |>
-  ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
-  geom_path(alpha=0.5, show.legend = FALSE) +
-  scale_color_grey(end=0.6) + theme_bw() + 
-  ggtitle("B. Saddle-node bifurcation")
+panelB <- sn |>
+  group_by(t,type,variable) |> 
+  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
+  rename(species = variable) |>
+  ggplot(aes(t, col=type)) + 
+    geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
+    geom_line(aes(y=mean)) +
+    #geom_vline(aes(xintercept = 100)) + 
+    facet_wrap(~species, ncol=1) +
+    theme_bw()
+  
 
-panelC <- stoch |> filter(type == "historical", i == 1) |>
-  bind_rows(filter(stoch, type=="true", i < 50) |> mutate(type="predicted")) |>
-  ggplot(aes(t, value, col = type, group=interaction(i,type), lty=type)) +
-  geom_path(alpha=0.5) + scale_color_grey(end=0.6) + theme_bw() + 
+panelC <- stoch |>
+  group_by(t,type,variable) |> 
+  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
+  rename(species = variable) |>
+  ggplot(aes(t, col=type)) + 
+    geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
+    geom_line(aes(y=mean)) +
+    #geom_vline(aes(xintercept = 100)) + 
+    facet_wrap(~species, ncol=1) +
+    theme_bw() + 
   ggtitle("C. Stochastic transition")
 
 
@@ -242,9 +253,9 @@ panelA / panelB / panelC
 
 ```{r}
 mcmc_scores <- bind_rows(
-  read_csv("../greta/data/scores_saddlenode.csv.gz") |> mutate(scenario="saddlenode"),
-read_csv("../greta/data/scores_stochastic.csv.gz"),
-read_csv("../greta/data/scores_hopf.csv.gz") |> 
+  read_csv("../greta/forecasts/scores_saddlenode.csv.gz") |> mutate(scenario="saddlenode"),
+read_csv("../greta/forecasts/scores_stochastic.csv.gz"),
+read_csv("../greta/forecasts/scores_hopf.csv.gz") |> 
   filter(scenario == "hopf_increasing") |>
   mutate(scenario = forcats::fct_recode(scenario, hopf = "hopf_increasing"),
          reps = 1)
