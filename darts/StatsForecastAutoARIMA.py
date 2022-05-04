@@ -5,63 +5,88 @@ sys.path.append("../")
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from utils import preprocessed_t_series, truth_dist, make_df
+from utils import get_train_series, truth_dist, make_df
 import argparse
 import os
 
+scaler = Scaler()
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    "-s",
-    "--sim_model",
-    default="stochastic",
-    type=str,
-    help="Select which model to use for the tipping point (stochastic/saddle/hopf)",
-)
-parser.add_argument(
-    "--case",
-    default="tipped",
-    type=str,
-    help="Select which case for the training series",
-)
 parser.add_argument(
     "-f",
     "--forecasting_model",
     default="arima",
     type=str,
-    help="Select which model to train",
+    help="model to train with (arima)",
+)
+parser.add_argument(
+    "-s",
+    "--n_samples",
+    default=1,
+    type=int,
+    help="Number of samples that the model was trained on",
 )
 parser.add_argument(
     "-o",
     "--output_file_name",
     default="trash",
     type=str,
-    help="Select which filename to use",
+    help="File name of plots",
+)
+parser.add_argument(
+    "--sim_model",
+    default="stochastic",
+    type=str,
+    help="Select which dynamics to use for the tipping point (stochastic/saddle/hopf)",
+)
+parser.add_argument(
+    "--tipped",
+    action="store_true",
+    help="Use model trained on tipped or nontipped data",
+)
+parser.add_argument(
+    "--decrease",
+    action="store_true",
+    help="Use model trained on decreasing or increasing hopf model",
 )
 args = parser.parse_args()
 
-if args.case.lower() == "tipped" and args.sim_model == "stochastic":
-    train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-elif args.case.lower() == "nontipped" and args.sim_model == "stochastic":
-    train_series = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-elif args.case.lower() == "both" and args.sim_model == "stochastic":
-    train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-    train_series_ = TimeSeries.from_csv("stochastic_non_tipped.csv", time_col="time")
-    train_series = train_series.concatenate(train_series_, axis="sample")
+train_series = get_train_series(args)
 
 _model = {"arima" : StatsForecastAutoARIMA,}[args.forecasting_model]
-input_len =25
-output_len=24
+
 if not os.path.exists("forecasts/"):
     os.makedirs("forecasts/")
-
-for i in range(1):
-    t_series, v_series = train_series.split_before(input_len)
-    t_dist = truth_dist("stochastic", t_series, input_len, output_len, n_draws=100)
+input_len = 25
+output_len = 24
+final_df = DataFrame()
+for i in range(5):
+    np.random.seed(i)
+    torch.manual_seed(i)
+    n_draws = 100
     
-    t_max = 250-input_len
+    args.n_samples = 1
+    train_series = get_train_series(args)
     
-    model = _model().fit(t_series)
-    preds = model.predict(t_max, num_samples=100)
+    if args.sim_model == "stochastic":
+        t_series = train_series[:input_len]
+    else:
+        t_series = train_series[-input_len:]
     
-    df = make_df(preds, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), args.case, 1, 0)
-    df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
+    # truth_dist 
+    start_t = input_len
+    t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
+    
+    t_max = 250-input_len if args.sim_model != hopf else 100
+    
+    ensemble_preds = []
+    for model in models:
+        _preds = model.predict(t_max, t_series, num_samples=n_draws)
+        ensemble_preds.append(_preds)
+    ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
+    
+    case = "tipped" if args.tipped else "nontipped"
+        
+    df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
+    final_df = final_df.append(df, ignore_index=True)
+    
+final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)

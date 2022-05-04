@@ -149,7 +149,7 @@ if args.evaluate:
             t_series = train_series[:input_len]
         
         # truth_dist 
-        start_t = input_len if args.sim_model != "hopf" else 100
+        start_t = input_len
         t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
         
         t_max = 250-input_len if args.sim_model != "hopf" else 100
