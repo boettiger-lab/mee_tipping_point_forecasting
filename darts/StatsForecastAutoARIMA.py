@@ -5,11 +5,14 @@ sys.path.append("../")
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from pandas import DataFrame
+import numpy as np
+import torch
 from utils import get_train_series, truth_dist, make_df
 import argparse
+from functools import reduce
 import os
 
-scaler = Scaler()
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "-f",
@@ -76,13 +79,22 @@ for i in range(5):
     start_t = input_len
     t_dist = truth_dist(args.sim_model, t_series, input_len, output_len, n_draws=n_draws, reverse=args.decrease, start_t=start_t)
     
-    t_max = 250-input_len if args.sim_model != hopf else 100
+    t_max = 250-input_len if args.sim_model != "hopf" else 100
     
     ensemble_preds = []
-    for model in models:
-        _preds = model.predict(t_max, t_series, num_samples=n_draws)
+    if args.sim_model != "hopf":
+        model = _model().fit(series=t_series)
+        _preds = model.predict(t_max, num_samples=n_draws)
         ensemble_preds.append(_preds)
-    ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
+        ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="sample"), ensemble_preds)
+    else:
+        h_t_series, p_t_series = t_series.univariate_component(0), t_series.univariate_component(1)
+        for series in [h_t_series, p_t_series]:
+            model = _model().fit(series=series)
+            _preds = model.predict(t_max, num_samples=n_draws)
+            ensemble_preds.append(_preds)
+      
+        ensemble_series = reduce(lambda a, b: a.concatenate(b, axis="component"), ensemble_preds)
     
     case = "tipped" if args.tipped else "nontipped"
         
