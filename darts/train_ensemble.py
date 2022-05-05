@@ -159,7 +159,8 @@ if args.evaluate:
         ensemble_preds = []
         for model in models:
             if args.sim_model == "hopf":
-                _preds = scaler.inverse_transform(model.predict(t_max, t_series, num_samples=n_draws))
+                input_series = scaler.transform(t_series)
+                _preds = scaler.inverse_transform(model.predict(t_max, input_series, num_samples=n_draws))
             else: 
                 _preds = model.predict(t_max, t_series, num_samples=n_draws)
             ensemble_preds.append(_preds)
