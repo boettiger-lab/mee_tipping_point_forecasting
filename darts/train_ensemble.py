@@ -61,6 +61,7 @@ parser.add_argument(
     help="Flag to use decreasing Hopf model",
 )
 args = parser.parse_args()
+final_dest = f"forecasts/reps={args.n_samples}/{args.output_file_name}.csv.gz"
 
 if args.forecasting_model == "lstm": 
     if args.sim_model == "stochastic":
@@ -159,7 +160,8 @@ if args.evaluate:
         ensemble_preds = []
         for model in models:
             if args.sim_model == "hopf":
-                _preds = scaler.inverse_transform(model.predict(t_max, t_series, num_samples=n_draws))
+                input_series = scaler.transform(t_series)
+                _preds = scaler.inverse_transform(model.predict(t_max, input_series, num_samples=n_draws))
             else: 
                 _preds = model.predict(t_max, t_series, num_samples=n_draws)
             ensemble_preds.append(_preds)
@@ -172,5 +174,5 @@ if args.evaluate:
             
         df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
         final_df = final_df.append(df, ignore_index=True)
-        
-    final_df.to_csv(f"forecasts/reps={args.n_samples}/{args.output_file_name}.csv.gz", index=False)
+    
+    final_df.to_csv(final_dest, index=False)
