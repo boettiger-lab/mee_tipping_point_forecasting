@@ -1,6 +1,6 @@
 import sys
 sys.path.append("../")
-from model import stochastic_tp, saddle_node_tp, hopf_tp
+from model import saddle_node_tp, hopf_tp
 import numpy as np
 import pandas as pd
 from darts import TimeSeries
@@ -12,13 +12,13 @@ models = {
 
 def get_train_series(args):
     # Selecting case to pick training set
-    if args.tipped and args.sim_model == "stochastic":
+    if args.tipped and args.sim_model == "stochastic" and args.n_samples == 1:
         train_series = TimeSeries.from_csv("stochastic_tipped.csv", time_col="time")
-    elif not args.tipped and args.sim_model == "stochastic":
+    elif not args.tipped and args.sim_model == "stochastic" and args.n_samples == 1:
         train_series = TimeSeries.from_csv("stochastic_nontipped.csv", time_col="time")
     elif args.sim_model == "saddle":
         train_series =  preprocessed_t_series(args.sim_model, args.n_samples, tipped=args.tipped)
-    else: # Hopf
+    else:
         # Generating time series
         train_series = preprocessed_t_series(args.sim_model, args.n_samples, reverse=args.decrease)
     
@@ -62,8 +62,8 @@ def preprocessed_t_series(model, n_samples, reverse=False, tipped=False):
 
 def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=False, start_t=25):
     N_init = t_series[-1].values()[0] 
-    t_max = 250-input_len if model != "hopf" else 100
-    t = len(t_series) if model!= "hopf" else 100
+    t_max = 225 if model != "hopf" else 100
+    t = 250 if model != "hopf" else 100
     
     if model == "hopf":
         if reverse:
@@ -75,14 +75,9 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
             K_init = 14 + delta * t
             _data = hopf_tp(N_init, t_max, K_init=K_init, delta=delta)
     elif model == "stochastic":
-        _data = saddle_node_tp(N=N_init, t_max=t_max, alpha=0, h=0.26)
+        _data = saddle_node_tp(N=N_init[0], t_max=t_max, alpha=0, h=0.26)
     else:
-        _data = models[model.lower()](N_init[0], t_max)
-    
-    # Need to account for degradation parameter having changed over t_series
-    # for saddle bifurcations
-    if model == "saddle":
-        _data.h = _data.h_init + t * _data.alpha
+        _data = models[model.lower()](N_init[0], t_max, alpha=.0015/4)
         _data.h_init = _data.h_init + t * _data.alpha
 
     training_data = _data.collect_samples(n_draws)
@@ -101,9 +96,16 @@ def truth_dist(model, t_series, input_len, output_len, n_draws=100, reverse=Fals
         vals = np.array(_vals)
     else:
         vals = np.array(_ts).reshape(training_data.shape[1], 1, n_draws)
-        
-    stop = 250 if model != "hopf" else 200
     
+    if model == "stochastic":
+        stop = 250
+    elif model == "saddle":
+        start_t = 250
+        stop = 475
+    elif model == "hopf":
+        start_t = 100
+        stop = 200
+      
     return TimeSeries.from_times_and_values(RangeIndex(start=start_t, stop=stop), vals)
   
 def count_tipped(vals, threshold=0.3):
