@@ -131,6 +131,8 @@ for i in range(42, 47):
 if args.evaluate:
     if not os.path.exists("forecasts/"):
             os.makedirs("forecasts/")
+    if not os.path.exists(f"forecasts/reps={args.n_samples}"):
+            os.makedirs(f"forecasts/reps={args.n_samples}")
     input_len = hyperparameters["input_chunk_length"]
     output_len = hyperparameters["output_chunk_length"]
     final_df = DataFrame()
@@ -171,4 +173,4 @@ if args.evaluate:
         df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
         final_df = final_df.append(df, ignore_index=True)
         
-    final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
+    final_df.to_csv(f"forecasts/reps={args.n_samples}/{args.output_file_name}.csv.gz", index=False)

@@ -109,4 +109,4 @@ for i in range(5):
     df = make_df(ensemble_series, t_dist, t_series, args.sim_model, args.forecasting_model.lower(), case, args.n_samples, i)
     final_df = final_df.append(df, ignore_index=True)
     
-final_df.to_csv(f"forecasts/{args.output_file_name}.csv.gz", index=False)
+final_df.to_csv(f"forecasts/reps={args.n_samples}/{args.output_file_name}.csv.gz", index=False)
