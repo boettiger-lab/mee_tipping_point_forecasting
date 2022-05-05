@@ -109,7 +109,7 @@ The Nicholson-Bailey model describes a predator-prey dynamic for the relationshi
 We consider the form which includes density dependence in the host species, and allow for environmental stochasticity,
 
 \begin{align}
-H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K_t}\right) - c P_t + \eta_{H,t} \\
+H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K_t}\right) - c P_t + \eta_{H,t} \right) \\
 P_{t+1} &= H_t \exp \left( r \left(1  \tfrac{H}{K_t}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right) \\
 K_{t+1} &= K_t + \delta
 \label{hopf}
