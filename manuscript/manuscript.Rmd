@@ -183,10 +183,9 @@ Uncertainty intervals here are estimated directly from parameters of the model.
 
 ## Method group 3: Machine Learning models
 
-Lastly, we examine how deep learning algorithms perform.
-Over the past decade, deep learning has become popular for a broad range of challenging predictive tasks.
+Over the past decade, deep learning has become popular for a broad range of challenging predictive tasks;
 However, there have been a relatively small number of studies investigating how deep learning methods perform with sequence to sequence time series forecasting [@kao, @lyu, @Du].
-Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is important to improving forecasting performance. 
+Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is important to optimizing forecasting performance. 
 To investigate these assertions, we examine four models that use a combination of memory, attention and encoder-decoder network architectures. 
 
 Many of the common deep learning algorithms are not designed to estimate uncertainty intervals, so it is necessary to consider how deep learning methods can be used for uncertainty estimation. 
