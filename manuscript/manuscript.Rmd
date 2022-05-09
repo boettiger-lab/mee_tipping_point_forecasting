@@ -176,29 +176,34 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 -->
 
 We present forecasts produced by ARIMA models as the model-free analogs to the forecasts made using parameter estimation with MCMC.
-Since ARIMA models make the assumption that the future will resemble the past via their auto-regressive and moving average components [@cite], ARIMA models are not well-suited for tipping point problems.
+Since ARIMA models make the assumption that the future will resemble the past via ARIMA's auto-regressive and moving average components [@cite], ARIMA models are not well-suited for tipping point problems.
 Thus, ARIMA-based forecasts should serve as a lower threshold of acceptability for the performance of non-mechanistic models.
-In contrast to inference with MCMC, uncertainty is estimated directly from the learned parameters [@cite].
+In contrast to inference with MCMC, uncertainty with ARIMA models is estimated directly from the learned parameters [@cite].
+Since ARIMA is a very commonly encountered forecasting method, we will refer readers to [@cite] for further discussion.
 
 
 ## Method group 3: Machine Learning models
 
-Over the past decade, deep learning has become very popular for a broad range of challenging predictive tasks [@cite];
-However, there have been a relatively small number of studies investigating how deep learning methods perform on sequence to sequence time series forecasting problems [@kao, @lyu, @Du].
-Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is important for improving forecasting performance. 
-To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures. 
+Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@kao, @lyu, @Du].
+Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance.
+Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
+Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
+To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
+We will examine LSTM and GRU models, which are both memory-based networks, Transformers, which use attention with an encoder-decoder, and Block LSTM's, which employ LSTM's in an encoder-decoder framework.
 
-Machine learning models are often used to make point forecasts, yet for their application to complex time series problems like tipping points, it will be necessary to use methods that estimate uncertainty. 
-For all the machine learning models in this study, we use the same method for uncertainty estimation.
-Each model is trained to learn the parameters of a poisson distribution that maximizes the log likelihood. 
-To estimate uncertainty intervals, we simply draw samples from the learned distribution at each time step and report the 95% confidence interval.
+Machine learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use methods that estimate uncertainty. 
+For all the machine learning models in this study, we use the same method for uncertainty estimation:
+each model is trained to learn the parameters of a poisson distribution that maximizes the log likelihood. 
+To estimate uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
 
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@cite].
 We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds [@figure_].
-A proposed reason for this instability is that the machine learning models often get stuck on local optima of loss surfaces [@modelstability].
-To regularize against the common initialization instability problem, each machine learning forecast in [@figures] is an ensemble forecast over 5 different initialization seeds.
-
-Bias Variance tradeoff.
+One proposed reason for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
+Another likely reason for this instability is overfitting to the training set.
+Overfitting is a fundamental issue in deep learning, for which there is no universal solution [@ying].
+A common method to reduce overfitting is to perform K-fold cross validation [@ying], but this approach cannot be effectively employed when there is one or few time series in the training set.
+To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 models that were trained with different initialization seeds.
+We found this simple ensemble method to be an effective way to improve the generalizability for each ML model.
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
