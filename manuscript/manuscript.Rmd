@@ -184,8 +184,8 @@ Since ARIMA is a very commonly encountered forecasting method, we will refer rea
 
 ## Method group 3: Machine Learning models
 
-Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@kao, @lyu, @Du].
-Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance.
+Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@kao, @lyu, @du].
+Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance -- see @kao, @lyu and @du for more details on these concepts.
 Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
 Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
 To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
@@ -199,11 +199,11 @@ To estimate uncertainty intervals, we draw samples from the learned distribution
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@cite].
 We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds [@figure_].
 One proposed reason for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
-Another likely reason for this instability is overfitting to the training set.
+Another likely reason is that machine learning models commonly overfit the training data.
 Overfitting is a fundamental issue in deep learning, for which there is no universal solution [@ying].
-A common method to reduce overfitting is to perform K-fold cross validation [@ying], but this approach cannot be effectively employed when there is one or few time series in the training set.
-To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 models that were trained with different initialization seeds.
-We found this simple ensemble method to be an effective way to improve the generalizability for each ML model.
+One frequently cited method to reduce overfitting is K-fold cross validation [@ying], but this approach cannot be effectively employed when there is one or few time series in the training set.
+To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 individual models that were trained with different initialization seeds.
+We found this simple ensemble method to be an effective way to improve generalizability.
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
