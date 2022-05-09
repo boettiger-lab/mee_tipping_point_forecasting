@@ -68,23 +68,25 @@ combined |> filter(simulation=="hopf", reps == 1, group == 1) |>
 
 
 
-combined |> filter(simulation=="saddle", group == 1) |> 
+combined |> filter(simulation=="saddle", group == 1, reps == 1) |> 
   ggplot(aes(t, col=type, fill=type)) + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = saddle_sims) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = saddle_sims) +
   geom_line(aes(y=mean)) +
   geom_line(aes(y=mean), data = saddle_sims) +
-  facet_grid(forecasting_model ~ reps, scales = "free") +
+  facet_wrap(~forecasting_model, scales = "free") +
+  #facet_grid(forecasting_model ~ reps, scales = "free") +
   theme_bw() + 
   ggtitle("B. Saddle-Node bifurcation")
 
-combined |> filter(simulation=="stochastic", group == 1) |> 
+combined |> filter(simulation=="stochastic", group == 1, reps==1) |> 
   ggplot(aes(t, col=type, fill=type)) + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = stochastic_sims) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = stochastic_sims) +
   geom_line(aes(y=mean)) +
   geom_line(aes(y=mean), data = stochastic_sims) +
-  facet_grid(forecasting_model ~ reps, scales = "free") +
+  facet_wrap(~forecasting_model, scales = "free") +
+  #facet_grid(forecasting_model ~ reps, scales = "free") +
   theme_bw() + 
   ggtitle("C. Stochastic transition")
 
