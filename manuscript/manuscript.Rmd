@@ -199,15 +199,33 @@ Across deep learning, overfitting is a fundamental issue, arising from neural ne
 With so many parameters, deep learning models tend to have high variance and thus overfit the training data, a consequence of the bias-variance trade-off common across statistics and machine learning [@ying].
 One frequently cited method to reduce overfitting is K-fold cross validation, but this approach cannot be effectively employed when there is one or few time series in the training set.
 To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 individual models that were trained with different initialization seeds.
-We found this simple ensemble method to be an effective way to improve generalizability in our limited data regime.
+We found this simple ensemble method to be an effective way to improve generalizability in the limited data regime.
 
 Recently, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance on time series data [@kao, @lyu, @du].
 Herein we will provide some background on what these machine learning methods are and their benefits.
 
-Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
+### Recurrent Neural Networks
+
+Recurrent neural networks are the predominant memory-based ML method.
+Recurrent neural networks differ from feed-forward neural networks in that a recurrent neural network provides feedback to itself between time steps.
+By providing self-feedback, recurrent neural networks are able to retain information from previous time steps and thus are considered a memory-based method.
+However, a standard recurrent neural network, i.e. a feed forward neural network that provides self-feedback, is unwieldy to train because of the vanishing and exploding gradient problem [@Pascanu], so there have been specialized neural network architectures designed to avoid these gradient problems.
+Long Short-term Memory and Gated Recurrent Units Networks are considered to be the state of the art recurrent neural networks that address exploding and vanishing gradients [@chung].
+These methods avoid gradient problems by regulating the self-feedback between time steps via gates which perform operations on the feedback signal -- see @chung for more details.
+While GRU's and LSTM's commonly outperform standard RNN's, it is difficult to anticipate whether GRU's or LSTM's will be best suited for any time series problem [@chung], so we investigate both methods.
+
+### Transformers
+
+The Transformer is a state of the art ML architecture which uses an attention mechanism to model long and short term dependencies on sequence to sequence tasks [@vaswani].
+Specifically, Transformers use a mechanism called self-attention which interrelates different positions of the input sequence in order to find an informative representation of the input sequence [@vaswani]. 
+Because of self-attention, Transformers do not need to process data sequentially like recurrent neural networks do, and thus can be parallelized, offering significant computational advantages [@vaswani].
+The Transformer is likely to be a foundational method for future AI research [@bommasani], so we considered it critical to investigate these models here.
+
+
+### Encoder-Decoder
+
 Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
-To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
-We will examine LSTM and GRU models, which are both memory-based networks, Transformers, which use attention with an encoder-decoder, and Block LSTM's, which employ LSTM's in an encoder-decoder framework.
+
 
 
 <!--
