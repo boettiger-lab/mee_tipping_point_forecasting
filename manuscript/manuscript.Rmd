@@ -188,7 +188,7 @@ Since ARIMA is a very commonly encountered forecasting method, we will refer rea
 Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis].
 Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use probablisitic forecasts. 
 For all the deep learning models in this study, we use the same method for uncertainty estimation:
-each model is trained to learn the parameters of a Poisson distribution that maximizes the log likelihood. 
+each model is trained to learn the parameters of a Poisson distribution to maximize the log likelihood. 
 To compute uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
 
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@cite].
