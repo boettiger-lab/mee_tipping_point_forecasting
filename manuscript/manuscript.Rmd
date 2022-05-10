@@ -196,7 +196,7 @@ We found that for the same set of hyperparameters, we could produce starkly diff
 One explanation for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
 Another likely cause is that machine learning models commonly overfit the training data [@ying].
 Across deep learning, overfitting is a fundamental issue, arising from neural networks being highly overparameterized. 
-With so many parameters, deep learning models tend to have high variance and thus overfit the training data, a consequnce of the bias-variance trade-off common across statistics and machine learning [@ying].
+With so many parameters, deep learning models tend to have high variance and thus overfit the training data, a consequence of the bias-variance trade-off common across statistics and machine learning [@ying].
 One frequently cited method to reduce overfitting is K-fold cross validation, but this approach cannot be effectively employed when there is one or few time series in the training set.
 To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 individual models that were trained with different initialization seeds.
 We found this simple ensemble method to be an effective way to improve generalizability in our limited data regime.
