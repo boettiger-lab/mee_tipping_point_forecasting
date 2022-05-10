@@ -185,15 +185,9 @@ Since ARIMA is a very commonly encountered forecasting method, we will refer rea
 
 ## Method group 3: Machine Learning models
 
-Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@kao, @lyu, @du].
-Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance -- see @kao, @lyu and @du for more context on memory, attention and encoder-decoders.
-Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
-Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
-To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
-We will examine LSTM and GRU models, which are both memory-based networks, Transformers, which use attention with an encoder-decoder, and Block LSTM's, which employ LSTM's in an encoder-decoder framework.
-
-Machine learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use probablisitic forecasts. 
-For all the machine learning models in this study, we use the same method for uncertainty estimation:
+Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis].
+Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use probablisitic forecasts. 
+For all the deep learning models in this study, we use the same method for uncertainty estimation:
 each model is trained to learn the parameters of a poisson distribution that maximizes the log likelihood. 
 To compute uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
 
@@ -201,10 +195,21 @@ A major nuisance with deep learning methods is their instability to hyperparamet
 We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds [@figure_].
 One explanation for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
 Another likely cause is that machine learning models commonly overfit the training data [@ying].
-Overfitting is a fundamental issue in deep learning, for which there is no universal solution [@ying].
+Across deep learning, overfitting is a fundamental issue, arising from neural networks being highly overparameterized. 
+With so many parameters, deep learning models tend to have high variance and thus overfit the training data [@ying].
 One frequently cited method to reduce overfitting is K-fold cross validation, but this approach cannot be effectively employed when there is one or few time series in the training set.
 To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 individual models that were trained with different initialization seeds.
-We found this simple ensemble method to be an effective way to improve generalizability.
+We found this simple ensemble method to be an effective way to improve generalizability in our limited data regime.
+
+Recently, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance on time series data [@kao, @lyu, @du].
+Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
+Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
+To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
+We will examine LSTM and GRU models, which are both memory-based networks, Transformers, which use attention with an encoder-decoder, and Block LSTM's, which employ LSTM's in an encoder-decoder framework.
+
+
+
+
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
@@ -226,6 +231,7 @@ We will focus on two of the most common such skill metrics, CRPS score and logs 
 Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS
 
 # Results
+
 
 
 By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
