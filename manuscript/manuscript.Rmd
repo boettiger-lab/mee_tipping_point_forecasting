@@ -259,65 +259,115 @@ This no-analog aspect of forecasting bifurcation dynamics means that even with m
 
 
 ```{r}
-hopf |> 
-  group_by(t,type,variable) |> 
-  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
-  rename(species = variable) |> 
-  mutate(species = forcats::fct_recode(species, host = "H", parasitoid = "P")) |>
-  ggplot(aes(t, col=type)) + 
-    geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
-    geom_line(aes(y=mean)) +
-    #geom_vline(aes(xintercept = 100)) + 
-    facet_wrap(~species, ncol=1) +
-    theme_bw() + 
-    ggtitle("A. Hopf bifurcation")
+
+forecasts <- read_parquet("data/forecasts.parquet")
+observations <- read_parquet("data/observations.parquet")
+
+hopf_obs <- observations |> filter(simulation=="hopf")
+stochastic_obs <- observations |> filter(simulation=="stochastic")
+saddle_obs <- observations |> filter(simulation=="saddle")
+```
+
+```{r fig.cap="Forecasts of the Hopf bifurcation under each model"}
+forecasts |> filter(simulation=="hopf", reps == 1, group == 1) |> 
+  ggplot(aes(t, col=type, fill=type)) + 
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = hopf_sims) +
+  geom_line(aes(y=mean)) +
+  geom_line(aes(y=mean), data = hopf_obs) +
+  facet_grid(forecasting_model ~ variable, scales = "free") +
+  theme_bw() + 
+  ggtitle("Hopf bifurcation")
 ```
 
 ```{r}
-panelB <- sn |>
-  group_by(t,type,variable) |> 
-  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
-  rename(species = variable) |>
-  ggplot(aes(t, col=type)) + 
-    geom_ribbon(aes(ymin = mean-2*sd, ymax = mean+2*sd, fill=type), alpha=0.5) +
-    geom_line(aes(y=mean)) +
-    #geom_vline(aes(xintercept = 100)) + 
-    facet_wrap(~species, ncol=1) +
-    theme_bw()
+forecasts |> filter(simulation=="saddle", group == 1, reps == 1) |> 
+  ggplot(aes(t, col=type, fill=type)) + 
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = saddle_sims) +
+  geom_line(aes(y=mean)) +
+  geom_line(aes(y=mean), data = saddle_obs) +
+  facet_wrap(~forecasting_model, scales = "free") +
+  #facet_grid(forecasting_model ~ reps, scales = "free") +
+  theme_bw() + 
+  ggtitle("Saddle-Node bifurcation")
+```
+
+```{r}
+forecasts |> filter(simulation=="stochastic", group == 1, reps==1) |> 
+  ggplot(aes(t, col=type, fill=type)) + 
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = stochastic_sims) +
+  geom_line(aes(y=mean)) +
+  geom_line(aes(y=mean), data = stochastic_obs) +
+  facet_wrap(~forecasting_model, scales = "free") +
+  #facet_grid(forecasting_model ~ reps, scales = "free") +
+  theme_bw() + 
+  ggtitle("Stochastic transition")
+```
+
+
+
+
+```{r}
+scores <- arrow::open_dataset("../scores", format="csv") |> collect()
+
+# shift logs score to strictly positive, non-infinite values so we can use a log-scale
+shift <- scores |> 
+  filter(!is.infinite(logs)) |> 
+  mutate(logs = logs - min(logs) +.01) |>
+  pivot_longer(c(logs, crps), 
+               names_to = "metric", 
+               values_to = "score")
+```
+
+```{r}
+shift |> 
+  ggplot(aes(forecasting_model, score, color=forecasting_model, fill=forecasting_model)) + 
+  geom_violin() +
+  facet_grid(metric ~ simulation, scales = "free") + 
+  scale_y_log10() +
+  theme_bw() + 
+  coord_flip()
   
-
-panelC <- stoch |>
-  group_by(t,type,variable) |> 
-  summarise(mean = mean(value), sd = sd(value), .groups = "drop") |> 
-  rename(species = variable) |>
-  ggplot(aes(t, col=type)) + 
-    geom_ribbon(aes(ymin = pmax(mean-2*sd,0), ymax = mean+2*sd, fill=type), alpha=0.5) +
-    geom_line(aes(y=mean)) +
-    #geom_vline(aes(xintercept = 100)) + 
-    facet_wrap(~species, ncol=1) +
-    theme_bw() + 
-  ggtitle("C. Stochastic transition")
-
-
-panelA / panelB / panelC
+  
+  ggplot(aes(simulation, score, color=forecasting_model, fill=forecasting_model)) + 
+  geom_violin() +
+  facet_wrap(~ metric, scales = "free", ncol=1) + 
+  scale_y_log10() + 
+  theme_bw()
 ```
 
 
 ```{r}
-mcmc_scores <- bind_rows(
-  read_csv("../greta/scores/scores_saddlenode.csv.gz") |> mutate(scenario="saddlenode"),
-read_csv("../greta/scores/scores_stochastic.csv.gz"),
-read_csv("../greta/scores/scores_hopf.csv.gz") |> 
-  filter(scenario == "hopf_increasing") |>
-  mutate(scenario = forcats::fct_recode(scenario, hopf = "hopf_increasing"),
-         reps = 1)
-) |> rename(method=model)
-mcmc_scores |> 
-  pivot_longer(c(logs, crps), names_to = "metric", values_to = "score") |> 
-  ggplot(aes(method, score, col=variable)) + geom_boxplot() + 
-  facet_grid(metric~scenario, scales="free_y")
+shift |>
+  ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
+  geom_jitter(alpha = 0.01, show.legend = FALSE) +
+  facet_grid(metric ~ simulation, scales = "free") + 
+  scale_y_log10() +
+  theme_bw() + 
+  coord_flip()
+
 ```
 
+
+```{r}
+# scores over time, averaged over replicates
+over_time <- shift |> 
+  group_by(t, simulation,forecasting_model, metric ) |> 
+  summarise(score = mean(score)) 
+
+over_time |> 
+  ggplot(aes(t, score, col = forecasting_model)) + 
+  geom_point(size=1) +
+  facet_grid(metric ~ simulation,
+             scales="free") + 
+  theme_bw() + scale_y_log10()
+
+
+
+
+```
 
 
 # Discussion
