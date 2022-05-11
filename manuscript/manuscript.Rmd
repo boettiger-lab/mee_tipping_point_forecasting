@@ -62,7 +62,7 @@ We evaluate the ability of some of the most promising machine learning methods f
 <!-- some more verbose bits about bifurcation models probably belongs in discussion instead -->
 We will focus the analysis of several different forecasting scenarios based around two classic models in population ecology: 
 Robert May's consumer-resource model [@May1979], and the Nicholson-Bailey parasatoid-host model [@Nicholson1935]. 
-While 'tactical' population dynamics models used to inform decision making in fields such as fisheries are often much more complex, these simple models nevertheless exhibit rich nonlinear dynamics thought to be typical in ecological systems [@].
+While 'tactical' population dynamics models used to inform decision making in fields such as fisheries are often much more complex, these simple models nevertheless exhibit rich nonlinear dynamics thought to be typical in ecological systems [@]. <!-- MFL: Using 'tactical' might throw readers off that aren't familiar with tact vs strat distinction -->
 These textbook models have been well studied and form the basis of half a century of research in ecology, including much recent work on topics such as resilience and tipping points [] which has had important theoretical and practical management outcomes [@Folke2009; @].
 May's model exhibits alternative stable states. 
 In this one-dimensional model, transitions between these states can occur due to intrinsic stochasticity, external forcing, or the gradual environmental change that results in a catastrophic saddle-node bifurcation and generates hysteresis. 
@@ -128,7 +128,7 @@ A yet more difficult forecasting scenario is created by the saddle-node bifurcat
 May's consumer-resource model is a one-dimensional model describing the growth of a 'resource' population (e.g. herbivore) which is grazed by a consumer [@May1979].
 As in the Nicholson-Bailey model, in the absence of that predation the resource population density grows under a density-dependent pattern described by a logistic function.
 The resource population is also grazed by a consumer at a rate given by a Holling type III s-curve (typically used to model handling time). 
-For a certain range of parameter choices, this model supports alternative stable state dynamics, and this model has been identified and employed in explaining alternative stable state dynamics in a broad range ecological and socio-ecological systems [@Scheffer2001].  
+For a certain range of parameter choices, this model supports alternative stable state dynamics, and this model has been identified and employed in explaining alternative stable state dynamics in a broad range of ecological and socio-ecological systems [@Scheffer2001].  
 
 \begin{align}
 N_{t+1} &= N_t + r N_t \left(1 - \frac{N_t}{K} \right) - \frac{h_t N_t^2}{s^2 + N_t^2} + \eta_t \\
@@ -139,9 +139,9 @@ h_{t+1} &= h_t + \alpha \\
 If the environment slowly alters one of the parameters (say, the encounter efficiency, `h_t`, in our formulation), one of the stable nodes moves closer and closer to the unstable saddle point, leading to a bifurcation that destroys the stable state, leaving the system to suddenly transition to the alternative stable state.
 Saddle-node bifurcations (also known as fold bifurcations) also create a phenomenon known as hysteresis, where it is not sufficient to restore the environment to the previous parameter values to recover the previous state. 
 Unlike the Hopf bifurcation which exhibits a continuous transition from a stable node to a small limit cycle that then grows, the saddle-node transition is a discontinuous or so-called 'catastrophic' bifurcation.
-Due both this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
-These dynamics have long been identified as an acute challenge to forecasting, with effort focused primarily on identifying any 'early warning signs' that a catastrophic bifurcation might be occur at all [@Scheffer2009; @Scheffer2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
-Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dei2011; @Dei2012] to whole-ecosystem experiments [@Carpenter2011], and postulated as a model for global change [@Barnosky2014].  
+Due both to this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
+These dynamics have long been identified as an acute challenge to forecasting, with effort focused primarily on identifying any 'early warning signs' that a catastrophic bifurcation might occur at all [@Scheffer2009; @Scheffer2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs. <!-- MFL: I think we can make the first half of this sentence clearer. I think some readers might get lost here. -->
+Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dei2011; @Dei2012] to whole-ecosystem experiments [@Carpenter2011], and postulated as a model for global change [@Barnosky2014]. 
 
 
 ## Scenario 3: The stochastic transition
@@ -156,7 +156,8 @@ In this context, predicting the probability of a transition in the future based 
 Unlike the saddle-node bifurcation, there is no slowly warping potential basin which can be detected to inform estimates. 
 Thus, in this scenario, rather than considering the problem of predicting the future evolution of a single time series based only on it's historical values, we consider an alternative framing of the task:
 we imagine our forecaster has access to historical data from one or more comparable systems which includes a previous stochastic transition event.
-Based on this data, our forecaster seeks to identify the distribution of expected transition times for analgous systems starting from the same initial condition. This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [].
+Based on this data, our forecaster seeks to identify the distribution of expected transition times for analagous systems starting from the same initial condition. 
+This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [].
 (Note that such stochastic transitions between alternative stable states can also create oscillatory-like dynamics when stochasticity is sufficiently high enough to drive repeated transitions from one attractor to the other and back again.  In such cases, it might be reasonable to estimate a strictly forward-looking forecast of a single system, predicting the distribution of these transitions.)
 
 
@@ -176,34 +177,58 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 -->
 
 We present forecasts produced by ARIMA models as the model-free analogs to the forecasts made using parameter estimation with MCMC.
-Since ARIMA models make the assumption that the future will resemble the past via ARIMA's auto-regressive and moving average components [@cite], ARIMA models are not well-suited for tipping point problems.
-Thus, ARIMA-based forecasts should serve as a lower threshold of acceptability for the performance of non-mechanistic models.
+Since ARIMA models make the assumption that the future will resemble the past via ARIMA's auto-regressive and moving average components [@cite], these models are not well-suited for problems with complex bifurcation dyanmics.
+Thus, ARIMA-based forecasts should be treated as a lower bound for the performance of non-mechanistic models.
 In contrast to inference with MCMC, uncertainty with ARIMA models is estimated directly from the learned parameters [@cite].
 Since ARIMA is a very commonly encountered forecasting method, we will refer readers to [@cite] for further discussion.
 
 
 ## Method group 3: Machine Learning models
 
-Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@kao, @lyu, @du].
-Across these studies, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance -- see @kao, @lyu and @du for more details on these concepts.
-Memory and attention are proposed as advantageous for time series forecasting since these methods enable models to learn long term dependencies [@kao, @attentionisall].
-Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
-To investigate these assertions on the challenging class of tipping point problems, we examine four models that use a combination of memory, attention and encoder-decoder network architectures.
-We will examine LSTM and GRU models, which are both memory-based networks, Transformers, which use attention with an encoder-decoder, and Block LSTM's, which employ LSTM's in an encoder-decoder framework.
-
-Machine learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use methods that estimate uncertainty. 
-For all the machine learning models in this study, we use the same method for uncertainty estimation:
-each model is trained to learn the parameters of a poisson distribution that maximizes the log likelihood. 
-To estimate uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
+Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis].
+Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will often be necessary to use multi-step, probablisitic forecasts. 
+For all the deep learning models in this study, we use the same method for uncertainty estimation:
+each model is trained to learn the parameters of a Poisson distribution to maximize the log likelihood. 
+To compute uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
 
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@cite].
 We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds [@figure_].
-One proposed reason for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
-Another likely reason is that machine learning models commonly overfit the training data.
-Overfitting is a fundamental issue in deep learning, for which there is no universal solution [@ying].
-One frequently cited method to reduce overfitting is K-fold cross validation [@ying], but this approach cannot be effectively employed when there is one or few time series in the training set.
+One explanation for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@modelstability]. 
+Another likely cause is that machine learning models commonly overfit the training data [@ying].
+Across deep learning, overfitting is a fundamental issue, arising from neural networks being highly overparameterized. 
+With so many parameters, deep learning models tend to have high variance and thus overfit the training data, a consequence of the bias-variance trade-off common across statistics and machine learning [@ying].
+One frequently cited method to reduce overfitting is K-fold cross validation, but this approach cannot be effectively employed when there is one or few time series in the training set.
 To remedy the instability problem, we use an ensemble model, wherein each ML forecast is the union of forecasts from 5 individual models that were trained with different initialization seeds.
-We found this simple ensemble method to be an effective way to improve generalizability.
+We found this simple ensemble method to be an effective way to improve generalizability in the limited data regime.
+
+Recently, it has become established that using memory or attention-based neural networks, and an encoder-decoder architecture is crucial for improving forecasting performance on time series data [@kao, @lyu, @du].
+Herein we will provide some background on what these machine learning methods are and their benefits.
+
+### Recurrent Neural Networks
+
+Recurrent neural networks are the predominant memory-based ML method.
+Recurrent neural networks differ from feed-forward neural networks in that a recurrent neural network provides feedback to itself between time steps [@sherstinsky].
+By providing self-feedback, recurrent neural networks are able to retain information from previous time steps and thus are considered a memory-based method.
+However, a standard recurrent neural network is unwieldy to train because of the vanishing and exploding gradient problem [@Pascanu], so there have been specialized neural network architectures designed to avoid these gradient problems.
+Long Short-term Memory and Gated Recurrent Units Networks are considered to be the state of the art recurrent neural networks that address exploding and vanishing gradients [@chung].
+These methods avoid gradient problems by regulating the self-feedback between time steps via gates which perform operations on the feedback signal -- see @chung for more details.
+While GRU's and LSTM's commonly outperform standard RNN's, it is difficult to anticipate whether GRU's or LSTM's will be best suited for any time series problem [@chung], so we investigate both methods.
+
+### Transformers
+
+The Transformer is a state of the art ML architecture that is able to model long and short term dependencies on sequence to sequence tasks [@vaswani].
+Transformers use a mechanism called self-attention which interrelates different positions of the input sequence in order to find an informative representation of the input sequence [@vaswani].
+For example, if given a sentence, a transformer could learn the contextual relationship between a subject and a direct object, but a recurrent network would process all the words as one phrase.
+Because of self-attention, Transformers do not need to process data sequentially, and thus can be parallelized, offering significant computational advantages [@vaswani].
+The Transformer is likely to be a foundational method for future AI research [@bommasani], so we considered it critical to investigate Transformers in this study.
+
+### Encoder-Decoder
+
+Encoder-decoder architectures have been shown empirically to excel on sequence to sequence tasks [@learningphrase, @cite, @cite].
+Encoder-decoders work by processing the input sequence into a fixed-length vector then decoding the fixed-length vector to the predicted output sequence.
+It is thought that by encoding the input sequence to a vector, encoder-decoders find informative representations of the input sequence that make the prediction task easier for the decoder [@sutskever].
+Of the models that we present, Block RNNs and Transformers are the only models that use encoder-decoders.
+
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
@@ -215,9 +240,9 @@ Stuff about how most machine learning techniques provide only point forecasts
 
 To compare forecasts, we focus exclusively on metrics of forecast skill which satisfy @Gneiting2007's property of a strictly proper score.
 This ensures the very desirable behavior that which no probabilistic forecast $Q(x,t)$ can have a score as high as that of the true process $P(x,t)$ on average. 
-In other words, while it is possible for any of the models considered to _overfit_ the data against which they are trained, i.e. have a higher likelihood than the true process, it is not possible for these models to overfit the data against which they are scored.
-It is worth noting that this property applies specifically to probabilistic forecasts, and is not true of all metrics often used to compare forecasts.
-Concerns about over-fitting arise in most types of model estimation, are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@].   
+In other words, while it is possible for any of the models considered to _overfit_ the data against which they are trained, i.e. have a higher likelihood than the true process, it is not possible for these models to overfit the data against which they are scored. <!-- MFL: I think we can take out the parenthetical here and assume the reader knows what we mean by overfitting-->
+It is worth noting that this property applies specifically to probabilistic forecasts, and is not true of all metrics often used to compare forecasts. <!-- MFL: hmm I am not completely following this point here -->
+Concerns about over-fitting arise in most types of model estimation and are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@]. <!-- MFL: I don't think I nailed the overfitting part in ML section but we probably want to reference this here-->
 This makes the use of strictly proper scoring especially relevant in assessing machine learning predictions.
 
 While all strictly proper scores have this property, this does not guarantee that all such metrics will share the same relative ranking between forecasts.
@@ -225,6 +250,7 @@ We will focus on two of the most common such skill metrics, CRPS score and logs 
 Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS
 
 # Results
+
 
 
 By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
