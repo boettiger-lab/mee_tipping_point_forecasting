@@ -186,7 +186,7 @@ Since ARIMA is a very commonly encountered forecasting method, we will refer rea
 ## Method group 3: Machine Learning models
 
 Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis].
-Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will be necessary to use probablisitic forecasts. 
+Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will often be necessary to use multi-step, probablisitic forecasts. 
 For all the deep learning models in this study, we use the same method for uncertainty estimation:
 each model is trained to learn the parameters of a Poisson distribution to maximize the log likelihood. 
 To compute uncertainty intervals, we draw samples from the learned distribution at each time step and report the 95% confidence interval.
@@ -207,25 +207,27 @@ Herein we will provide some background on what these machine learning methods ar
 ### Recurrent Neural Networks
 
 Recurrent neural networks are the predominant memory-based ML method.
-Recurrent neural networks differ from feed-forward neural networks in that a recurrent neural network provides feedback to itself between time steps.
+Recurrent neural networks differ from feed-forward neural networks in that a recurrent neural network provides feedback to itself between time steps [@sherstinsky].
 By providing self-feedback, recurrent neural networks are able to retain information from previous time steps and thus are considered a memory-based method.
-However, a standard recurrent neural network, i.e. a feed forward neural network that provides self-feedback, is unwieldy to train because of the vanishing and exploding gradient problem [@Pascanu], so there have been specialized neural network architectures designed to avoid these gradient problems.
+However, a standard recurrent neural network is unwieldy to train because of the vanishing and exploding gradient problem [@Pascanu], so there have been specialized neural network architectures designed to avoid these gradient problems.
 Long Short-term Memory and Gated Recurrent Units Networks are considered to be the state of the art recurrent neural networks that address exploding and vanishing gradients [@chung].
 These methods avoid gradient problems by regulating the self-feedback between time steps via gates which perform operations on the feedback signal -- see @chung for more details.
 While GRU's and LSTM's commonly outperform standard RNN's, it is difficult to anticipate whether GRU's or LSTM's will be best suited for any time series problem [@chung], so we investigate both methods.
 
 ### Transformers
 
-The Transformer is a state of the art ML architecture which uses an attention mechanism to model long and short term dependencies on sequence to sequence tasks [@vaswani].
-Specifically, Transformers use a mechanism called self-attention which interrelates different positions of the input sequence in order to find an informative representation of the input sequence [@vaswani]. 
-Because of self-attention, Transformers do not need to process data sequentially like recurrent neural networks do, and thus can be parallelized, offering significant computational advantages [@vaswani].
-The Transformer is likely to be a foundational method for future AI research [@bommasani], so we considered it critical to investigate these models here.
-
+The Transformer is a state of the art ML architecture that is able to model long and short term dependencies on sequence to sequence tasks [@vaswani].
+Transformers use a mechanism called self-attention which interrelates different positions of the input sequence in order to find an informative representation of the input sequence [@vaswani].
+For example, if given a sentence, a transformer could learn the contextual relationship between a subject and a direct object, but a recurrent network would process all the words as one phrase.
+Because of self-attention, Transformers do not need to process data sequentially, and thus can be parallelized, offering significant computational advantages [@vaswani].
+The Transformer is likely to be a foundational method for future AI research [@bommasani], so we considered it critical to investigate Transformers in this study.
 
 ### Encoder-Decoder
 
-Encoder-decoder architectures have been shown to excel on sequence to sequence tasks [@learningphase].
-
+Encoder-decoder architectures have been shown empirically to excel on sequence to sequence tasks [@learningphrase, @cite, @cite].
+Encoder-decoders work by processing the input sequence into a fixed-length vector then decoding the fixed-length vector to the predicted output sequence.
+It is thought that by encoding the input sequence to a vector, encoder-decoders find informative representations of the input sequence that make the prediction task easier for the decoder [@sutskever].
+Of the models that we present, Block RNNs and Transformers are the only models that use encoder-decoders.
 
 
 <!--
