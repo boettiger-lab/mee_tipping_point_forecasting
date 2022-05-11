@@ -121,12 +121,13 @@ scores <- arrow::open_dataset("scores", format="csv") |> collect()
 # shift logs score to positive?
 shift <- scores |> filter(!is.infinite(logs)) |> mutate(logs = logs - min(logs) +.01)
 
-crps <- scores |> 
+scores |> 
   ggplot(aes(forecasting_model, crps)) + 
   geom_boxplot() +
-  facet_wrap(~simulation, scales = "free", ncol=1) + theme_bw()
+  facet_wrap(~simulation, scales = "free", ncol=1) +
+  theme_bw()
 
-logs<- shift |>
+shift |>
   ggplot(aes(forecasting_model, logs)) + 
   geom_boxplot() +
   facet_wrap(~simulation, scales = "free", ncol=1) + 
@@ -134,7 +135,7 @@ logs<- shift |>
 
 
 # scores over time
-over_time <- scores |> collect() |> 
+over_time <- shift |> 
   group_by(t, simulation,forecasting_model ) |> 
   summarise(logs = mean(logs), 
             crps = mean(crps)) 
