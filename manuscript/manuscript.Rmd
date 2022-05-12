@@ -299,7 +299,7 @@ forecasts |> filter(simulation=="hopf", reps == 1, group == 1) |>
 forecasts |> filter(simulation=="saddle", group == 1, reps == 1) |> 
   ggplot(aes(t, col=type, fill=type)) + 
   geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = saddle_sims) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = saddle_obs) +
   geom_line(aes(y=mean)) +
   geom_line(aes(y=mean), data = saddle_obs) +
   facet_wrap(~forecasting_model, scales = "free") +
@@ -312,7 +312,7 @@ forecasts |> filter(simulation=="saddle", group == 1, reps == 1) |>
 forecasts |> filter(simulation=="stochastic", group == 1, reps==1) |> 
   ggplot(aes(t, col=type, fill=type)) + 
   geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = stochastic_sims) +
+  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = stochastic_obs) +
   geom_line(aes(y=mean)) +
   geom_line(aes(y=mean), data = stochastic_obs) +
   facet_wrap(~forecasting_model, scales = "free") +
