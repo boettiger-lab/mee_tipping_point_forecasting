@@ -42,16 +42,22 @@ editor_options:
     wrap: sentence
 ---
 
-```{r setup}
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo=FALSE, message=FALSE, warning=FALSE)
 library(tidyverse)
 library(patchwork)
+library(arrow)
+
+bound <- function(x, percentile = 0.975) {
+  dplyr::nth(x, percentile * length(x), order_by = x)
+}
 ```
 
 
 
 # Introduction
 
-Uncertainty important to forecasting [@Deitze2018] and  decision-making [@Schindler2015]
+Uncertainty important to forecasting [@Deitze2018] and decision-making [@Schindler2015]
 
 Machine learning is increasingly effective at forecasting, but methods often focus on creation or assessment only of point predictions [@]. 
 Because uncertainty can play such an intrinsic role in ecological dynamics [@Boettiger2018; @Coulson2004; @Oveskienen], it is essential that machine learning applications to ecological forecasting are able to address probablistic forecasts adequately.
@@ -275,49 +281,51 @@ This no-analog aspect of forecasting bifurcation dynamics means that even with m
 
 ```{r}
 
-forecasts <- read_parquet("data/forecasts.parquet")
+forecasts <- read_parquet("data/forecasts.parquet") |> filter(forecasting_model != "ml_ensemble")
 observations <- read_parquet("data/observations.parquet")
 
-hopf_obs <- observations |> filter(simulation=="hopf")
-stochastic_obs <- observations |> filter(simulation=="stochastic")
-saddle_obs <- observations |> filter(simulation=="saddle")
+hopf_obs <- observations |> mutate(variable = as.character(variable)) |> filter(iter %in% 1:15, simulation == "hopf", variable !="X")
+saddle_obs <- observations |> filter(iter %in% 1:15, simulation == "saddle")
+stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochastic")
+
 ```
 
 ```{r fig.cap="Forecasts of the Hopf bifurcation under each model"}
-forecasts |> filter(simulation=="hopf", reps == 1, group == 1) |> 
-  ggplot(aes(t, col=type, fill=type)) + 
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = hopf_obs) +
-  geom_line(aes(y=mean)) +
-  geom_line(aes(y=mean), data = hopf_obs) +
+forecasts  |> 
+  filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.1, data = hopf_obs) +
+  geom_line(alpha=0.1) +
+  geom_line(data = filter(hopf_obs, type=="historical")) +
   facet_grid(forecasting_model ~ variable, scales = "free") +
-  theme_bw() + 
+  theme_bw()  + 
+  coord_cartesian(ylim = c(0,15), xlim=c(75, 200)) + 
   ggtitle("Hopf bifurcation")
 ```
 
 ```{r}
-forecasts |> filter(simulation=="saddle", group == 1, reps == 1) |> 
-  ggplot(aes(t, col=type, fill=type)) + 
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = saddle_obs) +
-  geom_line(aes(y=mean)) +
-  geom_line(aes(y=mean), data = saddle_obs) +
+
+forecasts |> 
+  filter(iter %in% 1:15, simulation == "saddle") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.1, data = saddle_obs) +
+  geom_line(alpha=0.1) +
+  geom_line(data = filter(saddle_obs, type=="historical")) +
   facet_wrap(~forecasting_model, scales = "free") +
-  #facet_grid(forecasting_model ~ reps, scales = "free") +
-  theme_bw() + 
+  theme_bw()  + coord_cartesian(ylim = c(0,1)) + 
   ggtitle("Saddle-Node bifurcation")
 ```
 
 ```{r}
-forecasts |> filter(simulation=="stochastic", group == 1, reps==1) |> 
-  ggplot(aes(t, col=type, fill=type)) + 
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = pmax(lower,0), ymax = upper), alpha=0.5, data = stochastic_obs) +
-  geom_line(aes(y=mean)) +
-  geom_line(aes(y=mean), data = stochastic_obs) +
+
+forecasts |>
+  filter(iter %in% 1:15, simulation == "stochastic") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.2, data = filter(stochastic_obs, type=="observed")) +
+  geom_line(alpha=0.2) +
+  geom_line(data = filter(stochastic_obs, type=="historical")) +
   facet_wrap(~forecasting_model, scales = "free") +
-  #facet_grid(forecasting_model ~ reps, scales = "free") +
-  theme_bw() + 
+  theme_bw()  + coord_cartesian(ylim = c(0,0.8)) + 
   ggtitle("Stochastic transition")
 ```
 
@@ -338,9 +346,9 @@ shift <- scores |>
 
 
 ```{r}
-shift |>
+shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
-  geom_jitter(alpha = 0.006, show.legend = FALSE) + 
+  geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
   coord_flip() +
   facet_grid(simulation ~ metric, scales = "free") + 
   scale_y_log10() +
@@ -348,48 +356,28 @@ shift |>
 
 ```
 
-
 ```{r}
-# scores over time, averaged over replicates
-over_time <- shift |> 
-  group_by(t, simulation,forecasting_model, metric ) |> 
-  summarise(sd = sd(score),
-            score = mean(score),
-            .groups = "drop") |>
+shift |> 
   group_by(simulation,forecasting_model, metric) |> 
-  mutate(t = t - min(t)) |> ungroup()
-
-
-
-p1 <- over_time |> filter(metric == "crps") |>
-  ggplot(aes(t, score, col = forecasting_model)) + 
-  geom_pointrange(aes(y = score, ymin = score - sd, ymax = score + sd),
-                  shape=".", alpha=0.4, show.legend=FALSE) +
-  geom_line(show.legend=FALSE) +
-  facet_wrap(~simulation, scales="free", ncol=1) + 
+  mutate(t = t - min(t)) |> ungroup() |> 
+  filter(metric == "crps", t<100) |> 
+  ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
+  geom_line(aes(group=iter), alpha = 0.05, show.legend=FALSE) +
+  facet_grid(simulation ~ forecasting_model, scales="free") + 
   theme_bw() 
-
-p2 <- over_time |> filter(metric == "logs") |>
-  ggplot(aes(t, score, col = forecasting_model)) + 
-  geom_pointrange(aes(y = score, ymin = score - sd, ymax = score + sd),
-                  shape=".", alpha=0.4, show.legend=FALSE) +
-  geom_line(show.legend=FALSE) +
-  facet_wrap(~simulation, scales="free", ncol=1) + 
-  scale_y_log10() +
-  theme_bw() 
-
-p1 + p2
 ```
+
 ```{r}
-over_time |> filter(metric == "logs") |>
-  ggplot(aes(t, score, col = forecasting_model)) + 
-  geom_pointrange(aes(y = score, ymin = score - sd, ymax = score + sd),
-                  shape=".", alpha=0.4, show.legend=FALSE) +
-  geom_line(show.legend=FALSE) +
- # facet_wrap(~simulation, scales="free", ncol=1) + 
+shift |> 
+  group_by(simulation,forecasting_model, metric) |> 
+  mutate(t = t - min(t)) |> ungroup() |> 
+  filter(metric == "logs", t<100) |> 
+  ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
+  geom_line(aes(group=iter), alpha = 0.05, show.legend=FALSE) +
   facet_grid(simulation ~ forecasting_model, scales="free") + 
   theme_bw() + scale_y_log10()
 ```
+
 
 # Discussion
 

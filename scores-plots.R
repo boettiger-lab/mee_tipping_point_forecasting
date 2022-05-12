@@ -12,12 +12,21 @@ reference <- arrow::open_dataset("greta/forecasts/", format="csv") |>
                                         X = "N")) 
 
 
-darts <- arrow::open_dataset("darts/forecasts/", format="csv")|> filter(type == "predicted")
+darts <- arrow::open_dataset("darts/forecasts/", format="csv")|>
+  filter(type == "predicted")
+ensemble <- darts |> 
+  mutate(iter = paste0(iter,"-", forecasting_model), 
+                       forecasting_model="ml_ensemble") |>
+  collect()
+
+## eek big
+#darts <- bind_rows(collect(darts), collect(ensemble))
+
+
 greta <- arrow::open_dataset("greta/forecasts/", format="csv") |>
   mutate(forecasting_model = "MCMC", reps=1, group=1) |> 
   filter(type == "predicted") |> rename(iter = i) |> collect() |>
   mutate(variable = forcats::fct_recode(variable,  X = "N")) 
-
 
 
 compute_scores <- function(observed, dat) {
@@ -81,17 +90,6 @@ cases <- darts |>
   select(simulation, forecasting_model, variable) |>
   distinct() |> 
   collect()
-
-
-
-x <- cases[1,]
-s <- score_it(scenario="stochastic",
-         model = "block_rnn",
-         var ="X", darts, reference)
-
-
-
-
 for (i in 1:nrow(cases)) {
       scenario <- cases$simulation[[i]]
       model <- cases$forecasting_model[[i]]
@@ -113,45 +111,66 @@ for (i in 1:nrow(cases)) {
   write_csv(df, paste0("scores/", paste(scenario, model, var,sep="-"), ".csv.gz"))
 }
 
+cases <- ensemble |> 
+  select(simulation, forecasting_model, variable) |>
+  distinct() |> 
+  collect()
+for (i in 1:nrow(cases)) {
+  scenario <- cases$simulation[[i]]
+  model <- cases$forecasting_model[[i]]
+  var <- cases$variable[[i]]
+  df <- score_it(scenario, model, var, ensemble, reference)
+  write_csv(df, paste0("scores/", paste(scenario, model, var,sep="-"), ".csv.gz"))
+}
 
 
 
-scores <- arrow::open_dataset("scores", format="csv") |> collect()
 
-# shift logs score to positive?
-shift <- scores |> filter(!is.infinite(logs)) |> mutate(logs = logs - min(logs) +.01)
 
-scores |> 
-  ggplot(aes(forecasting_model, crps)) + 
-  geom_boxplot() +
-  facet_wrap(~simulation, scales = "free", ncol=1) +
-  theme_bw()
+
+
+
+
+
+
+
+
+
+
+
+scores <- arrow::open_dataset("../scores", format="csv") |> collect()
+
+# shift logs score to strictly positive, non-infinite values so we can use a log-scale
+shift <- scores |> 
+  filter(!is.infinite(logs)) |> 
+  mutate(logs = logs - min(logs) +.01) |>
+  pivot_longer(c(logs, crps), 
+               names_to = "metric", 
+               values_to = "score")
 
 shift |>
-  ggplot(aes(forecasting_model, logs)) + 
-  geom_boxplot() +
-  facet_wrap(~simulation, scales = "free", ncol=1) + 
-  scale_y_log10() + theme_bw()
-
-
-# scores over time
-over_time <- shift |> 
-  group_by(t, simulation,forecasting_model ) |> 
-  summarise(logs = mean(logs), 
-            crps = mean(crps)) 
-
-over_time |>
-  ggplot(aes(t, crps, col = forecasting_model)) + 
-  geom_line(lwd=1) +
-  facet_wrap(~ simulation,
-             scales="free") + 
+  ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
+  geom_jitter(alpha = 0.006, show.legend = FALSE) + 
+  coord_flip() +
+  facet_grid(simulation ~ metric, scales = "free") + 
+  scale_y_log10() +
   theme_bw()
 
+p1 <- over_time |> filter(metric == "crps") |>
+  ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
+  geom_ribbon(aes(y = score, ymin = ymin, ymax =ymax),
+              shape=".", alpha=0.4, show.legend=FALSE) +
+  geom_line(show.legend=FALSE) +
+  facet_wrap(~simulation, scales="free", ncol=1) + 
+  theme_bw() 
 
-over_time |>
-  ggplot(aes(t, logs, col = forecasting_model)) + 
-  geom_point(lwd=1) +
-  facet_wrap(~ simulation,
-             scales="free") + 
-  theme_bw() + scale_y_log10()
+p2 <- over_time |> filter(metric == "logs") |>
+  ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
+  geom_ribbon(aes(y = score, ymin = ymin, ymax = ymax),
+              shape=".", alpha=0.4, show.legend=FALSE) +
+  geom_line() +
+  facet_wrap(~simulation, scales="free", ncol=1) + 
+  scale_y_log10() +
+  theme_bw() 
 
+p1 + p2
