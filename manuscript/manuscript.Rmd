@@ -287,7 +287,7 @@ saddle_obs <- observations |> filter(simulation=="saddle")
 forecasts |> filter(simulation=="hopf", reps == 1, group == 1) |> 
   ggplot(aes(t, col=type, fill=type)) + 
   geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5) +
-  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = hopf_sims) +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha=0.5, data = hopf_obs) +
   geom_line(aes(y=mean)) +
   geom_line(aes(y=mean), data = hopf_obs) +
   facet_grid(forecasting_model ~ variable, scales = "free") +
