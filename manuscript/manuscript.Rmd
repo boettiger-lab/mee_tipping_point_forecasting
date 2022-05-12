@@ -385,9 +385,20 @@ Ecological systems have long been acknowledged as complex, due not only to the i
 Calls for increased forecasting efforts from ecologists frequently reference the role of changing climate and other anthropogenic change, which raise the challenge of prediction in no-analog environments, anticipating ecosystem responses to conditions that have not been previously observed [@Clark2001; @Dietze2018].
 What methods will be most reliable in the face of such uncertainty?
 
+- overall forecasting bifurcations is difficult, even in the idealized case of ample measurement data and knowing the structural model exactly. 
 
+- ML techniques are mostly bracketed by ARIMA and MCMC as expected (better than arima, worse than estimates using true model), though details vary (can do better than MCMC etc).
 
-reflects a fundamental challenge of ecological forecasting.
+- MCMC is most relevant to the saddle-node, which is an especially hard problem for the model-free methods.  block rnn does surprisingly well here all things considered. 
+
+- the stochastic context is in some sense the easiest for  ML/statistical methods, as it is the only case where training data includes the phenomenon of the transition.
+
+- MCMC does not always out-perform ML techniques, particularly in CRPS terms. Log likelihood-based skill score 
+
+- Forecast skill assessment can be challenging. it is essential to pay attention to skill over time. Forecast error is not a smooth function of horizon, nor is it always increasing with longer horizons.
+
+- Examining means and summary statistics of variation (confidence intervals) can be limiting too, obscuring aspects such as bimodally distributed scores.
+
 
 non-linearity,
 We have compared the ability of several cutting edge machine learning approaches for forecasting against statistical and process-based models.
