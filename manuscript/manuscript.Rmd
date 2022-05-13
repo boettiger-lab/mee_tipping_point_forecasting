@@ -385,7 +385,23 @@ shift |>
 
 Ecological systems have long been acknowledged as complex, due not only to the immense span of dimension and scale such processes involve, but also the frequency of emergent and non-linear phenomena such as stochastic resonance, including bifurcations, tipping points, and hysteresis examined here.
 Calls for increased forecasting efforts from ecologists frequently reference the role of changing climate and other anthropogenic change, which raise the challenge of prediction in no-analog environments, anticipating ecosystem responses to conditions that have not been previously observed [@Clark2001; @Dietze2018].
-What methods will be most reliable in the face of such uncertainty?
+This motivates the question, "What methods will be most reliable in the face of unobserved conditions?"
+
+In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting transition events.
+We compare the ability of several cutting edge machine learning approaches against statistical and process-based models, and show that deep learning methods are able to strike a middle ground between what we consider as acceptable and ideal case forecasting methods, ARIMA and MCMC-based parameter estimation respectively.
+When machine learning models are able to observe transition events, as in the stochastic case, they generally outperformed MCMC-based forecasting but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
+Yet, there are nuances to these assessments of performance since forecasting skill varies over time as we show in @figureX.
+For instance, while most of the ML methods outperform MCMC in the stochastic transition example when forecasting skill is averaged over all time points, MCMC produces more replicates with relatively small errors than the ML models.
+
+There are a number of questions that we have left unanswered in our study that we hope will be addressed in future work.
+In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so general conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
+Neither can we claim that the ML methods employed will translate well to all transition event forecasting  problems in reality, since working with real data will introduce additional difficulties.
+For instance, to train a neural network on more than one real time series, we would likely have to employ a specialized algorithm that would allow for generalization over varying time and state scales.
+
+Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
+This paper is not intended to give a comprehensive answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve. 
+Instead, this paper intends to serve as an initial exploration on whether deep learning methods should be considered as viable tools for the extremely challenging category of no-analog bifurcation forecasting problems.
+
 
 - overall forecasting bifurcations is difficult, even in the idealized case of ample measurement data and knowing the structural model exactly. 
 
@@ -403,7 +419,6 @@ What methods will be most reliable in the face of such uncertainty?
 
 
 non-linearity,
-We have compared the ability of several cutting edge machine learning approaches for forecasting against statistical and process-based models.
 
 - Ecological forecasting invariably is hard
 
