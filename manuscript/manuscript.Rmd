@@ -86,7 +86,8 @@ After considerable time considering alternative frameworks, we have emphasized t
 Most of our forecasts use the `darts` framework, a sophisticated and well documented python library with support for a wide range of methods.
 Our model-based MCMC forecasts use the `greta` framework, an R library that uses python-based `tensorflow` probability to achieve better performance.
 While python-based frameworks currently have the edge in performance and access modern ML algorithms, they lag behind in attention to statistical issues such as the computation of strictly proper skill scores (discussed below.) 
-Thus our examples of scoring and visualization will rely on a collection of R packages, in particular, `scoringRules` for the efficient calculation of Continuous Ranked Probability Score (CRPS) and logarithmic probability scores for forecast ensembles [@scoringRules].
+Thus our examples of scoring and visualization will rely on a collection of R packages, in particular, `scoringRules` for the efficient calculation of Continuous Ranked Probability Score (CRPS) and logarithmic probability (Logs) scores for forecast ensembles [@scoringRules].
+Following popular conventions, we express both skill scores in error-orientation, that is, larger values indicate worse skill (higher degree of error).
 We expect greater convergence between methods available in R and python in the future, as already illustrated in the example of `greta`.
 Complete code for all examples presented here can be found at https://github.com/boettiger-lab/mee_tipping_point_forecasting.
 
@@ -137,7 +138,7 @@ In a Hopf bifurcation, a stable node starts an oscillatory pattern which continu
 This example illustrates one of the many kinds of challenges which nonlinear phenomena pose to forecasting: the "historical" data prior to the bifurcation never exhibit the cyclical dynamics of growing amplitude that will emerge after the bifurcation occurs.
 If we had used a purely deterministic model, the dynamics would be constrained to a single stable point, corresponding to a slowly changing steady-state population size of host and parasitoid populations.
 However, stochasticity in this case acts as a source of some additional information about the dynamics, as the noise excites quasi-cycles which are visible in the irregular oscillations that appear significantly prior to the emergence of true limit cycles which follow the bifurcation [@Boettiger2018].
-
+Examples use the following parameters: $H_0 = 9$, $P_0 = 1$, $r = 0.75$, $c = 0.1$, $K_0 = 14$, $\delta = 0.08$, $\sigma_H = 0.02$, $\sigma_P = 0.02$. 
 
 ## Scenario 2: The saddle-node bifurcation
 
@@ -159,8 +160,8 @@ Unlike the Hopf bifurcation which exhibits a continuous transition from a stable
 Due both to this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
 Tipping point dynamics have long been identified as an important but difficult challenge for forecasting [e.g. @Scheffer2001; @Folke2004]. 
 Much effort in the ecological literature so far has focused on identifying any 'early warning signs' that a catastrophic bifurcation might occur at all [@Scheffer2009; @Scheffer2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
-Tipping points resulting from Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dai2013; @Dai2015] to whole-ecosystem experiments [@Carpenter2011], and postulated as a model for global change [@Barnosky2012]. 
-
+Tipping points resulting from Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dai2012; @Dai2015] to whole-ecosystem experiments [@Carpenter2011], and postulated as a model for global change [@Barnosky2012]. 
+Examples use the following parameters: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = 0.15$, $\alpha = 0.000375$, $\sigma = 0.02$, $N_0 = 0.75$.
 
 ## Scenario 3: The stochastic transition
 
@@ -177,7 +178,7 @@ we imagine our forecaster has access to historical data from one or more compara
 Based on this data, our forecaster seeks to identify the distribution of expected transition times for analagous systems starting from the same initial condition. 
 This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [@Scheffer2001; @Folke2004].
 (Note that such stochastic transitions between alternative stable states can also create oscillatory-like dynamics when stochasticity is sufficiently high enough to drive repeated transitions from one attractor to the other and back again.  In such cases, it might be reasonable to estimate a strictly forward-looking forecast of a single system, predicting the distribution of these transitions.)
-
+Model definition is the same as May's model for the saddle node with fixed parameter $h$, values: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = h = 0.26$, $\alpha = 0$, $\sigma = 0.02$, $N_0 = 0.55$.
 
 ## Method group 1: Markov Chain Monte Carlo
 
@@ -191,7 +192,7 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 
 ## Method group 2: Statistical models (ARIMA)
 
-<!-- Key distinction here from MCMC above is not on how model parameters are estimated, but rather on approaches that aren't making strong mechanistic assumptions about process, but are merely phenomonological type models
+<!-- Key distinction here from MCMC above is not on how model parameters are estimated, but rather on approaches that aren't making strong mechanistic assumptions about process, but are merely phenomenological type models
 -->
 
 We present forecasts produced by ARIMA models as the model-free analogs to the forecasts made using parameter estimation with MCMC.
@@ -269,64 +270,14 @@ Of the two, the logs probability score puts a much a greater penalty on unexpect
 
 # Results
 
-We examine forecast skill for each of the six forecasting methods (MCMC, ARIMA, block-RNN, GRU, LSTM, and transformer) in each of our three scenarios (Hopf bifucation, saddle-node bifurcation, stochastic transition).
-Using model-based simulations allows us to examine performance against an ensemble of replicates of the "true" process, which further helps identify differences that may occur solely due to chance. 
-
-
+We examine forecast skill for each of the six forecasting methods (MCMC, ARIMA, block-RNN, GRU, LSTM, and transformer) in each of our three scenarios (Hopf bifurcation, saddle-node bifurcation, stochastic transition).
+In addition to these cases, we also consider an "ensemble model", generated from drawing from the distribution of all models except the MCMC model. 
+Such ensemble techniques can better reflect uncertainty than relying on any single method [@something_about_ensembles].
+For simplicity, we consider the unweighted case, where each model is represented equally in the ensemble.
+Using model-based simulations allows us to examine performance against an multiple (n=100) replicates of the "true" process, which further helps identify differences that may occur solely due to chance. 
 By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
-Note that observations are constrained to a smaller region of state space (i.e. a smaller range of population sizes) than will be realized in future. 
+Note that in both bifurcation scenarios, future dynamics will see states never previously observed in the historical data that was used to train each of the methods (i.e. very small population sizes).  
 This no-analog aspect of forecasting bifurcation dynamics means that even with many sample points in the training data _and_ perfect knowledge of the true model structure, posterior distributions of parameter values are still influenced by the choice of priors. 
-
-
-```{r}
-
-forecasts <- read_parquet("data/forecasts.parquet") |> filter(forecasting_model != "ml_ensemble")
-observations <- read_parquet("data/observations.parquet")
-
-hopf_obs <- observations |> mutate(variable = as.character(variable)) |> filter(iter %in% 1:15, simulation == "hopf", variable !="X")
-saddle_obs <- observations |> filter(iter %in% 1:15, simulation == "saddle")
-stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochastic")
-
-```
-
-```{r fig.cap="Forecasts of the Hopf bifurcation under each model"}
-forecasts  |> 
-  filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
-  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
-  geom_line(alpha=0.1, data = hopf_obs) +
-  geom_line(alpha=0.1) +
-  geom_line(data = filter(hopf_obs, type=="historical")) +
-  facet_grid(forecasting_model ~ variable, scales = "free") +
-  theme_bw()  + 
-  coord_cartesian(ylim = c(0,15), xlim=c(75, 200)) + 
-  ggtitle("Hopf bifurcation")
-```
-
-```{r}
-
-forecasts |> 
-  filter(iter %in% 1:15, simulation == "saddle") |> 
-  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
-  geom_line(alpha=0.1, data = saddle_obs) +
-  geom_line(alpha=0.1) +
-  geom_line(data = filter(saddle_obs, type=="historical")) +
-  facet_wrap(~forecasting_model, scales = "free") +
-  theme_bw()  + coord_cartesian(ylim = c(0,1)) + 
-  ggtitle("Saddle-Node bifurcation")
-```
-
-```{r}
-
-forecasts |>
-  filter(iter %in% 1:15, simulation == "stochastic") |> 
-  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
-  geom_line(alpha=0.2, data = filter(stochastic_obs, type=="observed")) +
-  geom_line(alpha=0.2) +
-  geom_line(data = filter(stochastic_obs, type=="historical")) +
-  facet_wrap(~forecasting_model, scales = "free") +
-  theme_bw()  + coord_cartesian(ylim = c(0,0.8)) + 
-  ggtitle("Stochastic transition")
-```
 
 
 
@@ -345,17 +296,109 @@ shift <- scores |>
 
 
 ```{r}
+#| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
+#| Smaller scores are better (indicating smaller errors).
+#| Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
+#| simulations of the given scenario.  "
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
-  #geom_boxplot(col="black", outlier.size=0, outlier.shape = ".", outlier.alpha=0) +
   geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
   stat_summary(fun = mean, shape="|", show.legend = FALSE, col="black") +
   coord_flip() +
+  labs(y="") +
   facet_grid(simulation ~ metric, scales = "free") + 
   scale_y_log10() +
   theme_bw()
+```
+
+
+Overall forecasting skill scores are summarized in figure 2.
+
+
+
+```{r}
+forecasts <- read_parquet("data/forecasts.parquet") |> filter(forecasting_model != "ml_ensemble")
+observations <- read_parquet("data/observations.parquet")
+
+hopf_obs <- observations |> mutate(variable = as.character(variable)) |> filter(iter %in% 1:15, simulation == "hopf", variable !="X")
+saddle_obs <- observations |> filter(iter %in% 1:15, simulation == "saddle")
+stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochastic")
 
 ```
+
+```{r }
+#| fig2
+#| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
+#| The bifurcation occurs soon after forecasting period begins,
+#| leading to progressively larger and larger oscillations.
+#| Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
+#| Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations.
+#| Only last 25 time points of training data are shown."
+
+forecasts  |> 
+  filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.1, data = hopf_obs) +
+  geom_line(alpha=0.1) +
+  geom_line(data = filter(hopf_obs, type=="historical")) +
+  facet_grid(forecasting_model ~ variable, scales = "free") +
+  theme_bw()  + 
+  coord_cartesian(ylim = c(0,15), xlim=c(75, 200)) + 
+  ggtitle("Hopf bifurcation")
+```
+
+
+
+Forecasts of the Hopf bifurcation (Figure 2) are roughly comparable across the phenomenological models (ARIMA and machine learning models).
+All models are trained using 100 time points drawn from the period of time prior to the onset of the Hopf bifurcation, which leads to a stable limit cycle that gradually grows in magnitude.
+Most models predict a roughly constant mean with a spread roughly equal to that created by the stochastic oscillations around the stable node as seen in the training data prior to the bifurcation.
+Notably, the GRU method picks up the oscillatory nature of the dynamics, despite the fact that no true oscillations were yet present in the training data.
+However, like the ML models, it fails to predict the growing amplitude of those oscillations.
+Having access to the true model structure, the MCMC model alone predicts the transition into a pattern of oscillations which grows over time, though it tends to overestimate the amplitude of those oscillations initially.
+
+Those overestimates mean that the initial skill scores of the MCMC model are distinctly worse than those of any ML model during the early phase of the forecasts (Figures 6-7). 
+This error shows up particularly in the CRPS scores (Figure 6), which have a higher penalty for over-estimating the spread than the negative log probabilities (Figure 7).
+While the ML models fail to predict the core dynamical phenomenon of growing oscillations, 
+
+
+<!-- would be interesting to revisit this with lower stochasticity such that the cyclic behavior is more crisp, and the quasi-cycles in the training data are smaller-->
+
+```{r }
+#| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model.
+#| Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult."
+
+
+forecasts |> 
+  filter(iter %in% 1:15, simulation == "saddle") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.1, data = saddle_obs) +
+  geom_line(alpha=0.1) +
+  geom_line(data = filter(saddle_obs, type=="historical")) +
+  facet_wrap(~forecasting_model, scales = "free") +
+  theme_bw()  + coord_cartesian(ylim = c(0,1)) + 
+  ggtitle("Saddle-Node bifurcation")
+```
+
+The saddle node bifurcation 
+
+
+```{r}
+#| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model.
+#| In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
+forecasts |>
+  filter(iter %in% 1:15, simulation == "stochastic") |> 
+  ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
+  geom_line(alpha=0.2, data = filter(stochastic_obs, type=="observed")) +
+  geom_line(alpha=0.2) +
+  geom_line(data = filter(stochastic_obs, type=="historical")) +
+  facet_wrap(~forecasting_model, scales = "free") +
+  theme_bw()  + coord_cartesian(ylim = c(0,0.8)) + 
+  ggtitle("Stochastic transition")
+```
+
+
+
+
 
 ```{r}
 shift |> 
@@ -397,6 +440,14 @@ In this paper, we have explored a small number of machine learning and statistic
 Neither can we claim that the ML methods employed will translate well to all transition event forecasting  problems in reality, since working with real data will introduce additional difficulties.
 For instance, to train a neural network on more than one real time series, we would likely have to employ a specialized algorithm that would allow for generalization over varying time and state scales.
 
+Our analysis has focused on the task of making a single forecast prior to the occurrence of a critical transition.
+Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@Dietz2018]. 
+Updating a forecast after a critical transition has already occurred may be of little use in the context of hysteresis, such as under the saddle node or stochastic transition -- recognizing the alternative stable state only after the system is stuck in that basin will often be considered 'too late'.
+Assimilation may be more applicable to the Hopf bifurcation, where additional observations of slowly growing oscillations may lead to more accurate forecasts. 
+Such models may even accurately predict the homoclinic bifurcation that occurs when the limit cycle grows too large, eventually hitting a saddle point of zero population size for the host species.
+We leave these cases to future exploration. 
+
+
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
 This paper is not intended to give a comprehensive answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve. 
 Instead, this paper intends to serve as an initial exploration on whether deep learning methods should be considered as viable tools for the extremely challenging category of no-analog bifurcation forecasting problems.
@@ -416,6 +467,7 @@ Instead, this paper intends to serve as an initial exploration on whether deep l
 
 - Examining means and summary statistics of variation (confidence intervals) can be limiting too, obscuring aspects such as bimodally distributed scores.
 
+- Forecasts with 'assimilation' i.e. ability to re-estimate after seeing some of the data, rather than looking at a single forecast with a long horizon.
 
 non-linearity,
 
