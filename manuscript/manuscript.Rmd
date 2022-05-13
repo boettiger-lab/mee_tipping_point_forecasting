@@ -270,26 +270,24 @@ Concerns about over-fitting arise in most types of model estimation and are a pa
 This makes the use of strictly proper scoring especially relevant in assessing machine learning predictions.
 
 Not even all strictly proper scores will agree on the same relative ranking between forecasts.
-We will focus on two of the most common such skill metrics, CRPS score and logs score [e.g. see @gneiting_strictly_2007; @gneiting_probabilistic_2014].
+We will focus on two of the most common such skill metrics, CRPS score and log probability score (negative log likelihood) [e.g. see @gneiting_strictly_2007; @gneiting_probabilistic_2014].
 Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS, and may be more suitable when the occurrence of unexpected events incurs a particularly high cost.
+Note that while the minus log-likelihood can be negative for sufficiently high probability densities, we use a fixed scalar shift of logs score to ensure the log skill score is strictly positive, which facilitates visualization without impacting relative rankings.
 
 # Results
 
 We examine forecast skill for each of the six forecasting methods (MCMC, ARIMA, block-RNN, GRU, LSTM, and transformer) in each of our three scenarios (Hopf bifurcation, saddle-node bifurcation, stochastic transition).
 In addition to these cases, we also consider an "ensemble model", generated from drawing from the distribution of all models except the MCMC model. 
 Such ensemble techniques can better reflect uncertainty than relying on any single method [@something_about_ensembles].
-For simplicity, we consider the unweighted case, where each model is represented equally in the ensemble.
+For simplicity, we consider the un-weighted case, where each model is represented equally in the ensemble.
 Using model-based simulations allows us to examine performance against an multiple (n=100) replicates of the "true" process, which further helps identify differences that may occur solely due to chance. 
 By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
 Note that in both bifurcation scenarios, future dynamics will see states never previously observed in the historical data that was used to train each of the methods (i.e. very small population sizes).  
 This no-analog aspect of forecasting bifurcation dynamics means that even with many sample points in the training data _and_ perfect knowledge of the true model structure, posterior distributions of parameter values are still influenced by the choice of priors. 
 
 
-
-
 ```{r}
 scores <- arrow::open_dataset("../scores", format="csv") |> collect()
-
 # shift logs score to strictly positive, non-infinite values so we can use a log-scale
 shift <- scores |> 
   filter(!is.infinite(logs)) |> 
@@ -304,21 +302,27 @@ shift <- scores |>
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
 #| Smaller scores are better (indicating smaller errors).
 #| Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
-#| simulations of the given scenario.  "
+#| simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
   geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
   stat_summary(fun = mean, shape="|", show.legend = FALSE, col="black") +
   coord_flip() +
-  labs(y="") +
   facet_grid(simulation ~ metric, scales = "free") + 
   scale_y_log10() +
-  theme_bw()
+  theme_bw() +
+  theme(axis.title.y = element_blank())
 ```
 
 
-Overall forecasting skill scores are summarized in figure 2.
-
+Overall forecasting skill scores for each model across all three scenarios are summarized in figure 2.
+Average scores (black lines) hide wide variation in forecast skill.
+Generally, ML performance tends to be bracketed between MCMC (essentially the theoretical optimum), and the statistical ARIMA model, though sometimes performing worse than ARIMA or better than MCMC.
+Under scenarios with alternative stable states (saddle and stochastic), the distribution of scores is often bimodal for ML models, though not MCMC. 
+The ML ensemble model often performs as well as the best ML model on average.
+Note that a wide prediction of uncertainty does not mean a wide range in the score skill -- for instance the ensemble model which has the widest array of outcomes often has the a relatively tight distribution of score, especially in logs skill.
+This reflects the relative contributions of accuracy and uncertainty as components in the forecasts.
+Overall, ML scores are comparable to MCMC skill except for the scenario of the saddle-node bifurcation, where all other models are much worse.
 
 
 ```{r}
@@ -332,7 +336,7 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 ```
 
 ```{r }
-#| fig2
+#| fig3
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
 #| The bifurcation occurs soon after forecasting period begins,
 #| leading to progressively larger and larger oscillations.
@@ -354,16 +358,14 @@ forecasts  |>
 
 
 
-Forecasts of the Hopf bifurcation (Figure 2) are roughly comparable across the phenomenological models (ARIMA and machine learning models).
+Forecasts of the Hopf bifurcation (Figure 3) are roughly comparable across the phenomenological models (ARIMA and machine learning models).
 All models are trained using 100 time points drawn from the period of time prior to the onset of the Hopf bifurcation, which leads to a stable limit cycle that gradually grows in magnitude.
 Most models predict a roughly constant mean with a spread roughly equal to that created by the stochastic oscillations around the stable node as seen in the training data prior to the bifurcation.
 Notably, the GRU method picks up the oscillatory nature of the dynamics, despite the fact that no true oscillations were yet present in the training data.
 However, like the ML models, it fails to predict the growing amplitude of those oscillations.
 Having access to the true model structure, the MCMC model alone predicts the transition into a pattern of oscillations which grows over time, though it tends to overestimate the amplitude of those oscillations initially.
-
-Those overestimates mean that the initial skill scores of the MCMC model are distinctly worse than those of any ML model during the early phase of the forecasts (Figures 6-7). 
-This error shows up particularly in the CRPS scores (Figure 6), which have a higher penalty for over-estimating the spread than the negative log probabilities (Figure 7).
-While the ML models fail to predict the core dynamical phenomenon of growing oscillations, 
+Despite this, overall all methods score comparably in CRPS score (Fig 2), with most ML methods actually out-performing the MCMC score on average (Fig 5), albeit with much greater variation in individual scores.
+A clearer picture can be seen by looking at these skill scores over time (Fig 6-7), which show that MCMC is initially performing worse (over-predicting variance) but as oscillations grow further, it starts outperforming the more stationary forecasts of the ML models.
 
 
 <!-- would be interesting to revisit this with lower stochasticity such that the cyclic behavior is more crisp, and the quasi-cycles in the training data are smaller-->
@@ -384,8 +386,15 @@ forecasts |>
   ggtitle("Saddle-Node bifurcation")
 ```
 
-The saddle node bifurcation 
-
+The saddle node bifurcation proves even more difficult for most methods (Figure 4).
+Only the MCMC model anticipates the sharp transition to an alternative state, though this behavior is more baked into the method from the start which takes the true model structure as given. 
+Even accurate estimation of the MCMC requires slightly informative priors, though still broad enough to reflect a wide range of possible outcomes. 
+Two ML methods -- Block RNNs and transformers -- resemble a naive prediction extrapolating the last observed state, failing even to reflect the slow downward trend of the training data.  
+LSTM indicates greater uncertainty, while GRU shows very large variability which spans the alternative stable state range. 
+With additional tuning, better performance may be possible for these ML models. 
+The selected ARIMA model reflects wide uncertainty that is nevertheless not broad enough to span the alternative stable state.
+Consequentially, the MCMC estimate easily outperforms the ML models (Fig 2).
+The distribution of scores over 
 
 ```{r}
 #| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model.
@@ -400,12 +409,25 @@ forecasts |>
   theme_bw()  + coord_cartesian(ylim = c(0,0.8)) + 
   ggtitle("Stochastic transition")
 ```
-
+Machine learning methods do markedly better on the stochastic transition scenario than in the two bifurcation scenarios (Fig 5).
+This occurs because the training data includes the transition phenomenon of interest.
+All ML models accurately capture the dynamics of a sharp transition between alternative stable states -- a dynamic the statistical ARIMA model entirely fails to reflect.
+Stochastic transition events should be approximately exponentially distributed, as seen in the wide range of waiting times for transitions to occur in replicates of the true 'observed' process (Fig 5).
+Transformer and Block RNN distribution times are much more concentrated, while again GRU and especially the LSTM do a better job reflecting the uncertainty in range of transition times.  
 
 
 
 
 ```{r}
+#| fig6
+#| fig.cap="CRPS scores over time for each scenario.
+#| Each line represents the scores against a replicate of time series observations from 'true model'.
+#| Patterns show forecast skill generally get worse over time -
+#| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation.
+#| The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window.
+#| In the stochastic transition context, this creates two branches, where high values indicate periods of
+#| time when the forecast predicts the wrong state and lower branch indicates the correct state."
+
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
   mutate(t = t - min(t)) |> ungroup() |> 
@@ -413,10 +435,16 @@ shift |>
   ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
   geom_line(aes(group=iter), alpha = 0.05, show.legend=FALSE) +
   facet_grid(simulation ~ forecasting_model, scales="free") + 
-  theme_bw() 
+  theme_bw()  + ggtitle("CRPS scores over time")
 ```
 
 ```{r}
+#| fig.cap="Logs skill score over time. 
+#| Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score.
+#| Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty.
+#| Generally, MCMC performs better relative to other models under this metric than it does under CRPS,
+#| reflecting the bias-variance tradeoff of machine learning."
+
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
   mutate(t = t - min(t)) |> ungroup() |> 
@@ -424,7 +452,7 @@ shift |>
   ggplot(aes(t, score, col = forecasting_model, fill=forecasting_model)) + 
   geom_line(aes(group=iter), alpha = 0.05, show.legend=FALSE) +
   facet_grid(simulation ~ forecasting_model, scales="free") + 
-  theme_bw() + scale_y_log10()
+  theme_bw() + scale_y_log10() + ggtitle("Logs skill score over time")
 ```
 
 
@@ -472,11 +500,9 @@ Instead, this paper aims to serve as a first exploration on whether deep learnin
 
 - Examining means and summary statistics of variation (confidence intervals) can be limiting too, obscuring aspects such as bimodally distributed scores.
 
+
 - Forecasts with 'assimilation' i.e. ability to re-estimate after seeing some of the data, rather than looking at a single forecast with a long horizon.
 
-non-linearity,
-
-- Ecological forecasting invariably is hard
 
 
 \pagebreak
