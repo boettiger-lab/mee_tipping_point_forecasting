@@ -348,7 +348,9 @@ shift <- scores |>
 ```{r}
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
+  #geom_boxplot(col="black", outlier.size=0, outlier.shape = ".", outlier.alpha=0) +
   geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
+  stat_summary(fun = mean, shape="|", show.legend = FALSE, col="black") +
   coord_flip() +
   facet_grid(simulation ~ metric, scales = "free") + 
   scale_y_log10() +
