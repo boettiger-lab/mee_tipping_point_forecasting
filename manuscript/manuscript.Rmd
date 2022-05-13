@@ -196,7 +196,7 @@ Thus, this case represents a theoretical upper bound for the performance of fore
 -->
 
 We present forecasts produced by ARIMA models as the model-free analogs to the forecasts made using parameter estimation with MCMC.
-Since ARIMA models make the assumption that the future will resemble the past via ARIMA's auto-regressive and moving average components [@cite], these models are not well-suited for problems with complex bifurcation dyanmics.
+Since ARIMA models make the assumption that the future will resemble the past via ARIMA's auto-regressive and moving average components [@cite], these models are not well-suited for problems with complex bifurcation dynamics.
 Thus, ARIMA-based forecasts should be treated as a lower bound for the performance of non-mechanistic models.
 In contrast to inference with MCMC, uncertainty with ARIMA models is estimated directly from the learned parameters [@cite].
 Since ARIMA is a very commonly encountered forecasting method, we will refer readers to [@cite] for further discussion.
@@ -398,7 +398,7 @@ For instance, to train a neural network on more than one real time series, we wo
 
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
 This paper is not intended to give a comprehensive answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve. 
-Instead, this paper intends to serve as an initial exploration on whether deep learning methods should be considered as viable tools for the extremely challenging category of no-analog bifurcation forecasting problems.
+Instead, this paper aims to serve as a first exploration on whether deep learning methods should be considered as viable tools for the extremely challenging category of no-analog bifurcation forecasting problems.
 
 
 - overall forecasting bifurcations is difficult, even in the idealized case of ample measurement data and knowing the structural model exactly. 
