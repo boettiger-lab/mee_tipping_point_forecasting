@@ -64,18 +64,15 @@ Will these emerging methods improve the capacity for forecasts in ecological sys
 Ecological dynamics are notoriously complex, with uncertainty and non-linearity playing critical roles [@Boettiger2018; @hallett_why_2004; @Oveskienen2010].
 These challenges are nowhere more evident then in _critical transitions_, sudden shifts in the states or patterns of ecosystem dynamics that are simultaneously more important and more difficult to predict than more gradual changes.
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
-
 We evaluate the ability of some of the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
 
 # Materials and Methods
 
 <!-- some more verbose bits about bifurcation models probably belongs in discussion instead -->
 We will focus the analysis of several different forecasting scenarios based around two classic models in population ecology: 
-
 Robert May's consumer-resource model [@May1977], and the Nicholson-Bailey parasatoid-host model [@nicholson_balance_1935]. 
 Though these models may appear simple when measured against high-dimensional and parameter rich models found in some management contexts such as fisheries, they can exhibit rich nonlinear dynamics and provide greater capacity to generalize [@Levins1966; @Getz2018]. 
 These textbook models have been well studied and form the basis of half a century of research in ecology, including much recent work on topics such as resilience and tipping points which has had important theoretical and practical management outcomes [@Folke2004; @Fischer2009; @Polasky2011].
-
 May's model exhibits alternative stable states. 
 In this one-dimensional model, transitions between these states can occur due to intrinsic stochasticity, external forcing, or the gradual environmental change that results in a catastrophic saddle-node bifurcation and generates hysteresis. 
 The Nicholson-Bailey model is a two species model which contains a Hopf bifurcation, a non-catastrophic bifurcation which either creates or destroys a limit cycle -- a stable oscillatory pattern. 
