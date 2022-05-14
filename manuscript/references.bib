@@ -308,23 +308,6 @@ Version Number: 5},
 	file = {arXiv Fulltext PDF:/Users/marcus/Zotero/storage/JW6QU4W4/Bommasani et al. - 2021 - On the Opportunities and Risks of Foundation Model.pdf:application/pdf;arXiv.org Snapshot:/Users/marcus/Zotero/storage/YMTL8XLR/2108.html:text/html},
 }
 
-
-@article{cho_learning_2014,
-	title = {Learning {Phrase} {Representations} using {RNN} {Encoder}-{Decoder} for {Statistical} {Machine} {Translation}},
-	url = {http://arxiv.org/abs/1406.1078},
-	abstract = {In this paper, we propose a novel neural network model called RNN Encoder-Decoder that consists of two recurrent neural networks (RNN). One RNN encodes a sequence of symbols into a fixed-length vector representation, and the other decodes the representation into another sequence of symbols. The encoder and decoder of the proposed model are jointly trained to maximize the conditional probability of a target sequence given a source sequence. The performance of a statistical machine translation system is empirically found to improve by using the conditional probabilities of phrase pairs computed by the RNN Encoder-Decoder as an additional feature in the existing log-linear model. Qualitatively, we show that the proposed model learns a semantically and syntactically meaningful representation of linguistic phrases.},
-	urldate = {2022-05-06},
-	journal = {arXiv:1406.1078 [cs, stat]},
-	author = {Cho, Kyunghyun and van Merrienboer, Bart and Gulcehre, Caglar and Bahdanau, Dzmitry and Bougares, Fethi and Schwenk, Holger and Bengio, Yoshua},
-	month = sep,
-	year = {2014},
-	note = {arXiv: 1406.1078},
-	keywords = {Computer Science - Computation and Language, Computer Science - Machine Learning, Computer Science - Neural and Evolutionary Computing, Statistics - Machine Learning},
-	annote = {Comment: EMNLP 2014},
-	file = {arXiv Fulltext PDF:/Users/marcus/Zotero/storage/FF5FXH39/Cho et al. - 2014 - Learning Phrase Representations using RNN Encoder-.pdf:application/pdf;arXiv.org Snapshot:/Users/marcus/Zotero/storage/2KJUNSC6/1406.html:text/html},
-}
-
-
 @article{sutskever_sequence_2014,
 	title = {Sequence to {Sequence} {Learning} with {Neural} {Networks}},
 	url = {http://arxiv.org/abs/1409.3215},
@@ -443,6 +426,7 @@ Version Number: 5},
 }
 
 
+
 @article{boettiger_early_2012,
 	title = {Early warning signals and the prosecutor's fallacy},
 	volume = {279},
@@ -453,7 +437,14 @@ Version Number: 5},
 	language = {en},
 	number = {1748},
 	urldate = {2022-05-13},
+	journal = {Proceedings of the Royal Society B: Biological Sciences},
+	author = {Boettiger, Carl and Hastings, Alan},
+	month = dec,
+	year = {2012},
+	pages = {4734--4739},
+	file = {Full Text:/Users/marcus/Zotero/storage/8JZW59MM/Boettiger and Hastings - 2012 - Early warning signals and the prosecutor's fallacy.pdf:application/pdf},
 }
+
 
 @article{Polasky2011,
 	title = {Decision-making under great uncertainty: environmental management in an era of global change.},
@@ -961,4 +952,20 @@ arXiv:1811.12808 [cs, stat]},
 	month = oct,
 	year = {2005},
 	pages = {248--249},
+}
+
+
+@misc{aitken_understanding_2021,
+	title = {Understanding {How} {Encoder}-{Decoder} {Architectures} {Attend}},
+	url = {http://arxiv.org/abs/2110.15253},
+	abstract = {Encoder-decoder networks with attention have proven to be a powerful way to solve many sequence-to-sequence tasks. In these networks, attention aligns encoder and decoder states and is often used for visualizing network behavior. However, the mechanisms used by networks to generate appropriate attention matrices are still mysterious. Moreover, how these mechanisms vary depending on the particular architecture used for the encoder and decoder (recurrent, feed-forward, etc.) are also not well understood. In this work, we investigate how encoder-decoder networks solve different sequence-to-sequence tasks. We introduce a way of decomposing hidden states over a sequence into temporal (independent of input) and input-driven (independent of sequence position) components. This reveals how attention matrices are formed: depending on the task requirements, networks rely more heavily on either the temporal or input-driven components. These findings hold across both recurrent and feed-forward architectures despite their differences in forming the temporal components. Overall, our results provide new insight into the inner workings of attention-based encoder-decoder networks.},
+	urldate = {2022-05-14},
+	publisher = {arXiv},
+	author = {Aitken, Kyle and Ramasesh, Vinay V. and Cao, Yuan and Maheswaranathan, Niru},
+	month = oct,
+	year = {2021},
+	note = {Number: arXiv:2110.15253
+arXiv:2110.15253 [cs, stat]},
+	keywords = {Computer Science - Machine Learning, Statistics - Machine Learning},
+	annote = {Comment: 10+14 pages, 16 figures. NeurIPS 2021},
 }
