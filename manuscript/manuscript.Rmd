@@ -136,8 +136,9 @@ K_{t+1} &= K_t + \delta
 \label{hopf}
 \end{align}
 
-Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, which drives a Hopf bifurcation as $K$ becomes sufficiently large. 
+Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, which drives a super-critical Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern which grows in amplitude as the bifurcation parameter continues to increase.
+In this model, the Hopf bifurcation is dubbed 'super-critical' as it creates a stable limit cycle instead of an unstable one.
 This example illustrates one of the many kinds of challenges which nonlinear phenomena pose to forecasting: the "historical" data prior to the bifurcation never exhibit the cyclical dynamics of growing amplitude that will emerge after the bifurcation occurs.
 If we had used a purely deterministic model, the dynamics would be constrained to a single stable point, corresponding to a slowly changing steady-state population size of host and parasitoid populations.
 However, stochasticity in this case acts as a source of some additional information about the dynamics, as the noise excites quasi-cycles which are visible in the irregular oscillations that appear significantly prior to the emergence of true limit cycles which follow the bifurcation [@boettiger_noise_2018].
@@ -327,10 +328,13 @@ Overall, ML scores are comparable to MCMC skill except for the scenario of the s
 
 
 ```{r}
-forecasts <- read_parquet("data/forecasts.parquet") |> filter(forecasting_model != "ml_ensemble")
+forecasts <- read_parquet("data/forecasts.parquet") |>
+  filter(forecasting_model != "ml_ensemble")
 observations <- read_parquet("data/observations.parquet")
 
-hopf_obs <- observations |> mutate(variable = as.character(variable)) |> filter(iter %in% 1:15, simulation == "hopf", variable !="X")
+hopf_obs <- observations |> 
+  mutate(variable = as.character(variable)) |>
+  filter(iter %in% 1:15, simulation == "hopf", variable !="X")
 saddle_obs <- observations |> filter(iter %in% 1:15, simulation == "saddle")
 stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochastic")
 
@@ -487,18 +491,33 @@ It is also important to remember that probabilistic forecast skill scores do not
 The ability to better reflect uncertainty rather than better average predictions explains much of the performance of the ensemble model.
 
 The success of these ML models on the stochastic transition case is particularly notable.
-Using only a single previous replicate 
+All methods are given only a single previous replicate of a stochastic transition (Fig 5, red line) on which to base there estimates.
+This is typical of ecological scenarios where data is so often limited.
+While even one observation of a transition is more than the methods have in our other forecasts, this still presents a significant challenge to model estimation.
+Unlike the MCMC case, the ML models have no prior expectation of a model structure that contains sharp transitions -- we might have expected these models to perform little differently than the ARIMA model. 
+Given this single replicate, all four ML models successfully capture the phenomenological pattern of a sharp shift between two stable states -- behavior which the structurally simpler family of ARIMA models cannot express.
+This provides a clear illustration of the much broader array of phenomenological behaviors that can be accurately models with ML models compared to classical statistical models.
+In this way, the ML models can be seen to impose even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
+In contrast, the MCMC performance benefits from very strong process-based assumptions, which happen to match the 'true' model in this case and thus provide a comparison of the theoretical optimal performance.
 
-Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in these critical transitions.
+Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in the critical transition scenarios (Hopf and saddle node).
 This is not surprising, as the training data provide no prior example of such behavior (e.g. growing oscillations or a sudden shift).
 Nevertheless, this should be an important reminder of a central difficulty in ecological forecasting.
 Note that in such scenarios, near-term forecasts [@dietze_iterative_2018] may be very accurate right up to the transition event before becoming widely wrong. 
 Nor can the possibility of such non-linear behavior be easily dismissed in ecological models -- the examples considered here have been bedrock of ecological modeling and management practices for over half a century [@Folke2004], and if anything are only too simple, representing a small slice of possible dynamical behavior of more complicated models.
 
 
+It may be natural to ask whether this performance would be remedied if the ML models were trained on data which includes prior examples of super-critical Hopf or saddle node bifurcations. 
+This question is not as easy to answer as it may seem, because of the difficulty in defining what real-world forecasting scenario that may correspond to.
+The scenarios we have considered are true, pure forecasts: the training data comes from a single realization of a specific generative process, and the task is to predict the future states of that system before they occur.
+Would it be possible to train an predictive algorithm on 'analogous' examples of critical transitions?
+For instance, could data from other lakes which may have experienced a critical transition such as eutrophication event in the past be used to train machine learning models to predict such events in some focal lake in the future [@Scheffer2001]?
+Perhaps, but it depends what we mean by an 'analogous' system.
+Even if the underlying mechanism was accurately captured by the same model, say, the saddle-node model of @May1977 we consider here, it is likely that most of the individual model parameters would be quite different.
 
-Identifiability
 
+
+Identifiability MCMC theoretical limits
 
 
 
@@ -518,6 +537,10 @@ We leave these cases to future exploration.
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
 This paper is not intended to give a complete answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve; instead, this study aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of forecasting problems.
 Since we have shown that ML models can make good forecasts on our selected tipping point scenarios, particularly the stochastic transition case, we have established that these deep learning models are promising methods for critical transition forecasting problems.
+
+
+
+
 
 - overall forecasting bifurcations is difficult, even in the idealized case of ample measurement data and knowing the structural model exactly. 
 
