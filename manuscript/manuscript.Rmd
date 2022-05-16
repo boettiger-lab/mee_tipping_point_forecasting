@@ -339,10 +339,10 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 ```{r }
 #| fig3
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
-#| The bifurcation occurs soon after forecasting period begins,
-#| leading to progressively larger and larger oscillations.
+#| The bifurcation occurs soon after forecasting period begins, 
+#| leading to progressively larger and larger oscillations. 
 #| Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
-#| Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations.
+#| Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
 #| Only last 25 time points of training data are shown."
 
 forecasts  |> 
@@ -372,8 +372,8 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 <!-- would be interesting to revisit this with lower stochasticity such that the cyclic behavior is more crisp, and the quasi-cycles in the training data are smaller-->
 
 ```{r }
-#| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model.
-#| Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult."
+#| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
+#| Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
 
 forecasts |> 
@@ -398,7 +398,7 @@ Consequentially, the MCMC estimate easily outperforms the ML models (Fig 2).
 The distribution of scores over 
 
 ```{r}
-#| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model.
+#| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model. 
 #| In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
 forecasts |>
   filter(iter %in% 1:15, simulation == "stochastic") |> 
@@ -418,16 +418,26 @@ Stochastic transition events should be approximately exponentially distributed, 
 Transformer and Block RNN distribution times are much more concentrated, while again GRU and especially the LSTM do a better job reflecting the uncertainty in range of transition times.  
 
 
+Examining patterns in the scores over time (Fig 6-7) provides a more nuanced understanding of the forecast dynamics than aggregate scores alone (Fig 2).
+In the Hopf bifurcation, CRPS scores get worse over time across all methods, including the MCMC forecasts.
+In the saddle node bifurcation and stochastic transition, the same pattern holds somewhat more dramatically for non-MCMC forecast,
+while MCMC scores are worst in mid-range.
+Comparing CRPS scores to logs score also emphasizes the relative role of uncertainty: for instance, the MCMC scores for the Hopf bifurcation get steadily worse under CRPS but not under logs score. 
+A relatively sharp transition can be seen under both MCMC scores on the Hopf bifurcation once the magnitude of the oscillations exceeds the variance created by mere stochasticity: the MCMC model no longer over-estimates the spread of the data, while the ML models now underestimate that variation. 
+CRPS scores for stochastic transitions exhibit a distinct two-branch pattern, with scores for a given replicate being either very high (poor skill) or very low, reflecting whether the individual 'true' replicate matches the mean state predicted by the forecast or the other state. 
+Logs skill score may be a better measure in this context, where correctly capturing the uncertainty in the forecast means that this bi-modal structure in scores can be avoided entirely, e.g. by the MCMC predictions. 
+The forecast-skill-over time plots illustrate diferent reasons for the bi-modal distribution in skill seen for the saddle-node and stochastic transition scenarios in Figure 2 respectively: in the case of the saddle node, the two modes are distinguished by time-horizon: short term forecasts are relatively accurate, longer term forecasts (i.e. after the catastrophic transition) are poor.
+In the case of the stochastic transition model, the two modes are not structured by horizon but by replicate, with some replicates having transitioned and others still in the original state.
 
 
 ```{r}
 #| fig6
 #| fig.cap="CRPS scores over time for each scenario.
-#| Each line represents the scores against a replicate of time series observations from 'true model'.
-#| Patterns show forecast skill generally get worse over time -
-#| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation.
-#| The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window.
-#| In the stochastic transition context, this creates two branches, where high values indicate periods of
+#| Each line represents the scores against a replicate of time series observations from 'true model'. 
+#| Patterns show forecast skill generally get worse over time - 
+#| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation. 
+#| The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
+#| In the stochastic transition context, this creates two branches, where high values indicate periods of 
 #| time when the forecast predicts the wrong state and lower branch indicates the correct state."
 
 shift |> 
@@ -442,9 +452,9 @@ shift |>
 
 ```{r}
 #| fig.cap="Logs skill score over time. 
-#| Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score.
-#| Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty.
-#| Generally, MCMC performs better relative to other models under this metric than it does under CRPS,
+#| Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
+#| Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
+#| Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
 #| reflecting the bias-variance tradeoff of machine learning."
 
 shift |> 
@@ -466,8 +476,32 @@ This motivates the question, "What methods will be most reliable in the face of 
 
 In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting transition events.
 We compare the ability of several cutting edge machine learning approaches against statistical and process-based models, and show that deep learning methods are generally able to strike a middle ground between what we consider as acceptable and ideal case forecasting methods, ARIMA and MCMC-based parameter estimation respectively.
-When machine learning models are able to observe transition phenomena, as in the stochastic case, they generally outperformed MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
-Yet, there are many nuances to these assessments as examining summary statistics, CRPS and log probability scores obscure finer detailed components of the forecasts, like the pronounced bimodality of ML forecasts for the stochastic transition case. 
+All though most ML-based forecasting applications focus on point predictions, we have emphasized examples which can provide a meaningful estimate of uncertainty.
+When machine learning models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
+An ensemble forecast combining the predictions of all four ML methods generally scores as well or better than any one of the ML methods alone.
+Yet, there are many nuances to these assessments as examining summary statistics, CRPS and log probability scores obscure finer detailed components of the forecasts.
+For instance, forecast skill varies with the length of the forecast horizon, and not in a monotonic fashion. 
+This is the result of multiple factors: for some dynamics, such as those involving tipping points, the long term behavior can be easier to predict then transient transitions. 
+Both predicted uncertainty and forecast skill can be better on longer horizons than on shorter ones, as in the MCMC predictions of tipping point dynamics.
+It is also important to remember that probabilistic forecast skill scores do not only measure how close observations are to expectation, but also reflect the predicted uncertainty: therefore, over-confidence about predictive accuracy can result in worse scores than less accurate on average but correctly reflect a greater degree of uncertainty. 
+The ability to better reflect uncertainty rather than better average predictions explains much of the performance of the ensemble model.
+
+The success of these ML models on the stochastic transition case is particularly notable.
+Using only a single previous replicate 
+
+Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in these critical transitions.
+This is not surprising, as the training data provide no prior example of such behavior (e.g. growing oscillations or a sudden shift).
+Nevertheless, this should be an important reminder of a central difficulty in ecological forecasting.
+Note that in such scenarios, near-term forecasts [@dietze_iterative_2018] may be very accurate right up to the transition event before becoming widely wrong. 
+Nor can the possibility of such non-linear behavior be easily dismissed in ecological models -- the examples considered here have been bedrock of ecological modeling and management practices for over half a century [@Folke2004], and if anything are only too simple, representing a small slice of possible dynamical behavior of more complicated models.
+
+
+
+Identifiability
+
+
+
+
 
 There are a number of questions that we have left unanswered that we hope will be addressed in future work.
 In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so comprehensive conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
