@@ -500,12 +500,22 @@ This provides a clear illustration of the much broader array of phenomenological
 In this way, the ML models can be seen to impose even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
 In contrast, the MCMC performance benefits from very strong process-based assumptions, which happen to match the 'true' model in this case and thus provide a comparison of the theoretical optimal performance.
 
+The MCMC case illustrates some of the hard limits to ecological forecasting of critical transitions.
+Our MCMC forecast assumes the _true_ model structure, the data-generating process, is known, and the forecaster need only infer the posterior distribution of model parameters.
+This is a much stronger assumption than that made by the ML models, though it can potentially be justfied on the basis of a mechanistic understanding of the processes involved.
+It is important not to confound the MCMC example here with the use of MCMC in process based models of real systems.
+In the real world, this is never the case: all models are at best approximations of the underlying processes [@Oreskes1994].
+Despite this advantage, even the MCMC forecasts differ from the distribution of the true process.
+Because the available data come from only a small region of the dynamical state space, they are consistent with many possible parameterizations of the same model structure -- which creates likelihood ridges and non-identifiability of specific parameter values.
+Using more simplified versions of the dynamical processes in question, such as the canonical form of a bifurcation, can mitigate this issue in some cases.
+Even when such non-identifiability issues cannot be avoided entirely, they can usually be diagnosed by examining the degree of mixing in MCMC sampling and comparing posterior to prior distributions.
+<!-- While similar convergence issues may arise in the estimation of ML models, they may be harder to diagnose. -->
+
 Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in the critical transition scenarios (Hopf and saddle node).
 This is not surprising, as the training data provide no prior example of such behavior (e.g. growing oscillations or a sudden shift).
 Nevertheless, this should be an important reminder of a central difficulty in ecological forecasting.
 Note that in such scenarios, near-term forecasts [@dietze_iterative_2018] may be very accurate right up to the transition event before becoming widely wrong. 
 Nor can the possibility of such non-linear behavior be easily dismissed in ecological models -- the examples considered here have been bedrock of ecological modeling and management practices for over half a century [@Folke2004], and if anything are only too simple, representing a small slice of possible dynamical behavior of more complicated models.
-
 
 It may be natural to ask whether this performance would be remedied if the ML models were trained on data which includes prior examples of super-critical Hopf or saddle node bifurcations. 
 This question is not as easy to answer as it may seem, because of the difficulty in defining the corresponding forecasting scenario.
@@ -517,18 +527,6 @@ Even if the underlying mechanism was accurately captured by the same model, say,
 Rarely do ecologists have access to completely controlled replicates for fitting or training models.
 The ability for ML models to successfully generalize from training in such cases remains an open problem and a promising subject of further investigation.
 
-Even the MCMC case illustrates some of the hard limits to ecological forecasting of critical transitions.
-Our MCMC forecast assumes the _true_ model structure, the data-generating process, is known, and the forecaster need only infer the posterior distribution of model parameters.
-This is a much stronger assumption than that made by the ML models, though it can potentially be justfied on the basis of a mechanistic understanding of the processes involved.
-It is important not to confound the MCMC example here with the use of MCMC in process based models of real systems.
-In the real world, this is never the case: all models are at best approximations of the underlying processes [@Oreskes1994].
-Despite this advantage, even the MCMC forecasts differ from the distribution of the true process.
-Because the available data come from only a small region of the dynamical state space, they are consistent with many possible parameterizations of the same model structure -- which creates likelihood ridges and non-identifiability of specific parameter values.
-Using more simplified versions of the dynamical processes in question, such as the canonical form of a bifurcation, can mitigate this issue in some cases.
-Even when such non-identifiability issues cannot be avoided entirely, they can usually be diagnosed by examining the degree of mixing in MCMC sampling and comparing posterior to prior distributions.
-<!-- While similar convergence issues may arise in the estimation of ML models, they may be harder to diagnose. -->
-
-
 There are a number of questions that we have left unanswered that we hope will be addressed in future work.
 In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so comprehensive conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
 Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties.
@@ -539,7 +537,9 @@ Forecasting is ideally a more iterative process of data assimilation, where fore
 Updating a forecast after a critical transition has already occurred may be of little use in the context of hysteresis, such as under the saddle node or stochastic transition -- recognizing the alternative stable state only after the system is stuck in that basin will often be considered 'too late'.
 Assimilation may be more applicable to the Hopf bifurcation, where additional observations of slowly growing oscillations may lead to more accurate forecasts. 
 Such models may even accurately predict the homoclinic bifurcation that occurs when the limit cycle grows too large, eventually hitting a saddle point of zero population size for the host species.
-We leave these cases to future exploration. 
+We leave these cases to future exploration rather than attempting to explore all such variations in a single narrative. 
+We have focused on these illustrative examples accompanied by an extensive appendix of reproducible code implemented using well documented and intuitive frameworks.
+We encourage the reader to use these appendices as an entry point into further exploration.
 
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
 This paper is not intended to give a complete answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve; instead, this study aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of forecasting problems.
