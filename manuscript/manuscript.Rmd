@@ -478,27 +478,32 @@ Ecological systems have long been acknowledged as complex, due not only to the i
 Calls for increased forecasting efforts from ecologists frequently reference the role of changing climate and other anthropogenic change, which raise the challenge of prediction in no-analog environments, anticipating ecosystem responses to conditions that have not been previously observed [@clark_ecological_2001; @dietze_iterative_2018].
 This motivates the question, "What methods will be most reliable in the face of unobserved conditions?"
 
-In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting transition events.
+In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting critical transition events.
 We compare the ability of several cutting edge machine learning approaches against statistical and process-based models, and show that deep learning methods are generally able to strike a middle ground between what we consider as acceptable and ideal case forecasting methods, ARIMA and MCMC-based parameter estimation respectively.
-All though most ML-based forecasting applications focus on point predictions, we have emphasized examples which can provide a meaningful estimate of uncertainty.
-When machine learning models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
+Although most ML-based forecasting applications focus on point predictions, we have emphasized examples which can provide a meaningful estimate of uncertainty.
+When the ML models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
 An ensemble forecast combining the predictions of all four ML methods generally scores as well or better than any one of the ML methods alone.
-Yet, there are many nuances to these assessments as examining summary statistics, CRPS and log probability scores obscure finer detailed components of the forecasts.
-For instance, forecast skill varies with the length of the forecast horizon, and not in a monotonic fashion. 
-This is the result of multiple factors: for some dynamics, such as those involving tipping points, the long term behavior can be easier to predict then transient transitions. 
+Yet, examining summary statistics, CRPS and log probability scores obscures finer detailed components of the forecasts.
+For instance, forecast skill varies with the length of the forecast horizon in a non-monotonic fashion. 
+This is the result of multiple factors: for some dynamics, such as those involving tipping points, the long term behavior can be easier to predict than transient transitions. 
 Both predicted uncertainty and forecast skill can be better on longer horizons than on shorter ones, as in the MCMC predictions of tipping point dynamics.
-It is also important to remember that probabilistic forecast skill scores do not only measure how close observations are to expectation, but also reflect the predicted uncertainty: therefore, over-confidence about predictive accuracy can result in worse scores than less accurate on average but correctly reflect a greater degree of uncertainty. 
+It is also important to remember that probabilistic forecast skill scores do not only measure how close observations are to expectation, but also reflect the predicted uncertainty: therefore, over-confidence about predictive accuracy can result in worse scores than less accurate on average but correctly reflect a greater degree of uncertainty. <!-- MFL: "that are less accurate"?-->
 The ability to better reflect uncertainty rather than better average predictions explains much of the performance of the ensemble model.
 
 The success of these ML models on the stochastic transition case is particularly notable.
-All methods are given only a single previous replicate of a stochastic transition (Fig 5, red line) on which to base there estimates.
+All methods are given only a single previous replicate of a stochastic transition (Fig 5, red line) on which to base their estimates.
 This is typical of ecological scenarios where data is so often limited.
 While even one observation of a transition is more than the methods have in our other forecasts, this still presents a significant challenge to model estimation.
 Unlike the MCMC case, the ML models have no prior expectation of a model structure that contains sharp transitions -- we might have expected these models to perform little differently than the ARIMA model. 
 Given this single replicate, all four ML models successfully capture the phenomenological pattern of a sharp shift between two stable states -- behavior which the structurally simpler family of ARIMA models cannot express.
-This provides a clear illustration of the much broader array of phenomenological behaviors that can be accurately models with ML models compared to classical statistical models.
+This provides a clear illustration of the much broader array of phenomenological behaviors that can be accurately modeled with ML models compared to classical statistical models.
 In this way, the ML models can be seen to impose even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
 In contrast, the MCMC performance benefits from very strong process-based assumptions, which happen to match the 'true' model in this case and thus provide a comparison of the theoretical optimal performance.
+
+When examining the performance of the ML models, it is clear that there is no single method that excels in all scenarios.
+Neither is there one class of ML methods that outperforms the others -- a fact we found surprising given the reported dominance of encoder-decoders in the sequence-to-sequence deep learning subfield [@aitken_understanding_2021].
+These observations underscore the point that ML is a very empirically-driven field in which there are few guarantees on performance.
+Furthermore, due to the black-box-ness of deep learning and other reasons like instability to initialization seed, it is often difficult to provide an explanation for why certain methods over-perform or fail to meet expectations.
 
 Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in the critical transition scenarios (Hopf and saddle node).
 This is not surprising, as the training data provide no prior example of such behavior (e.g. growing oscillations or a sudden shift).
@@ -506,11 +511,10 @@ Nevertheless, this should be an important reminder of a central difficulty in ec
 Note that in such scenarios, near-term forecasts [@dietze_iterative_2018] may be very accurate right up to the transition event before becoming widely wrong. 
 Nor can the possibility of such non-linear behavior be easily dismissed in ecological models -- the examples considered here have been bedrock of ecological modeling and management practices for over half a century [@Folke2004], and if anything are only too simple, representing a small slice of possible dynamical behavior of more complicated models.
 
-
 It may be natural to ask whether this performance would be remedied if the ML models were trained on data which includes prior examples of super-critical Hopf or saddle node bifurcations. 
 This question is not as easy to answer as it may seem, because of the difficulty in defining what real-world forecasting scenario that may correspond to.
 The scenarios we have considered are true, pure forecasts: the training data comes from a single realization of a specific generative process, and the task is to predict the future states of that system before they occur.
-Would it be possible to train an predictive algorithm on 'analogous' examples of critical transitions?
+Would it be possible to train a predictive algorithm on 'analogous' examples of critical transitions?
 For instance, could data from other lakes which may have experienced a critical transition such as eutrophication event in the past be used to train machine learning models to predict such events in some focal lake in the future [@Scheffer2001]?
 Perhaps, but it depends what we mean by an 'analogous' system.
 Even if the underlying mechanism was accurately captured by the same model, say, the saddle-node model of @May1977 we consider here, it is likely that most of the individual model parameters would be quite different.
@@ -524,8 +528,7 @@ Identifiability MCMC theoretical limits
 
 There are a number of questions that we have left unanswered that we hope will be addressed in future work.
 In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so comprehensive conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
-Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties.
-Some potential issues include varying state and time scales across time series, non-concurrent sampling, sparse data, and more.
+Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties. <!-- MFL: I think we could cut this paragraph out completely now -->
 
 Furthermore, our analysis has focused on the task of making a single forecast prior to the occurrence of a critical transition.
 Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@Dietz2018]. 
