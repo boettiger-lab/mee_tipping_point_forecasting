@@ -61,7 +61,7 @@ bound <- function(x, percentile = 0.975) {
 Forecasting plays an important and rapidly growing role in both testing our fundamental understanding of ecological processes, and informing ecological applications and conservation decision-making [@dietze_iterative_2018; @schindler_portfolio_2015].
 Meanwhile, recent advances in machine learning have rapidly improved the prevalence and accuracy of short term forecasts in many fields [@kao_exploring_2020; @lyu_lstm_2020; @du_multivariate_2020]. 
 Will these emerging methods improve the capacity for forecasts in ecological systems as well?
-Ecological dynamics are notoriously complex, with uncertainty and non-linearity playing critical roles [@Boettiger2018; @hallett_why_2004; @Oveskienen2010].
+Ecological dynamics are notoriously complex, with uncertainty and non-linearity playing critical roles [@Boettiger2018; @hallett_why_2004; @Ovaskainen2010].
 These challenges are nowhere more evident then in _critical transitions_, sudden shifts in the states or patterns of ecosystem dynamics that are more important and more difficult to predict than gradual changes.
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
 We evaluate the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
@@ -165,7 +165,7 @@ Unlike the Hopf bifurcation which exhibits a continuous transition from a stable
 Due both to this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
 
 Tipping point dynamics have long been identified as an important but difficult challenge for forecasting [e.g. @Scheffer2001; @Folke2004]. 
-Much effort in the ecological literature so far has focused on identifying any 'early warning signs' that a catastrophic bifurcation might occur at all [@Scheffer2009; @Scheffer2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
+Much effort in the ecological literature so far has focused on identifying any 'early warning signs' that a catastrophic bifurcation might occur at all [@scheffer_early-warning_2009; @scheffer_anticipating_2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
 Tipping points resulting from Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dai2012; @Dai2015] to whole-ecosystem experiments [@carpenter_early_2011], and postulated as a model for global change [@Barnosky2012]. 
 Examples use the following parameters: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = 0.15$, $\alpha = 0.000375$, $\sigma = 0.02$, $N_0 = 0.75$.
 
@@ -502,7 +502,7 @@ In contrast, the MCMC performance benefits from very strong process-based assump
 
 The MCMC case illustrates some of the hard limits to ecological forecasting of critical transitions.
 Our MCMC forecast assumes the _true_ model structure, the data-generating process, is known, and the forecaster need only infer the posterior distribution of model parameters.
-This is a much stronger assumption than that made by the ML models, though it can potentially be justfied on the basis of a mechanistic understanding of the processes involved.
+This is a much stronger assumption than that made by the ML models, though it can potentially be justified on the basis of a mechanistic understanding of the processes involved.
 It is important not to confound the MCMC example here with the use of MCMC in process based models of real systems.
 In the real world, this is never the case: all models are at best approximations of the underlying processes [@Oreskes1994].
 Despite this advantage, even the MCMC forecasts differ from the distribution of the true process.
@@ -512,9 +512,9 @@ Even when such non-identifiability issues cannot be avoided entirely, they can u
 <!-- While similar convergence issues may arise in the estimation of ML models, they may be harder to diagnose. -->
 
 When examining the performance of the ML models, it is clear that there is no single method that excels in all scenarios.
-Neither is there one class of ML methods that outperforms the others -- a fact we found surprising given the reported dominance of encoder-decoders in the sequence-to-sequence deep learning subfield [@aitken_understanding_2021].
+Neither is there one class of ML methods that outperforms the others -- a fact we found surprising given the reported dominance of encoder-decoders in the sequence-to-sequence deep learning sub-field [@aitken_understanding_2021].
 These observations underscore the point that ML is a very empirically-driven field in which there are few guarantees on performance.
-Furthermore, due to the black-box-ness of deep learning and other reasons like instability to initialization seed, it is often difficult to provide an explanation for why certain methods over-perform or fail to meet expectations.
+Furthermore, due to the black-box-ness of deep learning and other reasons like instability to initialization seed, it is often impossible to provide an explanation for why certain methods over-perform or fail to meet expectations.
 
 Overall, ML models and the more traditional ARIMA model fail to predict the qualitative shift in dynamic behavior that occurs in the critical transition scenarios (Hopf and saddle node).
 This is not surprising, as the training data provide no prior example of such behavior (e.g. growing oscillations or a sudden shift).
@@ -537,7 +537,7 @@ In this paper, we have explored a small number of machine learning and statistic
 Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties. <!-- MFL: I think we could cut this paragraph out completely now -->
 
 Furthermore, our analysis has focused on the task of making a single forecast prior to the occurrence of a critical transition.
-Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@Dietz2018]. 
+Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@dietze_iterative_2018]. 
 Updating a forecast after a critical transition has already occurred may be of little use in the context of hysteresis, such as under the saddle node or stochastic transition -- recognizing the alternative stable state only after the system is stuck in that basin will often be considered 'too late'.
 Assimilation may be more applicable to the Hopf bifurcation, where additional observations of slowly growing oscillations may lead to more accurate forecasts. 
 Such models may even accurately predict the homoclinic bifurcation that occurs when the limit cycle grows too large, eventually hitting a saddle point of zero population size for the host species.
