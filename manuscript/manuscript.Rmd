@@ -1,5 +1,5 @@
 ---
-title: "Ecological Limits to Forecasting: Estimating Uncertainty in Critical Transitions with Deep Learning"
+title: "Limits to Ecological Forecasting: Estimating Uncertainty in Critical Transitions with Deep Learning"
 authors:
   - name: Marcus Lapeyrolerie
     department: Department of Environmental Science, Policy, and Management
@@ -12,10 +12,10 @@ authors:
     location: Berkeley, California
     email: cboettig@berkeley.edu (corresponding author)
 abstract: |
-  1. Meaningful representations of uncertainty are an essential component of effective ecological forecasting.
-  2. Machine learning
-  3. We examine scenarios in which stochasticity and non-linearity can lead to extreme uncertainty under common ecological models.  
-  4. We show that ..
+  1. In the current age of a rapidly changing environment, it is becoming increasingly important to study critical transitions and how to best anticipate them. Critical transitions pose extremely challenging forecasting problems, which necessitate informative uncertainty estimation rather than point forecasts. In this study, we apply some of the most cutting edge deep learning methods for probabilistic time series forecasting to several classic ecological models that examine critical transitions.
+  2. Our analysis focuses on three different simulated examples of critical transitions: a Hopf bifurcation, a saddle-node bifurcation and a stochastic transition. For each scenario, we compare the forecasts from four deep learning models, Long-short Term Memory networks, Gated Recurrent Unit networks, Block Recurrent neural networks and Transformers, to forecasts from an ARIMA model and a MCMC estimated model that is given the true transition dynamics.
+  3. We found that the deep learning models were able to perform comparably to the idealized MCMC model on the stochastic transition case, and generally in between the MCMC and ARIMA models on the Hopf and saddle-node bifurcation examples.
+  4. Our results establish that deep learning models are a promising class of forecasting methods for critical transition prediction problems, and that deep learning methods warrant further exploration on this challenging class of forecasting problems. 
   
 keywords:
   - Time Series
