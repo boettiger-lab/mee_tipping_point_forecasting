@@ -1,5 +1,5 @@
 ---
-title: "Ecological Limits to Forecasting: Estimating Uncertainty in Critical Transitions with Deep Learning"
+title: "Limits to Ecological Forecasting: Estimating Uncertainty for Critical Transitions with Deep Learning"
 authors:
   - name: Marcus Lapeyrolerie
     department: Department of Environmental Science, Policy, and Management
@@ -12,16 +12,16 @@ authors:
     location: Berkeley, California
     email: cboettig@berkeley.edu (corresponding author)
 abstract: |
-  1. Meaningful representations of uncertainty are an essential component of effective ecological forecasting.
-  2. Machine learning
-  3. We examine scenarios in which stochasticity and non-linearity can lead to extreme uncertainty under common ecological models.  
-  4. We show that ..
+  1. In the current age of a rapidly changing environment, it is becoming increasingly important to study critical transitions and how to best anticipate them. Critical transitions pose extremely challenging forecasting problems, which necessitate informative uncertainty estimation rather than point forecasts. In this study, we apply some of the most cutting edge deep learning methods for probabilistic time series forecasting to several classic ecological models that examine critical transitions.
+  2. Our analysis focuses on three different simulated examples of critical transitions: a Hopf bifurcation, a saddle-node bifurcation and a stochastic transition. For each scenario, we compare the forecasts from four deep learning models, Long-short Term Memory networks, Gated Recurrent Unit networks, Block Recurrent neural networks and Transformers, to forecasts from an ARIMA model and a MCMC estimated model that is given the true transition dynamics.
+  3. We found that the deep learning models were able to perform comparably to the idealized MCMC model on the stochastic transition case, and generally in between the MCMC and ARIMA models on the Hopf and saddle-node bifurcation examples.
+  4. Our results establish that deep learning methods warrant further exploration on the challenging class of critical transition forecasting problems. 
   
 keywords:
-  - Time Series
+  - Artificial Intelligence
   - Forecasting
   - Machine Learning
-  - Artificial Intelligence
+  - Time Series
   - Tipping points
 bibliography: references.bib
 nocite: |
@@ -29,9 +29,10 @@ nocite: |
 header-includes:
   - \usepackage{amsmath}
   - \usepackage{amssymb}
-#  - \usepackage{lineno}
-#  - \usepackage{endfloat}
-#  - \linenumbers
+  - \usepackage{lineno}
+  - \usepackage{setspace}
+  - \linenumbers
+  - \doublespacing
   
 output: 
   rticles::arxiv_article:
@@ -302,8 +303,8 @@ shift <- scores |>
 
 ```{r}
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
-#| Smaller scores are better (indicating smaller errors).
-#| Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
+#|  Smaller scores are better (indicating smaller errors).
+#|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
 #| simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
@@ -340,14 +341,13 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```
 
-```{r }
-#| fig3
+```{r}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
-#| The bifurcation occurs soon after forecasting period begins, 
+#|  The bifurcation occurs soon after forecasting period begins, 
 #| leading to progressively larger and larger oscillations. 
-#| Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
-#| Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
-#| Only last 25 time points of training data are shown."
+#|  Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
+#|  Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
+#|  Only last 25 time points of training data are shown."
 
 forecasts  |> 
   filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
@@ -377,7 +377,7 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 
 ```{r }
 #| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
-#| Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
+#|  Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
 
 forecasts |> 
@@ -403,7 +403,7 @@ The distribution of scores over
 
 ```{r}
 #| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model. 
-#| In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
+#|  In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
 forecasts |>
   filter(iter %in% 1:15, simulation == "stochastic") |> 
   ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
@@ -435,13 +435,12 @@ In the case of the stochastic transition model, the two modes are not structured
 
 
 ```{r}
-#| fig6
 #| fig.cap="CRPS scores over time for each scenario.
-#| Each line represents the scores against a replicate of time series observations from 'true model'. 
-#| Patterns show forecast skill generally get worse over time - 
+#|  Each line represents the scores against a replicate of time series observations from 'true model'. 
+#|  Patterns show forecast skill generally get worse over time - 
 #| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation. 
-#| The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
-#| In the stochastic transition context, this creates two branches, where high values indicate periods of 
+#|  The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
+#|  In the stochastic transition context, this creates two branches, where high values indicate periods of 
 #| time when the forecast predicts the wrong state and lower branch indicates the correct state."
 
 shift |> 
@@ -456,9 +455,9 @@ shift |>
 
 ```{r}
 #| fig.cap="Logs skill score over time. 
-#| Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
-#| Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
-#| Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
+#|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
+#|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
+#|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
 #| reflecting the bias-variance tradeoff of machine learning."
 
 shift |> 
@@ -549,7 +548,18 @@ Ecological forecasting is invariably difficult, even in the idealized cases of a
 This paper is not intended to give a complete answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve; instead, this study aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of forecasting problems.
 Since we have shown that ML models can make good forecasts on our selected tipping point scenarios, particularly the stochastic transition case, we have established that these deep learning models are promising methods for critical transition forecasting problems.
 
+# Conflicts of Interest {-}
 
-\pagebreak
+The authors declare there are no conflicts of interest.
+
+# Authors' Contributions {-}
+
+M.L. and C.B. developed the code and wrote the manuscript.
+
+# Data Availability {-}
+
+We have created a github repository <https://github.com/boettiger-lab/mee_tipping_point_forecasting.> that contains the code used to produce the figures herein.
+
+\newpage
 
 # References
