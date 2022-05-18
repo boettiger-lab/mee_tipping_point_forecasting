@@ -1,5 +1,5 @@
 ---
-title: "Limits to Ecological Forecasting: Estimating Uncertainty in Critical Transitions with Deep Learning"
+title: "Limits to Ecological Forecasting: Estimating Uncertainty for Critical Transitions with Deep Learning"
 authors:
   - name: Marcus Lapeyrolerie
     department: Department of Environmental Science, Policy, and Management
@@ -341,8 +341,7 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```
 
-```{r }
-#| fig3
+```{r}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
 #| The bifurcation occurs soon after forecasting period begins, 
 #| leading to progressively larger and larger oscillations. 
@@ -436,7 +435,6 @@ In the case of the stochastic transition model, the two modes are not structured
 
 
 ```{r}
-#| fig6
 #| fig.cap="CRPS scores over time for each scenario.
 #| Each line represents the scores against a replicate of time series observations from 'true model'. 
 #| Patterns show forecast skill generally get worse over time - 
