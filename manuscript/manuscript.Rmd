@@ -303,8 +303,8 @@ shift <- scores |>
 
 ```{r}
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
-#| Smaller scores are better (indicating smaller errors).
-#| Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
+#|  Smaller scores are better (indicating smaller errors).
+#|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
 #| simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
@@ -343,11 +343,11 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```{r}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
-#| The bifurcation occurs soon after forecasting period begins, 
+#|  The bifurcation occurs soon after forecasting period begins, 
 #| leading to progressively larger and larger oscillations. 
-#| Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
-#| Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
-#| Only last 25 time points of training data are shown."
+#|  Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
+#|  Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
+#|  Only last 25 time points of training data are shown."
 
 forecasts  |> 
   filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
@@ -377,7 +377,7 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 
 ```{r }
 #| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
-#| Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
+#|  Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
 
 forecasts |> 
@@ -403,7 +403,7 @@ The distribution of scores over
 
 ```{r}
 #| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model. 
-#| In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
+#|  In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
 forecasts |>
   filter(iter %in% 1:15, simulation == "stochastic") |> 
   ggplot(aes(x=t, y=value, group = interaction(iter, variable), col=type)) + 
@@ -436,11 +436,11 @@ In the case of the stochastic transition model, the two modes are not structured
 
 ```{r}
 #| fig.cap="CRPS scores over time for each scenario.
-#| Each line represents the scores against a replicate of time series observations from 'true model'. 
-#| Patterns show forecast skill generally get worse over time - 
+#|  Each line represents the scores against a replicate of time series observations from 'true model'. 
+#|  Patterns show forecast skill generally get worse over time - 
 #| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation. 
-#| The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
-#| In the stochastic transition context, this creates two branches, where high values indicate periods of 
+#|  The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
+#|  In the stochastic transition context, this creates two branches, where high values indicate periods of 
 #| time when the forecast predicts the wrong state and lower branch indicates the correct state."
 
 shift |> 
@@ -455,9 +455,9 @@ shift |>
 
 ```{r}
 #| fig.cap="Logs skill score over time. 
-#| Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
-#| Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
-#| Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
+#|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
+#|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
+#|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
 #| reflecting the bias-variance tradeoff of machine learning."
 
 shift |> 
