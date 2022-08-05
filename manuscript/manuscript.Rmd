@@ -67,6 +67,8 @@ These challenges are nowhere more evident then in _critical transitions_, sudden
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
 We evaluate the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
 
+“In this paper, we focus on the task of producing quantitative, probabilistic forecasts reflecting the possible distribution of future states at some time in the future.  It is important to distinguish this objective from the extensive previous literature on “early warning signs” of critical transitions [eg as reviewed in @Scheffer2015] which has sought to answer only a categorical question: is the system approaching a critical transition? More recent work by @Bury2021 has introduced ML methods to consider classification of this transition in four possible categories (Hopf, saddle-node, transcritical, or no bifurcation) rather than two (bifurcation or not). These are important results with considerable success, but do not answer the questions of when a shift might occur or how large that transition will be. In light of increasing calls for the importance of such quantitative, probabilistic forecasts [@Deitz2018], we focus on evaluating the potential and limits to prediction in critical transition scenarios.”
+
 # Materials and Methods
 
 <!-- some more verbose bits about bifurcation models probably belongs in discussion instead -->
@@ -187,6 +189,23 @@ Based on this data, our forecaster seeks to identify the distribution of expecte
 This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [@Scheffer2001; @Folke2004].
 (Note that such stochastic transitions between alternative stable states can also create oscillatory-like dynamics when stochasticity is sufficiently high enough to drive repeated transitions from one attractor to the other and back again.  In such cases, it might be reasonable to estimate a strictly forward-looking forecast of a single system, predicting the distribution of these transitions.)
 Model definition is the same as May's model for the saddle node with fixed parameter $h$, values: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = h = 0.26$, $\alpha = 0$, $\sigma = 0.02$, $N_0 = 0.55$.
+
+
+**Selecting timescales**
+In each scenario,  t = 0 is the start time of the training data, while the length of training data and forecast horizon (with ensembles sampled from the true distribution) is illustrated in Figure 1.  
+For the Hopf bifurcation, forecast begins at t=100 and extends to t =200, for the saddle node, forecast begins at t=250 and extends to t = 500, for the stochastic transition, both training data and forecasting tasks begin at 0 and extend to t = 250.  
+While much attention is often paid to the number of data points in training or testing data, it is essential to realize that these are only meaningful relative to the specific process in question.  
+Thus, in each case we have selected these time intervals to focus on the dynamical process in question, which unfolds at a different rate and tempo in each scenario.  
+For instance, if the stochastic scenario was restricted to a much shorter timescale used in the hopf case, few replicate simulations would experience a transition at all.  
+If it were made much longer, most of the timeseries would be spent post-transition. 
+Likewise, if the forecast for the Hopf scenario was extended much further into the future under the current parameterization, the system experiences a homoclinic bifurcation at which the population collapses to 0.  
+Using different length timescales allows us to consider the three different forecasting tasks illustrated in Figure 1 that focus around predicting the critical behavior, rather than predicting long periods of relative stasis.
+These three critical transitions are fundamentally different processes, there is no perfect apples-to-apples parameterization for each that allows the transition to unfold in a way that gives precisely the same time windows.
+
+
+
+time at which to start the forecast in each scenario relative to the timing of the bifurcation event (in the case of Hopf and Saddle Node), and relative to the expected distribution of transitions in the stochastic case. The rate at which the dynamical process unfolds in each case depends on the parameter values of the model in question.  At much
+
 
 ## Method group 1: Markov Chain Monte Carlo
 
