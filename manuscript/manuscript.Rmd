@@ -63,7 +63,7 @@ Forecasting plays an important and rapidly growing role in both testing our fund
 Meanwhile, recent advances in machine learning have rapidly improved the prevalence and accuracy of short term forecasts in many fields [@kao_exploring_2020; @lyu_lstm_2020; @du_multivariate_2020]. 
 Will these emerging methods improve the capacity for forecasts in ecological systems as well?
 Ecological dynamics are notoriously complex, with uncertainty and non-linearity playing critical roles [@Boettiger2018; @hallett_why_2004; @Ovaskainen2010].
-These challenges are nowhere more evident then in _critical transitions_, sudden shifts in the states or patterns of ecosystem dynamics that are more important and more difficult to predict than gradual changes.
+These challenges are nowhere more evident than in _critical transitions_, sudden shifts in the states or patterns of ecosystem dynamics that are more important and more difficult to predict than gradual changes.
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
 We evaluate the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
 
@@ -78,7 +78,7 @@ Though these models may appear simple when measured against high-dimensional and
 These textbook models have been well studied and form the basis of half a century of research in ecology, including much recent work on topics such as resilience and tipping points which has had important theoretical and practical management outcomes [@Folke2004; @Fischer2009; @Polasky2011].
 May's model exhibits alternative stable states. 
 In this one-dimensional model, transitions between these states can occur due to intrinsic stochasticity, external forcing, or the gradual environmental change that results in a catastrophic saddle-node bifurcation and generates hysteresis. 
-The Nicholson-Bailey model is a two species model which contains a Hopf bifurcation, a non-catastrophic bifurcation which either creates or destroys a limit cycle -- a stable oscillatory pattern. 
+The Nicholson-Bailey model is a two species model which contains a super-critical Hopf bifurcation, a non-catastrophic bifurcation which either creates or destroys a limit cycle -- a stable oscillatory pattern. 
 
 Assessing the accuracy of forecasting methods in the face of such bifurcation dynamics is a particularly important question for ecological systems and global environmental change problems.
 Bifurcations represent the kind of non-linear responses complex systems can make as the result of slowly changing parameters.
@@ -98,7 +98,7 @@ We expect greater convergence between methods available in R and Python in the f
 Complete code for all examples presented here can be found at https://github.com/boettiger-lab/mee_tipping_point_forecasting.
 
 
-```{r fig.cap="Forecast scenarios. A. a Hopf bifurcation: a stable node develops into a limit cycle. B. The saddle-node bifurcation."}
+```{r fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle. B. The saddle-node bifurcation. C. The stochastic transition."}
 hopf <- read_csv("../greta/forecasts/simulation=hopf/hopf_increasing.csv.gz")
 panelA <- hopf |> filter(type %in% c("historical", "true"), i < 10) |>
   rename(species = variable) |> 
@@ -134,12 +134,12 @@ We consider the form which includes density dependence in the host species, and 
 
 \begin{align}
 H_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K_t}\right) - c P_t + \eta_{H,t} \right) \\
-P_{t+1} &= H_t \exp \left( r \left(1  \tfrac{H}{K_t}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right) \\
+P_{t+1} &= H_t \exp \left( r \left(1 - \tfrac{H}{K_t}\right) \right)  \left(1 -  \exp \left(- c P_t + \eta_{P,t}\right) \right) \\
 K_{t+1} &= K_t + \delta
 \label{hopf}
 \end{align}
 
-Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at linear rate, which drives a super-critical Hopf bifurcation as $K$ becomes sufficiently large. 
+Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at a linear rate, which drives a super-critical Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern which grows in amplitude as the bifurcation parameter continues to increase.
 In this model, the Hopf bifurcation is dubbed 'super-critical' as it creates a stable limit cycle instead of an unstable one.
 This example illustrates one of the many kinds of challenges which nonlinear phenomena pose to forecasting: the "historical" data prior to the bifurcation never exhibit the cyclical dynamics of growing amplitude that will emerge after the bifurcation occurs.
@@ -164,12 +164,12 @@ h_{t+1} &= h_t + \alpha \\
 
 If the environment slowly alters one of the parameters (say, the encounter efficiency, `h_t`, in our formulation), one of the stable nodes moves closer and closer to the unstable saddle point, leading to a bifurcation that destroys the stable state, leaving the system to suddenly transition to the alternative stable state.
 Saddle-node bifurcations (also known as fold bifurcations) also create a phenomenon known as hysteresis, where it is not sufficient to restore the environment to the previous parameter values to recover the previous state. 
-Unlike the Hopf bifurcation which exhibits a continuous transition from a stable node to a small limit cycle that then grows, the saddle-node transition is a discontinuous or so-called 'catastrophic' bifurcation.
+Unlike the supercritical Hopf bifurcation which exhibits a continuous transition from a stable node to a small limit cycle that then grows, the saddle-node transition is a discontinuous or so-called 'catastrophic' bifurcation.
 Due both to this sudden, catastrophic nature of the transition and the difficulty in reversing the shift after it has occurred, saddle-node bifurcations have been the subject of intense study.
 
 Tipping point dynamics have long been identified as an important but difficult challenge for forecasting [e.g. @Scheffer2001; @Folke2004]. 
 Much effort in the ecological literature so far has focused on identifying any 'early warning signs' that a catastrophic bifurcation might occur at all [@scheffer_early-warning_2009; @scheffer_anticipating_2012] rather than more ambitious attempts to provide quantitative probabilistic forecasts of the likely distribution of waiting times before such a transition occurs.
-Tipping points resulting from Saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dai2012; @Dai2015] to whole-ecosystem experiments [@carpenter_early_2011], and postulated as a model for global change [@Barnosky2012]. 
+Tipping points resulting from saddle-node bifurcations have been demonstrated in examples ranging from laboratory microcosms [@Dai2012; @Dai2015] to whole-ecosystem experiments [@carpenter_early_2011], and postulated as a model for global change [@Barnosky2012]. 
 Examples use the following parameters: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = 0.15$, $\alpha = 0.000375$, $\sigma = 0.02$, $N_0 = 0.75$.
 
 
@@ -274,7 +274,7 @@ Encoder-decoder architectures have been shown empirically to excel on sequence t
 Encoder-decoders work by processing the input sequence into a fixed-length vector then decoding the fixed-length vector to the predicted output sequence.
 It is thought that by encoding the input sequence to a vector, encoder-decoders find informative representations of the input sequence that make the prediction task much easier [@sutskever_sequence_2014].
 Note that it is possible to use any type of neural network as the encoder and the decoder, but it is most common to use recurrent neural networks or networks with attention mechanisms [@aitken_understanding_2021].
-Of the models that we present, Block RNNs and Transformers have encoder-decoder structures.
+Of the models that we present, Block RNNs and Transformers have encoder-decoder-based architectures.
 
 <!--
 Basic typology of machine learning methods, how we distinguish "ML" from statistical methods (i.e. bias-variance tradeoff; no criteria to prove that the algorithm produces an unbiased estimate of a given summary statistic)
@@ -285,9 +285,9 @@ Stuff about how most machine learning techniques provide only point forecasts
 ## Forecast skill: strictly proper scores
 
 To compare forecasts, we focus exclusively on metrics of forecast skill which satisfy the property from @gneiting_strictly_2007 of a strictly proper score.
-This ensures the very desirable behavior that which no probabilistic forecast $Q(x,t)$ can have a score as high as that of the true process $P(x,t)$ on average. 
+This ensures the very desirable behavior that no probabilistic forecast $Q(x,t)$ can have a score as high as the score of the true process $P(x,t)$ on average. 
 In other words, while it is possible for any of the models considered to _overfit_ the data against which they are trained, i.e. have a higher likelihood than the true process, it is not possible for these models to overfit the data against which they are scored.
-It is worth noting that this property applies specifically to probabilistic forecasts and not point forecasts. Not all common metrics metrics often used to compare forecasts are strictly proper -- such as the average root-mean-square error or the average absolute error. <!-- MFL: hmm I am not completely following this point here. CB: added some examples of non-strictly-proper scoring metrics. For instance, {darts} has a whole 'metrics' class, which does not include any strictly proper metrics (because ML researchers don't care about statistical theorems?) -->
+It is worth noting that this property applies specifically to probabilistic forecasts and not point forecasts. Not all common metrics often used to compare forecasts are strictly proper -- such as the average root-mean-square error or the average absolute error. <!-- MFL: hmm I am not completely following this point here. CB: added some examples of non-strictly-proper scoring metrics. For instance, {darts} has a whole 'metrics' class, which does not include any strictly proper metrics (because ML researchers don't care about statistical theorems?) -->
 Concerns about over-fitting arise in most types of model estimation and are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@mehta_high-bias_2019]. <!-- MFL: I don't think I nailed the overfitting part in ML section but we probably want to reference this here-->
 This makes the use of strictly proper scoring especially relevant in assessing machine learning predictions.
 
@@ -304,7 +304,7 @@ Such ensemble techniques can better reflect uncertainty than relying on any sing
 For simplicity, we consider the unweighted case, where each model is represented equally in the ensemble.
 Using model-based simulations allows us to examine performance against multiple (n=100) replicates of the "true" process, which further helps identify differences that may occur solely due to chance. 
 By taking the true model structure as given, MCMC methods can be used to determine a theoretical limit of forecasting skill.
-Note that in both bifurcation scenarios, future dynamics will see states never previously observed in the historical data that was used to train each of the methods (i.e. very small population sizes).  
+Note that in both bifurcation scenarios, future dynamics will visit states never previously observed in the historical data that was used to train each of the methods (e.g. very small population sizes).  
 This no-analog aspect of forecasting bifurcation dynamics means that even with many sample points in the training data _and_ perfect knowledge of the true model structure, posterior distributions of parameter values are still influenced by the choice of priors. 
 
 
@@ -418,7 +418,6 @@ LSTM indicates greater uncertainty, while GRU shows very large variability which
 With additional tuning, better performance may be possible for these ML models. 
 The selected ARIMA model reflects wide uncertainty that is nevertheless not broad enough to span the alternative stable state.
 Consequentially, the MCMC estimate easily outperforms the ML models (Fig 2).
-The distribution of scores over 
 
 ```{r}
 #| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model. 
@@ -456,8 +455,8 @@ In the case of the stochastic transition model, the two modes are not structured
 ```{r}
 #| fig.cap="CRPS scores over time for each scenario.
 #|  Each line represents the scores against a replicate of time series observations from 'true model'. 
-#|  Patterns show forecast skill generally get worse over time - 
-#| gradually in the case of Hopf bifurcation or suddenly in repsonse to the saddle-node bifurcation. 
+#|  Patterns show forecast skill generally get worse over time -- 
+#| gradually in the case of Hopf bifurcation or suddenly in response to the saddle-node bifurcation. 
 #|  The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
 #|  In the stochastic transition context, this creates two branches, where high values indicate periods of 
 #| time when the forecast predicts the wrong state and lower branch indicates the correct state."
@@ -498,8 +497,8 @@ This motivates the question, "What methods will be most reliable in the face of 
 
 In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting critical transition events.
 We compare the ability of several cutting edge machine learning approaches against statistical and process-based models, and show that deep learning methods are generally able to strike a middle ground between what we consider as acceptable and ideal case forecasting methods, ARIMA and MCMC-based parameter estimation respectively.
-Although most ML-based forecasting applications focus on point predictions, we have emphasized examples which can provide a meaningful estimate of uncertainty.
-When the ML models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and Saddle-node examples.
+Although most ML-based forecasting applications focus on point predictions, we have emphasized examples that can provide a meaningful estimate of uncertainty.
+When the ML models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and saddle-node examples.
 An ensemble forecast combining the predictions of all four ML methods generally scores as well or better than any one of the ML methods alone.
 Yet, examining summary statistics, CRPS and log probability scores obscures finer detailed components of the forecasts.
 For instance, forecast skill varies with the length of the forecast horizon in a non-monotonic fashion. 
@@ -513,7 +512,7 @@ All methods are given only a single previous replicate of a stochastic transitio
 This is typical of ecological scenarios where data is so often limited.
 While even one observation of a transition is more than the methods have in our other forecasts, this still presents a significant challenge to model estimation.
 Unlike the MCMC case, the ML models have no prior expectation of a model structure that contains sharp transitions -- we might have expected these models to perform little differently than the ARIMA model. 
-Given this single replicate, all four ML models successfully capture the phenomenological pattern of a sharp shift between two stable states -- behavior which the structurally simpler family of ARIMA models cannot express.
+Given this single replicate, all four ML models successfully capture the phenomenological pattern of a sharp shift between two stable states -- this is behavior that the structurally simpler family of ARIMA models cannot express.
 This provides a clear illustration of the much broader array of phenomenological behaviors that can be accurately modeled with ML models compared to classical statistical models.
 In this way, the ML models can be seen to impose even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
 In contrast, the MCMC performance benefits from very strong process-based assumptions, which happen to match the 'true' model in this case and thus provide a comparison of the theoretical optimal performance.
