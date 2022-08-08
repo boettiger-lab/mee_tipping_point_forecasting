@@ -234,7 +234,7 @@ Since ARIMA is a commonly encountered method, we will refer readers to @hyndman_
 Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis_statistical_2018].
 Deep learning models are often used to make point forecasts, but for their application to ecological time series, it will often be necessary to use multi-step, probabilistic forecasts. 
 For all the deep learning models in this study, we use the same general process.
-Each machine learning model is trained on one time series.
+Each machine learning model is trained on one time series drawn from the three scenarios described previously.
 For the Hopf and saddle node cases, these time series consist of the period leading up to the bifurcation.
 A critical transition is, however, included in the training set for the stochastic transition case.
 Each model is trained to learn the parameters of a Laplace distribution for every time step in the forecast horizon.
