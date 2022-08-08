@@ -232,10 +232,13 @@ Since ARIMA is a commonly encountered method, we will refer readers to @hyndman_
 ## Method group 3: Machine Learning models
 
 Over the past decade, deep learning has become very popular for a broad range of challenging time series prediction problems [@makridakis_statistical_2018].
-Deep learning models are often used to make point forecasts, yet for their application to ecological time series, it will often be necessary to use multi-step, probablisitic forecasts. 
-For all the deep learning models in this study, we use the same method for uncertainty estimation:
-each model is trained to learn the parameters of a Poisson distribution to maximize the log likelihood. 
-To compute uncertainty intervals, we draw samples from the learned distribution at each time step.
+Deep learning models are often used to make point forecasts, but for their application to ecological time series, it will often be necessary to use multi-step, probabilistic forecasts. 
+For all the deep learning models in this study, we use the same general process.
+Each machine learning model is trained on one time series.
+For the Hopf and saddle node cases, these time series consist of the period leading up to the bifurcation.
+A critical transition is, however, included in the training set for the stochastic transition case.
+Each model is trained to learn the parameters of a Laplace distribution for every time step in the forecast horizon.
+To produce a forecast, we input a time series into a model, then we draw samples from the distributions that were learned during training.
 
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@madhyastha_model_2019].
 We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds.
@@ -497,14 +500,14 @@ This motivates the question, "What methods will be most reliable in the face of 
 
 In this paper, we carry out an initial exploration on how deep learning methods can perform on predicting critical transition events.
 We compare the ability of several cutting edge machine learning approaches against statistical and process-based models, and show that deep learning methods are generally able to strike a middle ground between what we consider as acceptable and ideal case forecasting methods, ARIMA and MCMC-based parameter estimation respectively.
-Although most ML-based forecasting applications focus on point predictions, we have emphasized examples that can provide a meaningful estimate of uncertainty.
+Although most ML-based forecasting applications focus on point predictions, we have emphasized examples that can provide informative estimates of uncertainty.
 When the ML models are able to observe transition phenomena, as in the stochastic case, they performed comparably to MCMC-based forecasting with respect to CRPS and log probability score but under-performed MCMC when there were no transition events in the training sets as in the Hopf and saddle-node examples.
 An ensemble forecast combining the predictions of all four ML methods generally scores as well or better than any one of the ML methods alone.
 Yet, examining summary statistics, CRPS and log probability scores obscures finer detailed components of the forecasts.
 For instance, forecast skill varies with the length of the forecast horizon in a non-monotonic fashion. 
 This is the result of multiple factors: for some dynamics, such as those involving tipping points, the long term behavior can be easier to predict than transient transitions. 
 Both predicted uncertainty and forecast skill can be better on longer horizons than on shorter ones, as in the MCMC predictions of tipping point dynamics.
-It is also important to remember that probabilistic forecast skill scores do not only measure how close observations are to expectation, but also reflect the predicted uncertainty: therefore, over-confidence about predictive accuracy can result in worse scores than less accurate on average but correctly reflect a greater degree of uncertainty. <!-- MFL: "that are less accurate"?-->
+It is also important to remember that probabilistic forecast skill scores do not only measure how close observations are to expectation, but also reflect the predicted uncertainty: therefore, over-confidence about predictive accuracy can result in worse scores than the scores of forecasts that are less accurate on average but correctly reflect a greater degree of uncertainty.
 The ability to better reflect uncertainty rather than better average predictions explains much of the performance of the ensemble model.
 
 The success of these ML models on the stochastic transition case is particularly notable.
@@ -514,7 +517,7 @@ While even one observation of a transition is more than the methods have in our 
 Unlike the MCMC case, the ML models have no prior expectation of a model structure that contains sharp transitions -- we might have expected these models to perform little differently than the ARIMA model. 
 Given this single replicate, all four ML models successfully capture the phenomenological pattern of a sharp shift between two stable states -- this is behavior that the structurally simpler family of ARIMA models cannot express.
 This provides a clear illustration of the much broader array of phenomenological behaviors that can be accurately modeled with ML models compared to classical statistical models.
-In this way, the ML models can be seen to impose even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
+In this way, the ML models can be seen as imposing even fewer assumptions on the phenomenological behavior of the system than the ARIMA model.
 In contrast, the MCMC performance benefits from very strong process-based assumptions, which happen to match the 'true' model in this case and thus provide a comparison of the theoretical optimal performance.
 
 The MCMC case illustrates some of the hard limits to ecological forecasting of critical transitions.
