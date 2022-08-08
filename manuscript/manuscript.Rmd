@@ -522,9 +522,9 @@ In contrast, the MCMC performance benefits from very strong process-based assump
 
 The MCMC case illustrates some of the hard limits to ecological forecasting of critical transitions.
 Our MCMC forecast assumes the _true_ model structure, the data-generating process, is known, and the forecaster need only infer the posterior distribution of model parameters.
-This is a much stronger assumption than that made by the ML models, though it can potentially be justified on the basis of a mechanistic understanding of the processes involved.
+This is a much stronger assumption than that made by the ML models, though this assumption can potentially be justified on the basis of a mechanistic understanding of the processes involved.
 It is important not to confound the MCMC example here with the use of MCMC in process based models of real systems.
-In the real world, this is never the case: all models are at best approximations of the underlying processes [@Oreskes1994].
+In the real world, this is never the case: all models are at best approximations of the underlying processes [@Oreskes1994]. <!-- ML: maybe "In the real world, having access to the _true_ model is never the case:"-->
 Despite this advantage, even the MCMC forecasts differ from the distribution of the true process.
 Because the available data come from only a small region of the dynamical state space, they are consistent with many possible parameterizations of the same model structure -- which creates likelihood ridges and non-identifiability of specific parameter values.
 Using more simplified versions of the dynamical processes in question, such as the canonical form of a bifurcation, can mitigate this issue in some cases.
@@ -554,7 +554,7 @@ The ability for ML models to successfully generalize from training in such cases
 
 There are a number of questions that we have left unanswered that we hope will be addressed in future work.
 In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so comprehensive conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
-Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties. <!-- MFL: I think we could cut this paragraph out completely now -->
+Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties like how to deal with missing data, sparse data or observation error.
 
 Furthermore, our analysis has focused on the task of making a single forecast prior to the occurrence of a critical transition.
 Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@dietze_iterative_2018]. 
