@@ -554,7 +554,7 @@ The ability for ML models to successfully generalize from training in such cases
 
 There are a number of questions that we have left unanswered that we hope will be addressed in future work.
 In this paper, we have explored a small number of machine learning and statistical models that can be used for forecasting, so comprehensive conclusions can not be drawn on whether statistical or machine learning-based approaches are better suited for tipping point forecasting problems.
-Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties like how to deal with missing data, sparse data or observation error.
+Neither can we claim that the ML methods employed will translate well to all sudden transition event forecasting problems in reality, since working with real data will introduce additional difficulties like how to deal with missing data, sparse data or observation errors.
 
 Furthermore, our analysis has focused on the task of making a single forecast prior to the occurrence of a critical transition.
 Forecasting is ideally a more iterative process of data assimilation, where forecasts are updated with respect to additional observations, rather than projecting 100s of time steps into the future [@dietze_iterative_2018]. 
