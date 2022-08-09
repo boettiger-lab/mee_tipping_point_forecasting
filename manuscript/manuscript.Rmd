@@ -566,7 +566,7 @@ We have focused on these illustrative examples accompanied by an extensive appen
 We encourage the reader to use these appendices as an entry point into further exploration.
 
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
-This paper is not intended to give a complete answer to whether machine learning models are the the best methods to use on any tipping point forecasting problem as this will take numbers of studies to resolve; instead, this study aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of forecasting problems.
+This paper is not intended to give a complete answer to whether machine learning models are the the methods that are best suited for tipping point forecasting problems as this will take numerous studies to resolve; instead, this study aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of prediction problems.
 Since we have shown that ML models can make good forecasts on our selected tipping point scenarios, particularly the stochastic transition case, we have established that these deep learning models are promising methods for critical transition forecasting problems.
 
 # Acknowledgements
