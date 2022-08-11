@@ -614,7 +614,7 @@ This paper is not intended to give a complete answer to whether deep learning is
 Given the difficulty of forecasting never-before-observed behavior, as illustrated by the Hopf and saddle-node bifurcation scenarios, there is good reason for research to focus more on the kind of qualitative predictions long emphasized in the literature on early warning signals and resilience [@scheffer2015].
 Recently, ML techniques developed for classification rather than the ML methods used in regression and forecasting models considered here have demonstrated a more nuanced ability to reliably detect different classes of critical transitions in time-series data [@bury2021; @lapeyrolerie2021].
 Rather than seeking to provide managers with quantitative, probabilistic forecasts reflecting a broad uncertainty in possible outcomes, this literature has sought to emphasize only a more qualitative form of prediction, such as establishing whether a system is either "resilient" or "approaching a critical transition."
-Decision sciences have long emphasized the importance of reconciling the qualitative predictions of resilience thinking with quantitative forecasts of future states [@folke2009; @polasky2011].
+Decision sciences have long emphasized the importance of reconciling the qualitative predictions of resilience thinking with quantitative forecasts of future states [@fischer2009; @polasky2011].
 Such approaches could be valuable in concert with probabilistic forecasts considered here, providing a possible mechanism to identify when the probabilistic forecast is least reliable.
 
 
