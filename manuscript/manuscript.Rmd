@@ -67,7 +67,16 @@ These challenges are nowhere more evident than in _critical transitions_, sudden
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
 We evaluate the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
 
-In this paper, we focus on the task of producing quantitative, probabilistic forecasts reflecting the possible distribution of future states. It is important to distinguish this objective from the extensive previous literature on “early warning signs” of critical transitions, as reviewed in @scheffer_early-warning_2009, which has sought to answer only a categorical question: is the system approaching a critical transition? More recent work by @bury_2021 has introduced ML methods to consider classification of this transition in four possible categories (Hopf, saddle-node, transcritical, or no bifurcation) rather than two (bifurcation or not). These are important results with considerable success, but do not answer the questions of when a shift might occur or how large that transition will be. In light of increasing calls for the importance of such quantitative, probabilistic forecasts [@dietze_iterative_2018], we focus on evaluating the potential and limits to prediction in critical transition scenarios.
+In this paper, we focus on the task of producing quantitative, probabilistic forecasts reflecting the possible distribution of future states, as frequently called for in ecological research [@clark2001; @dietze_iterative_2018].
+Such forecasting tasks may arise whenever a manager is interested in knowing the future states of a system: such as setting future catch quotas for a fishery or adjusting eradication effort for an invasive species.
+It is important to distinguish this objective from the extensive previous literature on “early warning signs” of critical transitions, as reviewed in @scheffer_early-warning_2009, which has sought to answer only a categorical question: is the system approaching a critical transition?
+Recent work such as @bury_2021 has introduced ML methods to consider classification of this transition in four possible categories (Hopf, saddle-node, transcritical, or no bifurcation) rather than two (bifurcation or not).
+These are important results that with considerable promise [@lapeyrolerie2021], but which nevertheless address a very different question using very different methods. 
+Early warning signals only predict "a big change may be coming soon" -- they do not try to forecast when or how big.
+As we shall see, there is good reason to focus on that more modest, qualitative objective when faced with systems that might produce critical transitions.
+Here, we examine the more ambitious questions of forecasting when and how much change: or more precisely, of making probabilistic forecasts of all future states over a given time horizon.
+
+
 
 # Materials and Methods
 
@@ -98,7 +107,7 @@ We expect greater convergence between methods available in R and Python in the f
 Complete code for all examples presented here can be found at https://github.com/boettiger-lab/mee_tipping_point_forecasting.
 
 
-```{r figure1, fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and replicate simulations of the true dynamics ('future ensemble') in yellow. Note how the characteristic time for the critical transition varies across the transitions. We will examine various models which will each produce probablistic forecast distributions (blue, Fig 3-5) seeking to match the true future ensemble (yellow) as closely as possible.", fig.height=6}
+```{r figure1, fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and replicate simulations of the true dynamics ('future ensemble') in yellow. Note how the characteristic time for the critical transition varies across the transitions. We will examine forecasts of various models (Fig 2) which will each produce probablistic forecast distributions (blue, Fig 3-5) seeking to match the true future ensemble (yellow) as closely as possible.", fig.height=6}
 hopf <- read_csv("../greta/forecasts/simulation=hopf/hopf_increasing.csv.gz")
 panelA <- hopf |> 
   mutate(type = as.factor(type)) |>
@@ -159,6 +168,7 @@ K_{t+1} &= K_t + \delta
 \end{align}
 
 Where $H_t$ is the population density of the host species at time $t$, (in arbitrary units) and $P_t$ the population density of the parasitoid.
+The time step is defined by the generation time of the parasitoid, which is about two weeks in the case of Nicholson's blowflies [@nicholson_outline_1954].
 Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at a linear rate, which drives a supercritical Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern which grows in amplitude as the bifurcation parameter continues to increase.
 In this model, the Hopf bifurcation is dubbed 'supercritical' as it creates a stable limit cycle instead of an unstable one.
@@ -205,26 +215,22 @@ In this context, predicting the probability of a transition in the future based 
 Unlike the saddle-node bifurcation, there is no slowly warping potential basin which can be detected to inform estimates. 
 Thus, in this scenario, rather than considering the problem of predicting the future evolution of a single time series based only on its historical values, we consider an alternative framing of the task:
 we imagine our forecaster has access to historical data from one or more comparable systems which includes a previous stochastic transition event.
-Based on this data, our forecaster seeks to identify the distribution of expected transition times for analagous systems starting from the same initial condition. 
+Based on this data, our forecaster seeks to identify the distribution of expected transition times for analogous systems starting from the same initial condition. 
 This parallels actual practice in which researchers would draw on previous examples of stochastic transitions in a system - lake-ecosystem shifts, disease emergence, changing fire regimes, [@Scheffer2001; @Folke2004].
 (Note that such stochastic transitions between alternative stable states can also create oscillatory-like dynamics when stochasticity is sufficiently high enough to drive repeated transitions from one attractor to the other and back again. In such cases, it might be reasonable to estimate a strictly forward-looking forecast of a single system, predicting the distribution of these transitions.)
 Model definition is the same as May's model for the saddle node with fixed parameter $h$, values: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = h = 0.26$, $\alpha = 0$, $\sigma = 0.02$, $N_0 = 0.55$.
 
 
 **Selecting timescales**
-In each scenario,  t = 0 is the start time of the training data, while the length of training data and forecast horizon (with ensembles sampled from the true distribution) is illustrated in Figure 1. 
+In each scenario,  t = 0 is the start time of the training data, while the length of training data and forecast horizon (with ensembles sampled from the true distribution) is illustrated in Fig 1. 
 For the Hopf bifurcation, forecast begins at t=100 and extends to t =200, for the saddle node, forecast begins at t=250 and extends to t = 500, for the stochastic transition, both training data and forecasting tasks begin at 0 and extend to t = 250. 
 While much attention is often paid to the number of data points in training or testing data, it is essential to realize that these are only meaningful relative to the specific process in question. 
 Thus, in each case we have selected these time intervals to focus on the dynamical process in question, which unfolds at a different rate and tempo in each scenario. 
-For instance, if the stochastic scenario was restricted to a much shorter timescale used in the hopf case, few replicate simulations would experience a transition at all. 
+For instance, if the stochastic scenario was restricted to a much shorter timescale used in the Hopf case, few replicate simulations would experience a transition at all. 
 If it were made much longer, most of the timeseries would be spent post-transition. 
 Likewise, if the forecast for the Hopf scenario was extended much further into the future under the current parameterization, the system experiences a homoclinic bifurcation at which the population collapses to 0. 
-Using different length timescales allows us to consider the three different forecasting tasks illustrated in Figure 1 that focus around predicting the critical behavior, rather than predicting long periods of relative stasis.
+Using different length timescales allows us to consider the three different forecasting tasks illustrated in Fig 1 that focus around predicting the critical behavior, rather than predicting long periods of relative stasis.
 These three critical transitions are fundamentally different processes, there is no perfect apples-to-apples parameterization for each that allows the transition to unfold in a way that gives precisely the same time windows.
-
-
-
-time at which to start the forecast in each scenario relative to the timing of the bifurcation event (in the case of Hopf and Saddle Node), and relative to the expected distribution of transitions in the stochastic case. The rate at which the dynamical process unfolds in each case depends on the parameter values of the model in question. At much
 
 
 ## Method group 1: Markov Chain Monte Carlo
@@ -361,14 +367,15 @@ shift |>
 ```
 
 
-Overall forecasting skill scores for each model across all three scenarios are summarized in figure 2.
+Overall forecasting skill scores for each model across all three scenarios are summarized in Fig 2.
 Average scores (black lines) hide wide variation in forecast skill.
 Generally, ML performance tends to be bracketed between MCMC (essentially the theoretical optimum), and the statistical ARIMA model, though sometimes performing worse than ARIMA or better than MCMC.
 Under scenarios with alternative stable states (saddle and stochastic), the distribution of scores is often bimodal for ML models, though not MCMC. 
 The ML ensemble model often performs as well as the best ML model on average.
 Note that a wide prediction of uncertainty does not mean a wide range in the score skill -- for instance the ensemble model which has the widest array of outcomes often has a relatively tight distribution of score, especially in logs skill.
 This reflects the relative contributions of accuracy and uncertainty as components in the forecasts.
-Overall, ML scores are comparable to MCMC skill except for the scenario of the saddle-node bifurcation, where all other models are much worse.
+Most ML scores are comparable to MCMC skill except for the scenario of the saddle-node bifurcation, where all other models are much worse.
+Th get a deeper understanding of these general patterns, we now turn to examine each of the forecast distributions themselves in comparison to the future ensemble produced by the true generative process model, Fig 3-5.
 
 
 ```{r}
@@ -389,7 +396,7 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```
 
-```{r figure3}
+```{r figure3, fig.height=7}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
 #|  The bifurcation occurs soon after forecasting period begins, 
 #| leading to progressively larger and larger oscillations. 
@@ -414,7 +421,7 @@ forecasts  |>
 
 
 
-Forecasts of the Hopf bifurcation (Figure 3) are roughly comparable across the phenomenological models (ARIMA and machine learning models).
+Forecasts of the Hopf bifurcation (Fig 3) are roughly comparable across the phenomenological models (ARIMA and machine learning models).
 All models are trained using 100 time points drawn from the period of time prior to the onset of the Hopf bifurcation, which leads to a stable limit cycle that gradually grows in magnitude.
 Most models predict a roughly constant mean with a spread roughly equal to that created by the stochastic oscillations around the stable node as seen in the training data prior to the bifurcation.
 Notably, the GRU method picks up the oscillatory nature of the dynamics, despite the fact that no true oscillations were yet present in the training data.
@@ -446,7 +453,7 @@ forecasts |>
   ggtitle("Saddle-Node bifurcation")
 ```
 
-The saddle node bifurcation proves even more difficult for most methods (Figure 4).
+The saddle node bifurcation proves even more difficult for most methods (Fig 4).
 Only the MCMC model anticipates the sharp transition to an alternative state, though this behavior is more baked into the method from the start which takes the true model structure as given. 
 Even accurate estimation of the MCMC requires slightly informative priors, though still broad enough to reflect a wide range of possible outcomes. 
 Two ML methods -- Block RNNs and Transformers -- resemble a naive prediction extrapolating the last observed state, failing even to reflect the slow downward trend of the training data. 
@@ -488,7 +495,7 @@ Comparing CRPS scores to logs score also emphasizes the relative role of uncerta
 A relatively sharp transition can be seen under both MCMC scores on the Hopf bifurcation once the magnitude of the oscillations exceeds the variance created by mere stochasticity: the MCMC model no longer over-estimates the spread of the data, while the ML models now underestimate that variation. 
 CRPS scores for stochastic transitions exhibit a distinct two-branch pattern, with scores for a given replicate being either very high (poor skill) or very low, reflecting whether the individual 'true' replicate matches the mean state predicted by the forecast or the other state. 
 Logs skill score may be a better measure in this context, where correctly capturing the uncertainty in the forecast means that this bi-modal structure in scores can be avoided entirely, e.g. by the MCMC predictions. 
-The forecast-skill-over time plots illustrate different reasons for the bi-modal distribution in skill seen for the saddle-node and stochastic transition scenarios in Figure 2 respectively: in the case of the saddle node, the two modes are distinguished by time-horizon: short term forecasts are relatively accurate, longer term forecasts (i.e. after the catastrophic transition) are poor.
+The forecast-skill-over time plots illustrate different reasons for the bi-modal distribution in skill seen for the saddle-node and stochastic transition scenarios in Fig 2 respectively: in the case of the saddle node, the two modes are distinguished by time-horizon: short term forecasts are relatively accurate, longer term forecasts (i.e. after the catastrophic transition) are poor.
 In the case of the stochastic transition model, the two modes are not structured by horizon but by replicate, with some replicates having transitioned and others still in the original state.
 
 
@@ -514,7 +521,7 @@ shift |>
 ```{r figure7}
 #| fig.cap="Logs skill score over time. 
 #|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
-#|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
+#|  Comparing this panel to those in Fig 6 highlights scenarios that most often underestimate uncertainty. 
 #|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
 #| reflecting the bias-variance tradeoff of machine learning."
 
@@ -603,8 +610,14 @@ We have focused on these illustrative examples accompanied by an extensive appen
 We encourage the reader to use these appendices as an entry point into further exploration.
 
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
-This paper is not intended to give a complete answer to whether deep learning is the best suited method for tipping point forecasting problems as this will take numerous studies to resolve; instead, this paper aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of prediction problems. <!-- I think here would perhaps be a good place to flesh out "promising" tag, stuck on how to do so-->
-Since we have shown that ML models can make relatively good forecasts on our selected tipping point scenarios, particularly the stochastic transition case, we have established that these deep learning models are worthy of further investigation regarding their application to critical transition forecasting problems.
+This paper is not intended to give a complete answer to whether deep learning is the best suited method for tipping point forecasting problems as this will take numerous studies to resolve; instead, this paper aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of prediction problems.
+Given the difficulty of forecasting never-before-observed behavior, as illustrated by the Hopf and saddle-node bifurcation scenarios, there is good reason for research to focus more on the kind of qualitative predictions long emphasized in the literature on early warning signals and resilience [@scheffer2015].
+Recently, ML techniques developed for classification rather than the ML methods used in regression and forecasting models considered here have demonstrated a more nuanced ability to reliably detect different classes of critical transitions in time-series data [@bury2021; @lapeyrolerie2021].
+Rather than seeking to provide managers with quantitative, probabilistic forecasts reflecting a broad uncertainty in possible outcomes, this literature has sought to emphasize only a more qualitative form of prediction, such as establishing whether a system is either "resilient" or "approaching a critical transition."
+Decision sciences have long emphasized the importance of reconciling the qualitative predictions of resilience thinking with quantitative forecasts of future states [@folke2009; @polasky2011].
+Such approaches could be valuable in concert with probabilistic forecasts considered here, providing a possible mechanism to identify when the probabilistic forecast is least reliable.
+
+
 
 # Acknowledgements
 
