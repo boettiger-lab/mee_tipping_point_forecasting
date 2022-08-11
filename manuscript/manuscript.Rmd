@@ -98,7 +98,7 @@ We expect greater convergence between methods available in R and Python in the f
 Complete code for all examples presented here can be found at https://github.com/boettiger-lab/mee_tipping_point_forecasting.
 
 
-```{r fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and replicate simulations of the true dynamics ('future ensemble') in yellow. Note how the characteristic time for the critical transition varies across the transitions. We will examine various models which will each produce probablistic forecast distributions (blue, Fig 3-5) seeking to match the true future ensemble (yellow) as closely as possible.", fig.height=6}
+```{r figure1, fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and replicate simulations of the true dynamics ('future ensemble') in yellow. Note how the characteristic time for the critical transition varies across the transitions. We will examine various models which will each produce probablistic forecast distributions (blue, Fig 3-5) seeking to match the true future ensemble (yellow) as closely as possible.", fig.height=6}
 hopf <- read_csv("../greta/forecasts/simulation=hopf/hopf_increasing.csv.gz")
 panelA <- hopf |> 
   mutate(type = as.factor(type)) |>
@@ -342,7 +342,7 @@ shift <- scores |>
 ```
 
 
-```{r}
+```{r figure2, dev="png", dpi=300, dev.args = list(type = "cairo-png"), out.width="400px", out.height="300px"}
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
 #|  Smaller scores are better (indicating smaller errors).
 #|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
@@ -388,7 +388,7 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```
 
-```{r}
+```{r figure3}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
 #|  The bifurcation occurs soon after forecasting period begins, 
 #| leading to progressively larger and larger oscillations. 
@@ -425,7 +425,7 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 
 <!-- would be interesting to revisit this with lower stochasticity such that the cyclic behavior is more crisp, and the quasi-cycles in the training data are smaller-->
 
-```{r }
+```{r figure4}
 #| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
 #|  Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
@@ -454,7 +454,7 @@ With additional tuning, better performance may be possible for these ML models.
 The selected ARIMA model reflects wide uncertainty that is nevertheless not broad enough to span the alternative stable state.
 Consequentially, the MCMC estimate easily outperforms the ML models (Fig 2).
 
-```{r}
+```{r figure5}
 #| fig.cap = "Forecasts of the stochastic transition under each model, compared to 15 realizations of the true model. 
 #|  In contrast to the other challenges, this case considers the prediction of replicate systems starting from the same initial condition, rather than forecasting the future evolution of the model after the stochastic transition has already occurred."
 forecasts |>
@@ -491,7 +491,7 @@ The forecast-skill-over time plots illustrate different reasons for the bi-modal
 In the case of the stochastic transition model, the two modes are not structured by horizon but by replicate, with some replicates having transitioned and others still in the original state.
 
 
-```{r}
+```{r figure6}
 #| fig.cap="CRPS scores over time for each scenario.
 #|  Each line represents the scores against a replicate of time series observations from 'true model'. 
 #|  Patterns show forecast skill generally get worse over time -- gradually 
@@ -510,7 +510,7 @@ shift |>
   theme_bw()  + ggtitle("CRPS scores over time")
 ```
 
-```{r}
+```{r figure7}
 #| fig.cap="Logs skill score over time. 
 #|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
 #|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
