@@ -98,7 +98,7 @@ We expect greater convergence between methods available in R and Python in the f
 Complete code for all examples presented here can be found at https://github.com/boettiger-lab/mee_tipping_point_forecasting.
 
 
-```{r fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and ensemble replicate simulations of the the future dynamics in yellow. Note how the characteristic time for the critical transition varies across the transitions. Compare to forecasts shown in figures 3-5 (forecasted timeseries always shown in blue).", fig.height=6}
+```{r fig.cap="Forecast scenarios. A. The Hopf bifurcation: a stable node develops into a limit cycle which gradually grows larger in this predator-prey model. B. The saddle-node bifurcation in a single species. C. The stochastic transition in a single species.  Plots show historical data used to train the algorithm in purple, and replicate simulations of the true dynamics ('future ensemble') in yellow. Note how the characteristic time for the critical transition varies across the transitions. We will examine various models which will each produce probablistic forecast distributions (blue, Fig 3-5) seeking to match the true future ensemble (yellow) as closely as possible.", fig.height=6}
 hopf <- read_csv("../greta/forecasts/simulation=hopf/hopf_increasing.csv.gz")
 panelA <- hopf |> 
   mutate(type = as.factor(type)) |>
