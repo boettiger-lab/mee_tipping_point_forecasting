@@ -158,6 +158,7 @@ K_{t+1} &= K_t + \delta
 \label{hopf}
 \end{align}
 
+Where $H_t$ is the population density of the host species at time $t$, (in arbitrary units) and $P_t$ the population density of the parasitoid.
 Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at a linear rate, which drives a supercritical Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern which grows in amplitude as the bifurcation parameter continues to increase.
 In this model, the Hopf bifurcation is dubbed 'supercritical' as it creates a stable limit cycle instead of an unstable one.
