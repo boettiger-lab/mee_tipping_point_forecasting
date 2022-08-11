@@ -78,7 +78,7 @@ Though these models may appear simple when measured against high-dimensional and
 These textbook models have been well studied and form the basis of half a century of research in ecology, including much recent work on topics such as resilience and tipping points which has had important theoretical and practical management outcomes [@Folke2004; @Fischer2009; @Polasky2011].
 May's model exhibits alternative stable states. 
 In this one-dimensional model, transitions between these states can occur due to intrinsic stochasticity, external forcing, or the gradual environmental change that results in a catastrophic saddle-node bifurcation and generates hysteresis. 
-The Nicholson-Bailey model is a two species model which contains a super-critical Hopf bifurcation, a non-catastrophic bifurcation which either creates or destroys a limit cycle -- a stable oscillatory pattern. 
+The Nicholson-Bailey model is a two species model which contains a supercritical Hopf bifurcation, a non-catastrophic bifurcation which either creates or destroys a limit cycle -- a stable oscillatory pattern. 
 
 Assessing the accuracy of forecasting methods in the face of such bifurcation dynamics is a particularly important question for ecological systems and global environmental change problems.
 Bifurcations represent the kind of non-linear responses complex systems can make as the result of slowly changing parameters.
@@ -158,9 +158,9 @@ K_{t+1} &= K_t + \delta
 \label{hopf}
 \end{align}
 
-Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at a linear rate, which drives a super-critical Hopf bifurcation as $K$ becomes sufficiently large. 
+Following @dakos_methods_2012, we further allow the carrying capacity of the host, $K$ to slowly increase at a linear rate, which drives a supercritical Hopf bifurcation as $K$ becomes sufficiently large. 
 In a Hopf bifurcation, a stable node starts an oscillatory pattern which grows in amplitude as the bifurcation parameter continues to increase.
-In this model, the Hopf bifurcation is dubbed 'super-critical' as it creates a stable limit cycle instead of an unstable one.
+In this model, the Hopf bifurcation is dubbed 'supercritical' as it creates a stable limit cycle instead of an unstable one.
 This example illustrates one of the many kinds of challenges which nonlinear phenomena pose to forecasting: the "historical" data prior to the bifurcation never exhibit the cyclical dynamics of growing amplitude that will emerge after the bifurcation occurs.
 If we had used a purely deterministic model, the dynamics would be constrained to a single stable point, corresponding to a slowly changing steady-state population size of host and parasitoid populations.
 However, stochasticity in this case acts as a source of some additional information about the dynamics, as the noise excites quasi-cycles which are visible in the irregular oscillations that appear significantly prior to the emergence of true limit cycles which follow the bifurcation [@boettiger_noise_2018].
@@ -578,7 +578,7 @@ Nevertheless, this should be an important reminder of a central difficulty in ec
 Note that in such scenarios, near-term forecasts [@dietze_iterative_2018] may be very accurate right up to the transition event before becoming widely wrong. 
 Nor can the possibility of such non-linear behavior be easily dismissed in ecological models -- the examples considered here have been bedrock of ecological modeling and management practices for over half a century [@Folke2004], and if anything are only too simple, representing a small slice of possible dynamical behavior of more complicated models.
 
-It may be natural to ask whether this performance would be remedied if the ML models were trained on data which includes prior examples of super-critical Hopf or saddle node bifurcations. 
+It may be natural to ask whether this performance would be remedied if the ML models were trained on data which includes prior examples of supercritical Hopf or saddle node bifurcations. 
 This question is not as easy to answer as it may seem, because of the difficulty in defining the corresponding forecasting scenario.
 The scenarios we have considered are true, pure forecasts: the training data comes from a single realization of a specific generative process, and the task is to predict the future states of that system before they occur.
 Would it be possible to train a predictive algorithm on 'analogous' examples of critical transitions?
