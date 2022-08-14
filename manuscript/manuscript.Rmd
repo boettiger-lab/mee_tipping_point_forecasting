@@ -31,6 +31,7 @@ header-includes:
   - \usepackage{amssymb}
   - \usepackage{lineno}
   - \usepackage{setspace}
+  - \usepackage{bbm}
   - \linenumbers
   - \doublespacing
   
@@ -290,14 +291,20 @@ Stuff about how most machine learning techniques provide only point forecasts
 To compare forecasts, we focus exclusively on metrics of forecast skill which satisfy the property from @gneiting_strictly_2007 of a strictly proper score.
 This ensures the very desirable behavior that no probabilistic forecast $Q(x,t)$ can have a score as high as the score of the true process $P(x,t)$ on average. 
 In other words, while it is possible for any of the models considered to _overfit_ the data against which they are trained, i.e. have a higher likelihood than the true process, it is not possible for these models to overfit the data against which they are scored.
-It is worth noting that this property applies specifically to probabilistic forecasts and not point forecasts. Not all common metrics often used to compare forecasts are strictly proper -- such as the average root-mean-square error or the average absolute error. <!-- MFL: hmm I am not completely following this point here. CB: added some examples of non-strictly-proper scoring metrics. For instance, {darts} has a whole 'metrics' class, which does not include any strictly proper metrics (because ML researchers don't care about statistical theorems?) -->
-Concerns about over-fitting arise in most types of model estimation and are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@mehta_high-bias_2019]. <!-- MFL: I don't think I nailed the overfitting part in ML section but we probably want to reference this here-->
+It is worth noting that this property applies specifically to probabilistic forecasts and not point forecasts. Not all common metrics often used to compare forecasts are strictly proper -- such as the average root-mean-square error or the average absolute error.
+Concerns about over-fitting arise in most types of model estimation and are a particularly acute concern to machine learning methods due to the bias-variance trade-off [@mehta_high-bias_2019].
 This makes the use of strictly proper scoring especially relevant in assessing machine learning predictions.
 
 Not even all strictly proper scores will agree on the same relative ranking between forecasts.
 We will focus on two of the most common such skill metrics, CRPS score and log probability score (negative log likelihood) [e.g. see @gneiting_strictly_2007; @gneiting_probabilistic_2014].
+We have defined these two scores explicitly in Equations 7-8, where $F$ and $f$ are the respective CDF's and PDF's from a probabilistic forecast, and $y$ refers to an observation.
 Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS, and may be more suitable when the occurrence of unexpected events incurs a particularly high cost.
 Note that while the minus log-likelihood can be negative for sufficiently high probability densities, we use a fixed scalar shift of logs score to ensure the log skill score is strictly positive, which facilitates visualization without impacting relative rankings.
+
+\begin{align} 
+\text{LogS}(F, y) &= -\log{f(y)} \\
+\text{CRPS}(F, y) &= -\int (F(z) - \mathbbm{1}\{y \leq z\})^2 \, dz
+\end{align}
 
 # Results
 
