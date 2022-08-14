@@ -30,6 +30,7 @@ header-includes:
   - \usepackage{amsmath}
   - \usepackage{amssymb}
   - \usepackage{lineno}
+  - \usepackage{bbm}
   - \usepackage{setspace}
   - \linenumbers
   - \doublespacing
@@ -67,11 +68,11 @@ These challenges are nowhere more evident than in _critical transitions_, sudden
 Here, we examine several of the best-known examples of critical transitions in ecological systems.
 We evaluate the most promising machine learning methods for probabilistic forecasts relative to traditional statistical and mechanistic approaches applied to several classic models in ecology.
 
-In this paper, we focus on the task of producing quantitative, probabilistic forecasts reflecting the possible distribution of future states, as frequently called for in ecological research [@clark2001; @dietze_iterative_2018].
+In this paper, we focus on the task of producing quantitative, probabilistic forecasts reflecting the possible distribution of future states, as frequently called for in ecological research [@clark_ecological_2001; @dietze_iterative_2018].
 Such forecasting tasks may arise whenever a manager is interested in knowing the future states of a system: such as setting future catch quotas for a fishery or adjusting eradication effort for an invasive species.
 It is important to distinguish this objective from the extensive previous literature on “early warning signs” of critical transitions, as reviewed in @scheffer_early-warning_2009, which has sought to answer only a categorical question: is the system approaching a critical transition?
 Recent work such as @bury_2021 has introduced ML methods to consider classification of this transition in four possible categories (Hopf, saddle-node, transcritical, or no bifurcation) rather than two (bifurcation or not).
-These are important results that with considerable promise [@lapeyrolerie2021], but which nevertheless address a very different question using very different methods. 
+These are important results with considerable promise [@lapeyrolerie_teaching_2021], but which nevertheless address a very different question using very different methods. 
 Early warning signals only predict "a big change may be coming soon" -- they do not try to forecast when or how big.
 As we shall see, there is good reason to focus on that more modest, qualitative objective when faced with systems that might produce critical transitions.
 Here, we examine the more ambitious questions of forecasting when and how much change: or more precisely, of making probabilistic forecasts of all future states over a given time horizon.
@@ -221,7 +222,7 @@ This parallels actual practice in which researchers would draw on previous examp
 Model definition is the same as May's model for the saddle node with fixed parameter $h$, values: $r = 1$, $K = 1$, $s = 0.1$, $h_0 = h = 0.26$, $\alpha = 0$, $\sigma = 0.02$, $N_0 = 0.55$.
 
 
-**Selecting timescales**
+## Selecting timescales
 In each scenario,  t = 0 is the start time of the training data, while the length of training data and forecast horizon (with ensembles sampled from the true distribution) is illustrated in Fig 1. 
 For the Hopf bifurcation, forecast begins at t=100 and extends to t =200, for the saddle node, forecast begins at t=250 and extends to t = 500, for the stochastic transition, both training data and forecasting tasks begin at 0 and extend to t = 250. 
 While much attention is often paid to the number of data points in training or testing data, it is essential to realize that these are only meaningful relative to the specific process in question. 
@@ -322,8 +323,14 @@ This makes the use of strictly proper scoring especially relevant in assessing m
 
 Not even all strictly proper scores will agree on the same relative ranking between forecasts.
 We will focus on two of the most common such skill metrics, CRPS score and log probability score (negative log likelihood) [e.g. see @gneiting_strictly_2007; @gneiting_probabilistic_2014].
-Of the two, the logs probability score puts a much a greater penalty on unexpected observations than CRPS, and may be more suitable when the occurrence of unexpected events incurs a particularly high cost.
+We define these scores explicitly in Equations 7-8, where $F$ and $f$ respectively correspond to the cumulative distribution function and probability density function of the forecast; and, $y$ denotes an observation.
+Of the two metrics, the logs probability score puts a much a greater penalty on unexpected observations than CRPS, and may be more suitable when the occurrence of unexpected events incurs a particularly high cost.
 Note that while the minus log-likelihood can be negative for sufficiently high probability densities, we use a fixed scalar shift of logs score to ensure the log skill score is strictly positive, which facilitates visualization without impacting relative rankings.
+
+\begin{align}
+\text{LogS}(F, y) &= - \log{f(y)} \\
+\text{CRPS}(F, y) &= \int (F(z) - \mathbbm{1}\{y \leq z\})^2 \, dz
+\end{align}
 
 # Results
 
@@ -611,10 +618,10 @@ We encourage the reader to use these appendices as an entry point into further e
 
 Ecological forecasting is invariably difficult, even in the idealized cases of ample measurement data and clearly identified structural models.
 This paper is not intended to give a complete answer to whether deep learning is the best suited method for tipping point forecasting problems as this will take numerous studies to resolve; instead, this paper aims to be an early exploration on whether deep learning methods should be considered as viable tools for this extremely challenging class of prediction problems.
-Given the difficulty of forecasting never-before-observed behavior, as illustrated by the Hopf and saddle-node bifurcation scenarios, there is good reason for research to focus more on the kind of qualitative predictions long emphasized in the literature on early warning signals and resilience [@scheffer2015].
-Recently, ML techniques developed for classification rather than the ML methods used in regression and forecasting models considered here have demonstrated a more nuanced ability to reliably detect different classes of critical transitions in time-series data [@bury2021; @lapeyrolerie2021].
+Given the difficulty of forecasting never-before-observed behavior, as illustrated by the Hopf and saddle-node bifurcation scenarios, there is good reason for research to focus more on the kind of qualitative predictions long emphasized in the literature on early warning signals and resilience [@scheffer_anticipating_2012].
+Recently, ML techniques developed for classification rather than the ML methods used in regression and forecasting models considered here have demonstrated a more nuanced ability to reliably detect different classes of critical transitions in time-series data [@bury_2021; @lapeyrolerie_teaching_2021].
 Rather than seeking to provide managers with quantitative, probabilistic forecasts reflecting a broad uncertainty in possible outcomes, this literature has sought to emphasize only a more qualitative form of prediction, such as establishing whether a system is either "resilient" or "approaching a critical transition."
-Decision sciences have long emphasized the importance of reconciling the qualitative predictions of resilience thinking with quantitative forecasts of future states [@fischer2009; @polasky2011].
+Decision sciences have long emphasized the importance of reconciling the qualitative predictions of resilience thinking with quantitative forecasts of future states [@Fischer2009; @polasky_decision-making_2011].
 Such approaches could be valuable in concert with probabilistic forecasts considered here, providing a possible mechanism to identify when the probabilistic forecast is least reliable.
 
 
