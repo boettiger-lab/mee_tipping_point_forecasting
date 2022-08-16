@@ -92,7 +92,7 @@ The Nicholson-Bailey model is a two species model which contains a supercritical
 
 Assessing the accuracy of forecasting methods in the face of such bifurcation dynamics is a particularly important question for ecological systems and global environmental change problems.
 Bifurcations represent the kind of non-linear responses complex systems can make as the result of slowly changing parameters.
-This can create a particularly challenging forecasting task when such transitions have not been previously observed in the same system, requiring the forecast to anticipate dynamics for which there are no corresponding analog in the historical data. 
+This can create a particularly challenging forecasting task when such transitions have not been previously observed in the same system, requiring the forecast to anticipate dynamics for which there are no analogs in the historical data. 
 Forecast skill under such no-analog conditions may be particularly relevant to ecological forecasting in the context of global change [@Williams2007].
 
 We provide fully reproducible coded examples in R and Python for performing, scoring, and visualizing each of the forecasts considered here.
@@ -268,7 +268,7 @@ Each model is trained to learn the parameters of a Laplace distribution for ever
 To produce a forecast, we input a time series into a model, then we draw samples from the distributions that were learned during training.
 
 A major nuisance with deep learning methods is their instability to hyperparameters and initialization seeds [@madhyastha_model_2019].
-We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained two models with different initialization seeds.
+We found that for the same set of hyperparameters, we could produce starkly different forecasts if we trained the same model with different initialization seeds.
 One explanation for this instability is that machine learning models often get stuck on the local optima of loss surfaces [@madhyastha_model_2019]. 
 Another likely cause is that machine learning models commonly overfit the training data [@mehta_high-bias_2019].
 Across deep learning, overfitting is a fundamental issue, arising from neural networks being highly overparameterized [@dar_farewell_2021]. 
@@ -382,7 +382,7 @@ The ML ensemble model often performs as well as the best ML model on average.
 Note that a wide prediction of uncertainty does not mean a wide range in the score skill -- for instance the ensemble model which has the widest array of outcomes often has a relatively tight distribution of score, especially in logs skill.
 This reflects the relative contributions of accuracy and uncertainty as components in the forecasts.
 Most ML scores are comparable to MCMC skill except for the scenario of the saddle-node bifurcation, where all other models are much worse.
-Th get a deeper understanding of these general patterns, we now turn to examine each of the forecast distributions themselves in comparison to the future ensemble produced by the true generative process model, Fig 3-5.
+To get a deeper understanding of these general patterns, we now turn to examine each of the forecast distributions themselves in comparison to the future ensemble produced by the true generative process model, Fig 3-5.
 
 
 ```{r}
@@ -434,7 +434,7 @@ Most models predict a roughly constant mean with a spread roughly equal to that 
 Notably, the GRU method picks up the oscillatory nature of the dynamics, despite the fact that no true oscillations were yet present in the training data.
 However, like the other ML models, it fails to predict the growing amplitude of those oscillations.
 Having access to the true model structure, the MCMC model alone predicts the transition into a pattern of oscillations which grows over time, though it tends to overestimate the amplitude of those oscillations initially.
-Despite this, overall all methods score comparably in CRPS score (Fig 2), with most ML methods actually out-performing the MCMC score on average (Fig 5), albeit with much greater variation in individual scores.
+Despite this, overall all methods score comparably in CRPS score (Fig 2) with most ML methods actually out-performing the MCMC score on average (Fig 5), albeit with much greater variation in individual scores.
 A clearer picture can be seen by looking at these skill scores over time (Fig 6-7), which show that MCMC is initially performing worse (over-predicting variance) but as oscillations grow further, it starts outperforming the more stationary forecasts of the ML models.
 
 
@@ -496,13 +496,12 @@ Transformer and Block RNN distribution times are much more concentrated, while a
 
 Examining patterns in the scores over time (Fig 6-7) provides a more nuanced understanding of the forecast dynamics than aggregate scores alone (Fig 2).
 In the Hopf bifurcation, CRPS scores get worse over time across all methods, including the MCMC forecasts.
-In the saddle node bifurcation and stochastic transition, the same pattern holds somewhat more dramatically for non-MCMC forecast,
-while MCMC scores are worst in mid-range.
+In the saddle node bifurcation and stochastic transition, the same pattern holds somewhat more dramatically for non-MCMC forecast, while MCMC scores are worse in mid-range.
 Comparing CRPS scores to logs score also emphasizes the relative role of uncertainty: for instance, the MCMC scores for the Hopf bifurcation get steadily worse under CRPS but not under logs score. 
 A relatively sharp transition can be seen under both MCMC scores on the Hopf bifurcation once the magnitude of the oscillations exceeds the variance created by mere stochasticity: the MCMC model no longer over-estimates the spread of the data, while the ML models now underestimate that variation. 
 CRPS scores for stochastic transitions exhibit a distinct two-branch pattern, with scores for a given replicate being either very high (poor skill) or very low, reflecting whether the individual 'true' replicate matches the mean state predicted by the forecast or the other state. 
 Logs skill score may be a better measure in this context, where correctly capturing the uncertainty in the forecast means that this bi-modal structure in scores can be avoided entirely, e.g. by the MCMC predictions. 
-The forecast-skill-over time plots illustrate different reasons for the bi-modal distribution in skill seen for the saddle-node and stochastic transition scenarios in Fig 2 respectively: in the case of the saddle node, the two modes are distinguished by time-horizon: short term forecasts are relatively accurate, longer term forecasts (i.e. after the catastrophic transition) are poor.
+The forecast-skill-over time plots illustrate different reasons for the bi-modal distribution in skill seen for the saddle-node and stochastic transition scenarios in Fig 2 respectively: in the case of the saddle node, the two modes are distinguished by time-horizon: short term forecasts are relatively accurate, and longer term forecasts (i.e. after the catastrophic transition) are poor.
 In the case of the stochastic transition model, the two modes are not structured by horizon but by replicate, with some replicates having transitioned and others still in the original state.
 
 
