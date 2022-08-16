@@ -92,7 +92,7 @@ The Nicholson-Bailey model is a two species model which contains a supercritical
 
 Assessing the accuracy of forecasting methods in the face of such bifurcation dynamics is a particularly important question for ecological systems and global environmental change problems.
 Bifurcations represent the kind of non-linear responses complex systems can make as the result of slowly changing parameters.
-This can create a particularly challenging forecasting task when such transitions have not been previously observed in the same system, requiring the forecast to anticipate dynamics for which there are no corresponding analog in the historical data. 
+This can create a particularly challenging forecasting task when such transitions have not been previously observed in the same system, requiring the forecast to anticipate dynamics for which there are no analogs in the historical data. 
 Forecast skill under such no-analog conditions may be particularly relevant to ecological forecasting in the context of global change [@Williams2007].
 
 We provide fully reproducible coded examples in R and Python for performing, scoring, and visualizing each of the forecasts considered here.
