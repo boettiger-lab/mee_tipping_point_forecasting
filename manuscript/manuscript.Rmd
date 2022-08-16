@@ -496,7 +496,7 @@ Transformer and Block RNN distribution times are much more concentrated, while a
 
 Examining patterns in the scores over time (Fig 6-7) provides a more nuanced understanding of the forecast dynamics than aggregate scores alone (Fig 2).
 In the Hopf bifurcation, CRPS scores get worse over time across all methods, including the MCMC forecasts.
-In the saddle node bifurcation and stochastic transition, the same pattern holds somewhat more dramatically for non-MCMC forecast, while MCMC scores are worse in mid-range.
+In the saddle node bifurcation and stochastic transition, the same pattern holds somewhat more dramatically for non-MCMC forecast, while MCMC scores are worst in mid-range.
 Comparing CRPS scores to logs score also emphasizes the relative role of uncertainty: for instance, the MCMC scores for the Hopf bifurcation get steadily worse under CRPS but not under logs score. 
 A relatively sharp transition can be seen under both MCMC scores on the Hopf bifurcation once the magnitude of the oscillations exceeds the variance created by mere stochasticity: the MCMC model no longer over-estimates the spread of the data, while the ML models now underestimate that variation. 
 CRPS scores for stochastic transitions exhibit a distinct two-branch pattern, with scores for a given replicate being either very high (poor skill) or very low, reflecting whether the individual 'true' replicate matches the mean state predicted by the forecast or the other state. 
