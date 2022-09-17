@@ -507,12 +507,11 @@ In the case of the stochastic transition model, the two modes are not structured
 
 ```{r figure6}
 #| fig.cap="CRPS scores over time for each scenario.
-#|  Each line represents the scores against a replicate of time series observations from 'true model'. 
-#|  Patterns show forecast skill generally get worse over time -- gradually 
-#| in the case of Hopf bifurcation or suddenly in response to the saddle-node bifurcation. 
-#|  The MCMC shows a sharp improvement in forecast skill over time as it passes the transition window. 
-#|  In the stochastic transition context, this creates two branches, where high values indicate periods of 
-#| time when the forecast predicts the wrong state and lower branch indicates the correct state."
+#|  Each line represents the CRPS scores against a replicate of time series observations from the 'true model'. 
+#|  The general pattern across these plots is that forecast skill gets worse over time -- gradually 
+#|  in the case of a Hopf bifurcation or suddenly in response to the saddle-node bifurcation. 
+#|  In the stochastic transition case,  the scores tend to diverge in two branches, where high values indicate periods of 
+#|  time when the forecast predicts the wrong equilibrium state and the lower branch indicates predicting the correct one."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
@@ -527,9 +526,9 @@ shift |>
 ```{r figure7}
 #| fig.cap="Logs skill score over time. 
 #|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
-#|  Comparing this panel to those in Fig 6 highlights scenarios that most often underestimate uncertainty. 
+#|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
 #|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
-#| reflecting the bias-variance tradeoff of machine learning."
+#|  reflecting the bias-variance tradeoff taken when using biased estimators in machine learning."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
