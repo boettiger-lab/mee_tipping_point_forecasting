@@ -115,10 +115,10 @@ panelA <- hopf |>
   filter(type %in% c("historical", "true"), i < 10) |>
   rename(species = variable) |> 
   mutate(species = forcats::fct_recode(species, host = "H", parasitoid = "P")) |>
-  bind_rows(tibble(i=1,t=1,type="predicted", variable="H", value=NA)) |> #placeholder
+  bind_rows(tibble(i=1,t=1,type="predicted", species="host", value=NA)) |> #placeholder
   mutate(type = forcats::fct_recode(type, "future ensemble" = "true", "forecast" = "predicted")) |>
   ggplot(aes(t, value, group=interaction(species, i, type), col=type, lty=species)) + 
-  geom_line(show.legend = TRUE, alpha = 0.7) +
+  geom_line(alpha = 0.7) +
   theme_bw() +  
   scale_color_viridis_d(guide="none") +
   ggtitle("A. Hopf bifurcation")+
