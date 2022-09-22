@@ -360,7 +360,7 @@ shift <- scores |>
 ```{r figure2, dev="png", dpi=300, dev.args = list(type = "cairo-png"), out.width="400px", out.height="300px"}
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
 #|  Smaller scores are better (indicating smaller errors).
-#|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
+#|  Black bars indicate means. The points indicate all individual predictions over time and replicate 'true'
 #|  simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
