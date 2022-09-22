@@ -361,7 +361,7 @@ shift <- scores |>
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
 #|  Smaller scores are better (indicating smaller errors).
 #|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
-#| simulations of the given scenario."
+#|  simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
   geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
@@ -406,11 +406,11 @@ stochastic_obs <- observations |> filter(iter %in% 1:15, simulation == "stochast
 
 ```{r figure3, fig.height=7}
 #| fig.cap="Forecasts of the Hopf bifurcation under each model, compared to 15 realizations of the true model. 
-#|  The bifurcation occurs soon after forecasting period begins, 
-#| leading to progressively larger and larger oscillations. 
+#|  The bifurcation occurs soon after the forecasting period begins, 
+#|  leading to progressively larger oscillations. 
 #|  Prior to the bifurcation, pseudo-cycles are visible in the training data due to stochastic excitations. 
 #|  Following the bifurcation, stochasticity blurs the oscillatory pattern across replicate simulations. 
-#|  Only last 25 time points of training data are shown."
+#|  Only the last 25 time points of the training data are shown."
 
 forecasts  |> 
   filter(iter %in% 1:15, simulation == "hopf", variable !="X") |> 
@@ -512,7 +512,7 @@ In the case of the stochastic transition model, the two modes are not structured
 #|  The general pattern across these plots is that forecast skill gets worse over time -- gradually 
 #|  in the case of a Hopf bifurcation or suddenly in response to the saddle-node bifurcation. 
 #|  In the stochastic transition case,  the scores tend to diverge in two branches, where high values indicate periods of 
-#|  time when the forecast predicts the wrong equilibrium state and the lower branch indicates predicting the correct one."
+#|  time when the forecast predicts the wrong equilibrium state and the lower branch indicates predictions of the correct one. The time axis in this plot and in Figure 7 refers to the time from the beginning of the forecast window, not the time from the beginning of the time series as in other plots."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
