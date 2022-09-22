@@ -636,7 +636,7 @@ M.L. and C.B. developed the code and wrote the manuscript.
 
 # Data Availability {-}
 
-We have created a github repository <https://github.com/boettiger-lab/mee_tipping_point_forecasting.> that contains the code used to produce the figures herein.
+We have created a github repository <https://github.com/boettiger-lab/mee_tipping_point_forecasting> that contains the code used to produce the figures herein.
 
 \newpage
 
