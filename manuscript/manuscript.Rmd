@@ -443,7 +443,7 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 
 ```{r figure4}
 #| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
-#|  Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
+#|  Training data precedes the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
 
 forecasts |> 
@@ -529,7 +529,8 @@ shift |>
 #|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
 #|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
 #|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
-#|  reflecting the bias-variance tradeoff taken when using biased estimators in machine learning."
+#|  reflecting the bias-variance tradeoff taken when using biased estimators in machine learning.
+#|  The time axis in this plot and in Figure 6 refers to the time from the beginning of the forecast window, not the time from the beginning of the time series as in other plots."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
