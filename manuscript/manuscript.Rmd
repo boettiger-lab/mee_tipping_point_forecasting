@@ -361,7 +361,7 @@ shift <- scores |>
 #| fig.cap="Overall distribution of skill scores across models, including an ensemble of methods.
 #|  Smaller scores are better (indicating smaller errors).
 #|  Black bars indicate means, dots indicate all individual predictions over time and replicate 'true'
-#| simulations of the given scenario."
+#|  simulations of the given scenario."
 shift |> 
   ggplot(aes(forecasting_model, score, color=forecasting_model)) + 
   geom_jitter(alpha = 0.06, show.legend = FALSE, shape=".") + 
