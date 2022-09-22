@@ -443,7 +443,7 @@ A clearer picture can be seen by looking at these skill scores over time (Fig 6-
 
 ```{r figure4}
 #| fig.cap = "Forecasts of the saddle-node bifurcation under each model, compared to 15 realizations of the true model. 
-#|  Training data proceeds the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
+#|  Training data precedes the bifurcation, making accurate prediction without knowledge of the underlying model very difficult. "
 
 
 forecasts |> 
@@ -512,7 +512,7 @@ In the case of the stochastic transition model, the two modes are not structured
 #|  The general pattern across these plots is that forecast skill gets worse over time -- gradually 
 #|  in the case of a Hopf bifurcation or suddenly in response to the saddle-node bifurcation. 
 #|  In the stochastic transition case,  the scores tend to diverge in two branches, where high values indicate periods of 
-#|  time when the forecast predicts the wrong equilibrium state and the lower branch indicates predictions of the correct one. The time axis in this plot and in Figure 7 refers to the time from the beginning of the forecast window, not the time from the beginning of the time series as in other plots."
+#|  time when the forecast predicts the wrong equilibrium state and the lower branch indicates predictions of the correct one. The time axis in this plot and in Figure 7 refers to the time from the beginning of the forecast horizon, not the time from the beginning of the time series as in other plots."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
@@ -529,7 +529,8 @@ shift |>
 #|  Forecasts which underestimate uncertainty do substantially worse in logs score than in CRPS score. 
 #|  Comparing this panel to those in Figure 6 highlights scenarios that most often underestimate uncertainty. 
 #|  Generally, MCMC performs better relative to other models under this metric than it does under CRPS, 
-#|  reflecting the bias-variance tradeoff taken when using biased estimators in machine learning."
+#|  reflecting the bias-variance tradeoff taken when using biased estimators in machine learning.
+#|  The time axis in this plot and in Figure 6 refers to the time from the beginning of the forecast horizon, not the time from the beginning of the time series as in other plots."
 
 shift |> 
   group_by(simulation,forecasting_model, metric) |> 
