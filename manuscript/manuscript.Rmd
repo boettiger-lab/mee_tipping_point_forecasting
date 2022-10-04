@@ -637,7 +637,7 @@ Marcus Lapeyrolerie and Carl Boettiger developed the code and wrote the manuscri
 
 # Data Availability {-}
 
-We have created a github repository <https://github.com/boettiger-lab/mee_tipping_point_forecasting> that contains the code used to produce the figures herein.
+We have created a github repository <https://github.com/boettiger-lab/mee_tipping_point_forecasting> that contains the code used to produce the figures herein. This repository has been archived at <https://zenodo.org/badge/latestdoi/470212861>.
 
 \newpage
 
